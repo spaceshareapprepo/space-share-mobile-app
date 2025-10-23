@@ -7,11 +7,11 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Link } from "expo-router";
 
-import Auth from "@/components/auth";
-import { supabase } from "../../lib/supabase";
+import Auth from '@/components/auth';
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import "react-native-url-polyfill/auto";
+import { supabase } from "../../lib/supabase";
 
 export default function HomeScreen() {
   const [session, setSession] = useState<Session | null>(null);
