@@ -7,13 +7,16 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Link } from "expo-router";
 
-import Auth from '@/components/auth';
+import Auth from "@/components/auth";
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import "react-native-url-polyfill/auto";
 import { supabase } from "../../lib/supabase";
+import { useAuthContext } from "@/hooks/use-auth-context";
 
 export default function HomeScreen() {
+  const { profile } = useAuthContext();
+  
   const [session, setSession] = useState<Session | null>(null);
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,6 +40,7 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
@@ -53,6 +57,7 @@ export default function HomeScreen() {
           to open developer tools.
         </ThemedText>
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <Link href="/modal">
           <Link.Trigger>
@@ -80,11 +85,11 @@ export default function HomeScreen() {
             </Link.Menu>
           </Link.Menu>
         </Link>
-
         <ThemedText>
           {`Tap the Explore tab to learn more about what's included in this starter app.`}
         </ThemedText>
       </ThemedView>
+
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
         <ThemedText>
@@ -98,10 +103,22 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
-      <ThemedView>
-        <Auth />
-        {session?.user?.id && <ThemedText>{JSON.stringify(session,null,2)}</ThemedText>}
+
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">Username</ThemedText>
+        <ThemedText>{profile?.username}</ThemedText>
+        <ThemedText type="subtitle">Full name</ThemedText>
+        <ThemedText>{profile?.full_name}</ThemedText>
       </ThemedView>
+
+      <Auth />
+
+      <ThemedView>
+        {session?.user?.id && (
+          <ThemedText>{JSON.stringify(session, null, 2)}</ThemedText>
+        )}
+      </ThemedView>
+
     </ParallaxScrollView>
   );
 }

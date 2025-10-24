@@ -50,6 +50,12 @@
         {
           "launchMode": "most-recent"
         }
+      ],
+      [
+        "expo-web-browser",
+        {
+          "experimentalLauncherActivity": false
+        }
       ]
     ],
     "experiments": {

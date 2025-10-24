@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import { supabase } from '../lib/supabase';
-import { Input, InputField } from '@/components/ui/input';
-import { Button, ButtonText } from '@/components/ui/button';
+import AuthButton from "@/components/social-auth-buttons/auth-button";
+import { Input, InputField } from "@/components/ui/input";
+import React, { useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
+import { supabase } from "../lib/supabase";
 
 export default function Auth() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function signInWithEmail() {
@@ -31,7 +31,19 @@ export default function Auth() {
     });
 
     if (error) Alert.alert(error.message);
-    if (!session) Alert.alert('Please check your inbox for email verification!');
+    if (!session)
+      Alert.alert("Please check your inbox for email verification!");
+    setLoading(false);
+  }
+
+  async function onSignOutButtonPress() {
+    setLoading(true);
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Error signing out:", error);
+      setLoading(false);
+    }
     setLoading(false);
   }
 
@@ -63,17 +75,34 @@ export default function Auth() {
         </Input>
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
-        <Button isDisabled={loading} onPress={signInWithEmail}>
-          <ButtonText>Sign in</ButtonText>
-        </Button>
+        <AuthButton
+          isDisabled={loading}
+          buttonText="Sign in"
+          onPress={() => {
+            void signInWithEmail();
+          }}
+        />
       </View>
       <View style={styles.verticallySpaced}>
-        <Button isDisabled={loading} onPress={signUpWithEmail}>
-          <ButtonText>Sign up</ButtonText>
-        </Button>
+        <AuthButton
+          isDisabled={loading}
+          buttonText="Sign up"
+          onPress={() => {
+            void signUpWithEmail();
+          }}
+        />
+      </View>
+      <View style={styles.verticallySpaced}>
+        <AuthButton
+          isDisabled={loading}
+          buttonText="Sign out"
+          onPress={() => {
+            void onSignOutButtonPress();
+          }}
+        />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -84,9 +113,9 @@ const styles = StyleSheet.create({
   verticallySpaced: {
     paddingTop: 4,
     paddingBottom: 4,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   mt20: {
     marginTop: 20,
   },
-})
+});
