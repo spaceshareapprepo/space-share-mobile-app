@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import "react-native-url-polyfill/auto";
 import { supabase } from "../../lib/supabase";
 import { useAuthContext } from "@/hooks/use-auth-context";
+import SignOutButton from "@/components/auth/sign-out-button";
 
 export default function HomeScreen() {
   const { profile } = useAuthContext();
@@ -110,13 +111,14 @@ export default function HomeScreen() {
         <ThemedText type="subtitle">Full name</ThemedText>
         <ThemedText>{profile?.full_name}</ThemedText>
       </ThemedView>
-
-      <Auth />
-
+      
       <ThemedView>
         {session?.user?.id && (
           <ThemedText>{JSON.stringify(session, null, 2)}</ThemedText>
         )}
+      </ThemedView>
+      <ThemedView>
+        <SignOutButton/>
       </ThemedView>
 
     </ParallaxScrollView>

@@ -1,55 +1,28 @@
 import AuthButton from "@/components/auth/auth-button";
 import { Input, InputField } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
+import { Link } from "expo-router";
 import React, { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
-import { supabase } from "../lib/supabase";
+import { Alert, StyleSheet, Text, View } from "react-native";
 
-export default function Auth() {
+export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function signInWithEmail() {
-    setLoading(true);
+    setIsLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     });
 
     if (error) Alert.alert(error.message);
-    setLoading(false);
+    setIsLoading(false);
   }
-
-  async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
-
-    if (error) Alert.alert(error.message);
-    if (!session)
-      Alert.alert("Please check your inbox for email verification!");
-    setLoading(false);
-  }
-
-  async function onSignOutButtonPress() {
-    setLoading(true);
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Error signing out:", error);
-      setLoading(false);
-    }
-    setLoading(false);
-  }
-
   return (
     <View style={styles.container}>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+      <View style={[styles.verticallySpaced]}>
         <Input>
           <InputField
             value={email}
@@ -74,32 +47,23 @@ export default function Auth() {
           />
         </Input>
       </View>
-      <View style={[styles.verticallySpaced, styles.mt20]}>
+      <View style={[styles.verticallySpaced]}>
         <AuthButton
-          isDisabled={loading}
-          buttonText="Sign in"
+          isDisabled={isLoading}
+          buttonText={isLoading ? "Signing in..." : "Sign in"}
           onPress={() => {
             void signInWithEmail();
           }}
         />
       </View>
-      <View style={styles.verticallySpaced}>
-        <AuthButton
-          isDisabled={loading}
-          buttonText="Sign up"
-          onPress={() => {
-            void signUpWithEmail();
-          }}
-        />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <AuthButton
-          isDisabled={loading}
-          buttonText="Sign out"
-          onPress={() => {
-            void onSignOutButtonPress();
-          }}
-        />
+      <View className="mt-4 text-center text-sm pb-2">
+        <Text>
+          {" "}
+          Don&apos;t have an account?{" "}
+          <Link href="/sign-up" className="underline underline-offset-4">
+            Sign up
+          </Link>
+        </Text>
       </View>
     </View>
   );
@@ -107,7 +71,7 @@ export default function Auth() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
+    marginTop: 10,
     padding: 12,
   },
   verticallySpaced: {

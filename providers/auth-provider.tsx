@@ -71,7 +71,7 @@ export default function AuthProvider({
       session,
       profile,
       isLoading,
-      isLoggedIn: session !== undefined,
+      isLoggedIn: !!session,
     }),
     [session, isLoading, profile]
   );
