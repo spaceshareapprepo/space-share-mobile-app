@@ -23,7 +23,7 @@ export const unstable_settings = {
 // Separate RootNavigator so we can access the AuthContext
 function RootNavigator() {
   const { isLoggedIn } = useAuthContext();
-  console.log(`isLoggedIn: ${isLoggedIn}`)
+
   return (
     <Stack>
       <Stack.Protected guard={isLoggedIn}>
