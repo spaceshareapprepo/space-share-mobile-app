@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import "./global.css";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { SplashScreenController } from "@/components/splash-screen-controller";
 
@@ -39,6 +40,7 @@ function RootNavigator() {
         name="modal"
         options={{ presentation: "modal", title: "Modal" }}
       />
+      <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
@@ -56,14 +58,16 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <AuthProvider>
-          <SplashScreenController />
-          <RootNavigator />
-          <StatusBar style="auto" />
-        </AuthProvider>
-      </ThemeProvider>
-    </GluestackUIProvider>
+    <SafeAreaProvider>
+      <GluestackUIProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <AuthProvider>
+            <SplashScreenController />
+            <RootNavigator />
+            <StatusBar style="auto" />
+          </AuthProvider>
+        </ThemeProvider>
+      </GluestackUIProvider>
+    </SafeAreaProvider>
   );
 }
