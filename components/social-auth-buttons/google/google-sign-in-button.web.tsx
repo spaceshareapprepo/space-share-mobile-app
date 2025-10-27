@@ -4,6 +4,7 @@ import {
   GoogleLogin,
   GoogleOAuthProvider,
 } from "@react-oauth/google";
+import type { GoogleLoginProps } from "@react-oauth/google";
 import { SignInWithIdTokenCredentials } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
@@ -13,7 +14,41 @@ function onGoogleButtonFailure() {
   console.error("Error signing in with Google");
 }
 
-export default function GoogleSignInButton() {
+type GoogleSignInButtonProps = {
+  buttonText?: string;
+};
+
+function mapButtonTextToVariant(
+  buttonText?: string
+): GoogleLoginProps["text"] | undefined {
+  if (!buttonText) {
+    return undefined;
+  }
+
+  const normalized = buttonText.toLowerCase();
+
+  if (normalized.includes("sign up")) {
+    return "signup_with";
+  }
+
+  if (normalized.includes("continue")) {
+    return "continue_with";
+  }
+
+  if (normalized === "sign in") {
+    return "signin";
+  }
+
+  if (normalized.includes("sign in")) {
+    return "signin_with";
+  }
+
+  return undefined;
+}
+
+export default function GoogleSignInButton({
+  buttonText,
+}: Readonly<GoogleSignInButtonProps>) {
   // Generate secure, random values for state and nonce
   const [nonce, setNonce] = useState("");
   const [sha256Nonce, setSha256Nonce] = useState("");
@@ -78,6 +113,8 @@ export default function GoogleSignInButton() {
         onError={onGoogleButtonFailure}
         useOneTap={true}
         auto_select={true}
+        shape="pill"
+        text={mapButtonTextToVariant(buttonText)}
       />
     </GoogleOAuthProvider>
   );

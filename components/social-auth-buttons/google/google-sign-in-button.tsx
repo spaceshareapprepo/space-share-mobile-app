@@ -84,7 +84,13 @@ async function onSignInButtonPress() {
   }
 }
 
-export default function GoogleSignInButton() {
+type GoogleSignInButtonProps = Readonly<{
+  buttonText?: string;
+}>;
+
+export default function GoogleSignInButton({
+  buttonText = "Sign in with Google",
+}: GoogleSignInButtonProps) {
   // to warm up the browser
   useEffect(() => {
     WebBrowser.warmUpAsync();
@@ -114,6 +120,8 @@ export default function GoogleSignInButton() {
         elevation: 2, // For Android shadow
       }}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={buttonText}
     >
       <Image
         source={{
@@ -129,7 +137,7 @@ export default function GoogleSignInButton() {
           fontWeight: "500",
         }}
       >
-        Sign in with Google
+        {buttonText}
       </Text>
     </TouchableOpacity>
   );
