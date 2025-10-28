@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthContext } from "@/hooks/use-auth-context";
 
 export default function GoogleAuthCallback() {
-  const { isLoggedIn, isLoading } = useAuthContext();
+  const { isLoggedIn, isLoading, profile } = useAuthContext();
   const navigatedRef = useRef(false);
 
   useEffect(() => {
@@ -14,21 +14,17 @@ export default function GoogleAuthCallback() {
   }, []);
 
   useEffect(() => {
-    if (navigatedRef.current) {
-      return;
-    }
-
-    if (isLoggedIn) {
-      navigatedRef.current = true;
-      router.replace("/(tabs)");
-      return;
-    }
-
-    if (!isLoading) {
+    if (navigatedRef.current) return;
+    if (!isLoading && !isLoggedIn) {
       navigatedRef.current = true;
       router.replace("/sign-in");
+      return;
     }
-  }, [isLoggedIn, isLoading]);
+    if (!isLoggedIn || !profile?.avatar_url || !profile?.id) return;
+
+    navigatedRef.current = true;
+    router.replace("/(tabs)");
+  }, [isLoggedIn, isLoading, profile]);
 
   const message = isLoading
     ? "Completing Google sign-in..."

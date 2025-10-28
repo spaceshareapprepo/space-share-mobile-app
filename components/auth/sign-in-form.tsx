@@ -93,6 +93,13 @@ export default function SignInForm() {
           >
             Sign in
           </ThemedText>
+          <ThemedText className="text-sm">
+            {" "}
+            Don&apos;t have an account?{" "}
+            <Link href="/sign-up" className="underline underline-offset-4">
+              Sign up
+            </Link>
+          </ThemedText>
         </ThemedView>
         {statusMessage && (
           <ThemedView className="mt-3">
@@ -198,15 +205,6 @@ export default function SignInForm() {
               void signInWithEmail();
             }}
           />
-        </ThemedView>
-        <ThemedView className="mt-4 text-center text-sm pb-2">
-          <ThemedText className="text-sm">
-            {" "}
-            Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="underline underline-offset-4">
-              Sign up
-            </Link>
-          </ThemedText>
         </ThemedView>
         <ThemedView className="items-center" >
           <HStack space="lg" className="items-center">

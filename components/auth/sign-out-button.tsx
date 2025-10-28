@@ -18,6 +18,7 @@ export default function SignOutButton() {
   return (
     <AuthButton
       isDisabled={loading}
+      size="lg"
       buttonText="Sign out"
       onPress={() => {
         void onSignOutButtonPress();

@@ -132,8 +132,14 @@ export default function SignUpForm() {
           >
             Sign up
           </ThemedText>
+          <ThemedText className="text-sm">
+            {" "}
+            Already have an account?{" "}
+            <Link href="/sign-in" className="underline underline-offset-4">
+              Sign in
+            </Link>
+          </ThemedText>
         </ThemedView>
-
         {statusMessage && (
           <ThemedView>
             <Alert
@@ -333,15 +339,6 @@ export default function SignUpForm() {
               void signUpWithEmail();
             }}
           />
-        </ThemedView>
-        <ThemedView className="mt-4 text-center text-sm pb-2">
-          <ThemedText className="text-sm">
-            {" "}
-            Already have an account?{" "}
-            <Link href="/sign-in" className="underline underline-offset-4">
-              Sign in
-            </Link>
-          </ThemedText>
         </ThemedView>
         <ThemedView className="items-center" >
           <HStack space="lg" className="items-center">
