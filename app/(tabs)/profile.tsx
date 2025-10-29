@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   const itemsDelivered = shipmentRequests.filter((item) => item.status !== 'urgent').length + 6;
   
   const { profile } = useAuthContext();
-  console.log(`Profile: ${profile}`);
+  console.log(`Profile: ${JSON.stringify(profile)}`);
   const displayName = profile?.full_name ?? profile?.email ?? '';
   const [session, setSession] = useState<Session | null>(null);
 

@@ -1,15 +1,15 @@
 'use client';
-import React from 'react';
 import { createButton } from '@gluestack-ui/core/button/creator';
+import { PrimitiveIcon, UIIcon } from '@gluestack-ui/core/icon/creator';
 import {
   tva,
-  withStyleContext,
   useStyleContext,
+  withStyleContext,
   type VariantProps,
 } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
+import React from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { PrimitiveIcon, UIIcon } from '@gluestack-ui/core/icon/creator';
 
 const SCOPE = 'BUTTON';
 
@@ -285,7 +285,7 @@ type IButtonProps = Omit<
   VariantProps<typeof buttonStyle> & { className?: string };
 
 const Button = React.forwardRef<
-  React.ElementRef<typeof UIButton>,
+  React.ComponentRef<typeof UIButton>,
   IButtonProps
 >(
   (
@@ -307,7 +307,7 @@ type IButtonTextProps = React.ComponentPropsWithoutRef<typeof UIButton.Text> &
   VariantProps<typeof buttonTextStyle> & { className?: string };
 
 const ButtonText = React.forwardRef<
-  React.ElementRef<typeof UIButton.Text>,
+  React.ComponentRef<typeof UIButton.Text>,
   IButtonTextProps
 >(({ className, variant, size, action, ...props }, ref) => {
   const {
@@ -339,14 +339,14 @@ const ButtonSpinner = UIButton.Spinner;
 
 type IButtonIcon = React.ComponentPropsWithoutRef<typeof UIButton.Icon> &
   VariantProps<typeof buttonIconStyle> & {
-    className?: string | undefined;
+    className: string | undefined;
     as?: React.ElementType;
     height?: number;
     width?: number;
   };
 
 const ButtonIcon = React.forwardRef<
-  React.ElementRef<typeof UIButton.Icon>,
+  React.ComponentRef<typeof UIButton.Icon>,
   IButtonIcon
 >(({ className, size, ...props }, ref) => {
   const {
@@ -397,7 +397,7 @@ type IButtonGroupProps = React.ComponentPropsWithoutRef<typeof UIButton.Group> &
   VariantProps<typeof buttonGroupStyle>;
 
 const ButtonGroup = React.forwardRef<
-  React.ElementRef<typeof UIButton.Group>,
+  React.ComponentRef<typeof UIButton.Group>,
   IButtonGroupProps
 >(
   (
@@ -431,4 +431,5 @@ ButtonSpinner.displayName = 'ButtonSpinner';
 ButtonIcon.displayName = 'ButtonIcon';
 ButtonGroup.displayName = 'ButtonGroup';
 
-export { Button, ButtonText, ButtonSpinner, ButtonIcon, ButtonGroup };
+export { Button, ButtonGroup, ButtonIcon, ButtonSpinner, ButtonText };
+

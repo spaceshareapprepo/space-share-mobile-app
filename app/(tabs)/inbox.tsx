@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { shipmentRequests, travellerListings } from '@/constants/mock-data';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { RealtimeChat } from '@/components/realtime-chat'
 
 type SegmentKey = 'messages' | 'notifications';
 
@@ -221,6 +222,9 @@ export default function InboxScreen() {
             ))}
           </View>
         )}
+      </ThemedView>
+      <ThemedView>
+        <RealtimeChat roomName="my-chat-room" username="john_doe" />
       </ThemedView>
     </ParallaxScrollView>
   );
