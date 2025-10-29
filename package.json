@@ -9,7 +9,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "reset-supabase": "tsx ./scripts/reset-supabase.ts"
+    "db:reset": "tsx ./scripts/reset-supabase.ts",
+    "db:policy": "tsx ./scripts/create-supabase-policies.ts",
+    "db:push": "npx drizzle-kit push",
+    "reset-supabase": "npm run db:reset && npm run db:push && npm run db:policy"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

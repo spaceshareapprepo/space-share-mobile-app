@@ -1,8 +1,8 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { airports, dbClient, listings, profiles } from "./schema";
+import { airports, db, listings, profiles } from "./schema.drizzle";
 // Export the schema from db.ts
-export * from "./schema";
+export * from "./schema.drizzle";
 
 // Create aliases for the airports table to join twice
 const originAirport = alias(airports, "origin_airport");
@@ -10,7 +10,7 @@ const destinationAirport = alias(airports, "destination_airport");
 
 export async function fetchListings() {
   try {
-    const data = await dbClient
+    const data = await db
       .select({
         id: listings.id,
         title: listings.title,
@@ -22,7 +22,7 @@ export async function fetchListings() {
         photos: listings.photos,
         isVerified: listings.isVerified,
         ownerId: profiles.id,
-        ownerName: sql<string>`(${profiles.name})`,
+        ownerName: sql<string>`(${profiles.fullName})`,
         ownerImage: sql<string>`(${profiles.publicAvatarUrl})`,
       })
       .from(listings)
