@@ -1,6 +1,6 @@
-import  { sql } from "drizzle-orm";
+import { db } from "@/lib/storage/db";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { db } from "@/lib/storage/schema.drizzle"
 
 // ============================================
 // HELPER FUNCTIONS FOR SUPABASE SETUP
@@ -47,13 +47,14 @@ export async function createAuthTriggers(db: ReturnType<typeof drizzle>) {
     SECURITY DEFINER SET search_path = ''
     AS $$
     BEGIN
-      INSERT INTO public.profiles (id, username, first_name, last_name, full_name, email_verified, avatar_url)
+      INSERT INTO public.profiles (id, username, first_name, last_name, full_name, email, email_verified, avatar_url)
       VALUES (
         new.id,
         new.raw_user_meta_data ->> 'user_name',
         new.raw_user_meta_data ->> 'first_name',
         new.raw_user_meta_data ->> 'last_name',
         new.raw_user_meta_data ->> 'full_name',
+        new.raw_user_meta_data ->> 'email',
         (new.email_confirmed_at IS NOT NULL),
         new.raw_user_meta_data ->> 'avatar_url'
       );
@@ -82,8 +83,9 @@ export async function createAuthTriggers(db: ReturnType<typeof drizzle>) {
           first_name = new.raw_user_meta_data ->> 'first_name',
           last_name = new.raw_user_meta_data ->> 'last_name',
           full_name = new.raw_user_meta_data ->> 'full_name',
-          avatar_url = new.raw_user_meta_data ->> 'avatar_url',
-          email_verified = (new.email_confirmed_at IS NOT NULL)
+          email = new.raw_user_meta_data ->> 'email',
+          email_verified = (new.email_confirmed_at IS NOT NULL),
+          avatar_url = new.raw_user_meta_data ->> 'avatar_url'
       WHERE id = new.id;
       RETURN new;
     EXCEPTION

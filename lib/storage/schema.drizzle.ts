@@ -9,28 +9,9 @@ import {
   jsonb,
   uuid,
   pgSchema,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import  { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { config } from 'dotenv';
-config({ path: '.env.local' });
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL env var is required to run Supabase setup.");
-}
-
-const pool = new Pool({
-  connectionString,
-  ssl:
-    connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
-      ? false
-      : { rejectUnauthorized: false },
-});
-
-export const db = drizzle({ client: pool});
 
 // ============================================
 // SCHEMA DEFINITION
@@ -52,15 +33,25 @@ export const profiles = pgTable('profiles', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   fullName: text('full_name'),
+  email: text('email'),
   avatarUrl: text('avatar_url'),
-  publicAvatarUrl: text('public_avatar_url'),
+  bucketAvatarUrl: text('bucket_avatar_url'),
   website: text('website'),
   emailVerified: boolean('email_verified'),
 });
 
+export const typeOfListingEnum = pgEnum('type_of_listing', ['travel', 'shipment']);
+
+export const statusCodeEnum = pgEnum('status_code', ['0', '1']);
+
+export const shipmentCodeEnum = pgEnum('shipment_code', ['matching', 'urgent']);
+
+export const currencyCodeEnum = pgEnum('currency_code', ['USD', 'GHS']);
+
 export const listings = pgTable("listings", {
   id: uuid("id")
     .primaryKey()
+    .notNull()
     .default(sql`gen_random_uuid()`),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -82,14 +73,19 @@ export const listings = pgTable("listings", {
     .references(() => airports.id, { onDelete: "cascade" }),
   flightDate: timestamp("flight_date", { withTimezone: true }).notNull(),
   maxWeightKg: integer("max_weight_kg").notNull(),
-  pricePerUnit: integer("price_per_unit_cents").notNull(),
+  pricePerUnit: integer("price_per_unit").notNull(),
+  currencyCode: currencyCodeEnum('currency_code').default('USD').notNull(),
   photos: jsonb("photos").$type<string[]>().default([]).notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
+  typeOfListing: typeOfListingEnum('type_of_listing').notNull(),
+  statusCode: statusCodeEnum('status_code').notNull().default('0'),
+  shipmentCode: shipmentCodeEnum('shipment_code'),
 });
 
 export const threads = pgTable("threads", {
   id: uuid("id")
     .primaryKey()
+    .notNull()
     .default(sql`gen_random_uuid()`),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -112,6 +108,7 @@ export const threads = pgTable("threads", {
 export const messages = pgTable("messages", {
   id: uuid("id")
     .primaryKey()
+    .notNull()
     .default(sql`gen_random_uuid()`),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -132,6 +129,7 @@ export const messages = pgTable("messages", {
 export const airports = pgTable("airports", {
   id: uuid("id")
     .primaryKey()
+    .notNull()
     .default(sql`gen_random_uuid()`),
 
   createdAt: timestamp("created_at").defaultNow(),

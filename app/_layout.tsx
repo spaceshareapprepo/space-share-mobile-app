@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -17,6 +17,8 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AuthProvider from "@/providers/auth-provider";
+import { ActivityIndicator } from "react-native";
+import { useEffect } from "react";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -25,28 +27,45 @@ export const unstable_settings = {
 // Separate RootNavigator so we can access the AuthContext
 function RootNavigator() {
   const { isLoggedIn, session } = useAuthContext();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session === undefined) return;
+
+    const [firstSegment] = segments;
+    const inAuthGroup = firstSegment === "(auth)";
+    const isOnGoogleAuth = firstSegment === "google-auth";
+
+    if (!isLoggedIn && !inAuthGroup) {
+      router.replace("/sign-in");
+      return;
+    }
+
+    if (isLoggedIn && (inAuthGroup || isOnGoogleAuth)) {
+      router.replace("/");
+    }
+  }, [isLoggedIn, session, segments, router]);
 
   if (session === undefined) {
     // Wait for the auth state to hydrate before deciding which stack to show.
-    return null;
+    return <ActivityIndicator />;
   }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isLoggedIn}>
         <Stack.Screen name="(drawer)" />
-        <Stack.Screen name="(home)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="google-auth" />
         <Stack.Screen
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}
         />
       </Stack.Protected>
+      <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="+not-found" />
       </Stack.Protected>
+      <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
@@ -65,9 +84,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <GluestackUIProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <AuthProvider>
             <SplashScreenController />
             <RootNavigator />

@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
-import { ActivityIndicator, StyleSheet, Text } from "react-native";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { useEffect, useRef } from "react";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuthContext } from "@/hooks/use-auth-context";
 
 export default function GoogleAuthCallback() {
-  const { isLoggedIn, isLoading, profile } = useAuthContext();
+  const { isLoggedIn, isLoading } = useAuthContext();
   const navigatedRef = useRef(false);
 
   useEffect(() => {
@@ -14,20 +14,25 @@ export default function GoogleAuthCallback() {
   }, []);
 
   useEffect(() => {
-    if (navigatedRef.current) return;
-    if (!isLoading && !isLoggedIn) {
-      navigatedRef.current = true;
-      router.replace("/sign-in");
-      return;
-    }
-    if (!isLoggedIn || !profile?.avatar_url || !profile?.id) return;
+    // Early return while loading
+    if (isLoading) return;
 
+    // Prevent multiple navigations
+    if (navigatedRef.current) return;
     navigatedRef.current = true;
-    router.replace("/(tabs)");
-  }, [isLoggedIn, isLoading, profile]);
+
+    // Navigate based on auth state
+    if (isLoggedIn) {
+      router.replace("/");
+    } else {
+      router.replace("/sign-in");
+    }
+  }, [isLoggedIn, isLoading]);
 
   const message = isLoading
     ? "Completing Google sign-in..."
+    : isLoggedIn
+    ? "Redirecting you to the app..."
     : "Redirecting to sign-in...";
 
   return (

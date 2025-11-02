@@ -1,9 +1,9 @@
 import AuthButton from "@/components/auth/auth-button";
-import GoogleSignInButton from '@/components/social-auth-buttons/google/google-sign-in-button';
+import GoogleSignInButton from "@/components/social-auth-buttons/google/google-sign-in-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
-import { Divider } from '@/components/ui/divider';
+import { Divider } from "@/components/ui/divider";
 import {
   FormControl,
   FormControlError,
@@ -23,7 +23,9 @@ import { Link } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 
-type ValidationErrors = Partial<Record<"firstName" | "lastName" | "username" | "email" | "password", string>>;
+type ValidationErrors = Partial<
+  Record<"firstName" | "lastName" | "username" | "email" | "password", string>
+>;
 
 type StatusMessage =
   | { variant: "error"; text: string }
@@ -38,7 +40,9 @@ export default function SignUpForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(null);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {}
+  );
 
   function validate(): boolean {
     const errors: ValidationErrors = {};
@@ -84,10 +88,7 @@ export default function SignUpForm() {
       const trimmedUsername = username.trim();
       const normalizedEmail = email.trim();
 
-      const {
-        data,
-        error,
-      } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
         options: {
@@ -125,11 +126,7 @@ export default function SignUpForm() {
     <ThemedView style={styles.container}>
       <VStack space="lg" className="w-full">
         <ThemedView>
-          <ThemedText
-            type="title"
-            accessibilityRole="header"
-            className="mb-3"
-          >
+          <ThemedText type="title" accessibilityRole="header" className="mb-3">
             Sign up
           </ThemedText>
           <ThemedText className="text-sm">
@@ -159,70 +156,83 @@ export default function SignUpForm() {
         )}
 
         <VStack space="md">
-          <FormControl isInvalid={Boolean(validationErrors.firstName)} size="sm">
-            <FormControlLabel>
-              <FormControlLabelText>
-                <ThemedText>First name</ThemedText>
-              </FormControlLabelText>
-            </FormControlLabel>
-            <Input>
-              <InputField
-                value={firstName}
-                onChangeText={setFirstName}
-                placeholder="First name"
-                autoCapitalize="words"
-                textContentType="givenName"
-                accessibilityLabel="First name"
-                accessibilityHint="Enter your first name"
-              />
-            </Input>
-            <FormControlHelper>
-              <FormControlHelperText>
-                Share the name you use day to day.
-              </FormControlHelperText>
-            </FormControlHelper>
-            {validationErrors.firstName && (
-              <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
-                <FormControlErrorText className="text-red-500">
-                  {validationErrors.firstName}
-                </FormControlErrorText>
-              </FormControlError>
-            )}
-          </FormControl>
+          
+            <FormControl
+              isInvalid={Boolean(validationErrors.firstName)}
+              size="sm"
+            >
+              <FormControlLabel>
+                <FormControlLabelText>
+                  <ThemedText>First name</ThemedText>
+                </FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="First name"
+                  autoCapitalize="words"
+                  textContentType="givenName"
+                  accessibilityLabel="First name"
+                  accessibilityHint="Enter your first name"
+                />
+              </Input>
+              <FormControlHelper>
+                <FormControlHelperText>
+                  Share the name you use day to day.
+                </FormControlHelperText>
+              </FormControlHelper>
+              {validationErrors.firstName && (
+                <FormControlError>
+                  <FormControlErrorIcon
+                    as={AlertCircleIcon}
+                    className="text-red-500"
+                  />
+                  <FormControlErrorText className="text-red-500">
+                    {validationErrors.firstName}
+                  </FormControlErrorText>
+                </FormControlError>
+              )}
+            </FormControl>
 
-          <FormControl isInvalid={Boolean(validationErrors.lastName)} size="sm">
-            <FormControlLabel>
-              <FormControlLabelText>
-                <ThemedText>Last name</ThemedText>
-              </FormControlLabelText>
-            </FormControlLabel>
-            <Input>
-              <InputField
-                value={lastName}
-                onChangeText={setLastName}
-                placeholder="Last name"
-                autoCapitalize="words"
-                textContentType="familyName"
-                accessibilityLabel="Last name"
-                accessibilityHint="Enter your last name"
-              />
-            </Input>
-            <FormControlHelper>
-              <FormControlHelperText>
-                Used to personalize your account.
-              </FormControlHelperText>
-            </FormControlHelper>
-            {validationErrors.lastName && (
-              <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
-                <FormControlErrorText className="text-red-500">
-                  {validationErrors.lastName}
-                </FormControlErrorText>
-              </FormControlError>
-            )}
-          </FormControl>
-
+            <FormControl
+              isInvalid={Boolean(validationErrors.lastName)}
+              size="sm"
+            >
+              <FormControlLabel>
+                <FormControlLabelText>
+                  <ThemedText>Last name</ThemedText>
+                </FormControlLabelText>
+              </FormControlLabel>
+              <Input>
+                <InputField
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Last name"
+                  autoCapitalize="words"
+                  textContentType="familyName"
+                  accessibilityLabel="Last name"
+                  accessibilityHint="Enter your last name"
+                />
+              </Input>
+              <FormControlHelper>
+                <FormControlHelperText>
+                  Used to personalize your account.
+                </FormControlHelperText>
+              </FormControlHelper>
+              {validationErrors.lastName && (
+                <FormControlError>
+                  <FormControlErrorIcon
+                    as={AlertCircleIcon}
+                    className="text-red-500"
+                  />
+                  <FormControlErrorText className="text-red-500">
+                    {validationErrors.lastName}
+                  </FormControlErrorText>
+                </FormControlError>
+              )}
+            </FormControl>
+          
           <FormControl isInvalid={Boolean(validationErrors.username)} size="sm">
             <FormControlLabel>
               <FormControlLabelText>
@@ -247,7 +257,10 @@ export default function SignUpForm() {
             </FormControlHelper>
             {validationErrors.username && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.username}
                 </FormControlErrorText>
@@ -282,7 +295,10 @@ export default function SignUpForm() {
             </FormControlHelper>
             {validationErrors.email && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.email}
                 </FormControlErrorText>
@@ -316,7 +332,10 @@ export default function SignUpForm() {
             </FormControlHelper>
             {validationErrors.password && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.password}
                 </FormControlErrorText>
@@ -340,7 +359,7 @@ export default function SignUpForm() {
             }}
           />
         </ThemedView>
-        <ThemedView className="items-center" >
+        <ThemedView className="items-center">
           <HStack space="lg" className="items-center">
             <Divider className="w-[100px]" />
             <ThemedText type="default"> or </ThemedText>

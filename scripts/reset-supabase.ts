@@ -1,7 +1,7 @@
 
-import  { sql } from "drizzle-orm";
+import { db } from "@/lib/storage/db";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { db } from "@/lib/storage/schema.drizzle"
 
 // ============================================
 // HELPER FUNCTIONS FOR SUPABASE RESET

@@ -1,19 +1,16 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs } from "expo-router";
+import React from "react";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { HapticTab } from "@/components/haptic-tab";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <>
-    {/* <Tabs
+    <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
@@ -32,7 +29,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="publish"
         options={{
-          title: 'Publish',
+          title: "Publish",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="cube.box.fill" color={color} />
           ),
@@ -41,7 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="my-spaces"
         options={{
-          title: 'My Spaces',
+          title: "My Spaces",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="cube.box.fill" color={color} />
           ),
@@ -59,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: "Profile",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person.crop.circle" color={color} />
           ),
@@ -74,17 +71,6 @@ export default function TabLayout() {
           ),
         }}
       />
-    </Tabs> */}
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Label>Home</Label>
-        <Icon sf="house.fill" drawable="custom_android_drawable" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="explore">
-        <Icon sf="gear" drawable="custom_settings_drawable" />
-        <Label>Settings</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-    </>
+    </Tabs>
   );
 }
