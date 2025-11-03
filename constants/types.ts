@@ -6,23 +6,65 @@ export type QuickFilter = {
   segment: SegmentKey;
 };
 
-export type Listings ={
-    id: string;
-    ownerId: string;
-    title: string;
-    description: string;
-    originId: string;
-    originName: string;
-    desitnationId: string;
-    destinationName: string;
-    flightDate: string;
-    maxWeightKg: number;
-    maxWeightLb: number;
-    pricePerUnit: number;
-    currencyCode: string;
-    photos: string[];
-    isVerified: boolean;
-    typeOfListing: string;
-    statusCode: string;
-    shipmentCode: string
-}
+export type TravellerListing = {
+  id: string;
+  name: string;
+  initials: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  availableKg: number;
+  totalCapacityKg: number;
+  pricePerKgUsd: number;
+  status: 'open' | 'closingSoon';
+  verification: string[];
+  experience: string;
+  focus: string;
+};
+
+export type ShipmentRequest = {
+  id: string;
+  owner: string;
+  initials: string;
+  itemName: string;
+  summary: string;
+  origin: string;
+  destination: string;
+  readyBy: string;
+  weightKg: number;
+  budgetUsd: number;
+  status: 'matching' | 'urgent';
+  handlingNotes: string;
+};
+
+export type RelatedAirport = {
+  id: string;
+  city: string | null;
+  name: string | null;
+  iata_code: string | null;
+};
+
+export type RawListingRow = {
+  id: string;
+  title: string | null;
+  description: string | null;
+  type_of_listing: 'travel' | 'shipment' | null;
+  status_code: string | null;
+  shipment_code: string | null;
+  flight_date: string | null;
+  max_weight_kg: number | null;
+  price_per_unit: number | null;
+  currency_code: string | null;
+  photos: string[] | null;
+  is_verified: boolean | null;
+  created_at: string | null;
+  owner:
+    | {
+        id: string;
+        full_name: string | null;
+        bucket_avatar_url: string | null;
+      }
+    | null;
+  origin: RelatedAirport | null;
+  destination: RelatedAirport | null;
+};

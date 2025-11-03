@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { ShipmentResultCard } from '@/components/listings/shipment-result-card';
+import { RouteResultCard } from '@/components/listings/traveller-result-card';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -8,7 +10,9 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { ShipmentRequest, TravellerListing } from '@/constants/mock-data';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { supabase } from '@/lib/supabase';
+import { getInitials } from "@/lib/utils";
 
+import type { RawListingRow, RelatedAirport } from "@/constants/types";
 
 type SegmentKey = 'routes' | 'items';
 
@@ -72,18 +76,18 @@ export default function SearchScreen() {
           photos,
           is_verified,
           created_at,
-          owner:profiles!listings_owner_id_fkey (
+          owner:profiles!listings_owner_id_profiles_id_fk (
             id,
             full_name,
             bucket_avatar_url
           ),
-          origin:airports!listings_origin_id_fkey (
+          origin:airports!listings_origin_id_airports_id_fk (
             id,
             city,
             name,
             iata_code
           ),
-          destination:airports!listings_destination_id_fkey (
+          destination:airports!listings_destination_id_airports_id_fk (
             id,
             city,
             name,
@@ -103,7 +107,7 @@ export default function SearchScreen() {
         setShipmentListings([]);
       } else if (data) {
         console.log(data);
-        const rows = (data as unknown) ?? [];
+        const rows = (data as unknown as RawListingRow[]) ?? [];
 
         const travel = rows
           .filter((row) => row.type_of_listing === 'travel')
@@ -267,38 +271,6 @@ export default function SearchScreen() {
   );
 }
 
-type RelatedAirport = {
-  id: string;
-  city: string | null;
-  name: string | null;
-  iata_code: string | null;
-};
-
-type RawListingRow = {
-  id: string;
-  title: string | null;
-  description: string | null;
-  type_of_listing: 'travel' | 'shipment' | null;
-  status_code: string | null;
-  shipment_code: string | null;
-  flight_date: string | null;
-  max_weight_kg: number | null;
-  price_per_unit: number | null;
-  currency_code: string | null;
-  photos: string[] | null;
-  is_verified: boolean | null;
-  created_at: string | null;
-  owner:
-    | {
-        id: string;
-        full_name: string | null;
-        bucket_avatar_url: string | null;
-      }
-    | null;
-  origin: RelatedAirport | null;
-  destination: RelatedAirport | null;
-};
-
 function mapToTravellerListing(row: RawListingRow): TravellerListing {
   const name = row.owner?.full_name?.trim() || row.title?.trim() || 'Traveller';
   const departure = row.flight_date ?? row.created_at ?? new Date().toISOString();
@@ -355,33 +327,6 @@ function formatAirport(airport: RelatedAirport | null) {
   return code ? `${city} (${code})` : city;
 }
 
-function getInitials(value: string) {
-  const parts = value
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-
-  if (parts.length === 0) {
-    return '??';
-  }
-
-  if (parts.length === 1) {
-    const [first] = parts;
-    if (!first) {
-      return '??';
-    }
-    const firstChar = first.charAt(0);
-    const secondChar = first.charAt(1) || firstChar;
-    return `${firstChar}${secondChar}`.toUpperCase();
-  }
-
-  const firstInitial = parts[0].charAt(0);
-  const secondInitial = parts[1].charAt(0) || parts[0].charAt(1) || firstInitial;
-  const initials = `${firstInitial}${secondInitial}`.toUpperCase();
-
-  return initials || '??';
-}
-
 function mapTravelStatus(statusCode: string | null): TravellerListing['status'] {
   return statusCode === '1' ? 'closingSoon' : 'open';
 }
@@ -412,123 +357,6 @@ function filterShipments(list: ShipmentRequest[], query: string) {
   });
 }
 
-function RouteResultCard({
-  listing,
-  tintColor,
-  borderColor,
-}: Readonly<{
-  listing: TravellerListing;
-  tintColor: string;
-  borderColor: string;
-}>) {
-  return (
-    <ThemedView style={[styles.resultCard, { borderColor }]}>
-      <View style={styles.resultHeader}>
-        <View style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}>
-          <IconSymbol name="airplane.circle.fill" size={20} color={tintColor} />
-        </View>
-        <View style={styles.resultHeaderText}>
-          <ThemedText type="subtitle">
-            {listing.origin} → {listing.destination}
-          </ThemedText>
-          <ThemedText style={styles.resultMetaText}>
-            Departs {formatDate(listing.departureDate)} · {formatRelative(listing.departureDate)}
-          </ThemedText>
-        </View>
-        <View style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}>
-          <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-            ${listing.pricePerKgUsd}/kg
-          </ThemedText>
-        </View>
-      </View>
-      <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
-      <View style={styles.resultFooter}>
-        <View style={styles.resultInfoRow}>
-          <IconSymbol name="cube.box.fill" size={18} color={tintColor} />
-          <ThemedText style={styles.resultInfoText}>
-            {listing.availableKg}kg free of {listing.totalCapacityKg}kg capacity
-          </ThemedText>
-        </View>
-        <View style={styles.badgeRow}>
-          {listing.verification.slice(0, 2).map((badge) => (
-            <View key={badge} style={[styles.badge, { backgroundColor: `${tintColor}12` }]}>
-              <IconSymbol name="checkmark.seal.fill" size={14} color={tintColor} />
-              <ThemedText style={[styles.badgeText, { color: tintColor }]}>{badge}</ThemedText>
-            </View>
-          ))}
-        </View>
-      </View>
-    </ThemedView>
-  );
-}
-
-function ShipmentResultCard({
-  shipment,
-  tintColor,
-  borderColor,
-}: Readonly<{
-  shipment: ShipmentRequest;
-  tintColor: string;
-  borderColor: string;
-}>) {
-  return (
-    <ThemedView style={[styles.resultCard, { borderColor }]}>
-      <View style={styles.resultHeader}>
-        <View style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}>
-          <IconSymbol name="cube.box.fill" size={20} color={tintColor} />
-        </View>
-        <View style={styles.resultHeaderText}>
-          <ThemedText type="subtitle">{shipment.itemName}</ThemedText>
-          <ThemedText style={styles.resultMetaText}>
-            {shipment.origin} → {shipment.destination} · Ready {formatRelative(shipment.readyBy)}
-          </ThemedText>
-        </View>
-        <View style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}>
-          <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-            Budget ${shipment.budgetUsd}
-          </ThemedText>
-        </View>
-      </View>
-      <ThemedText style={styles.resultBody}>{shipment.summary}</ThemedText>
-      <View style={styles.resultFooter}>
-        <View style={styles.resultInfoRow}>
-          <IconSymbol name="clock.fill" size={18} color={tintColor} />
-          <ThemedText style={styles.resultInfoText}>
-            {shipment.weightKg}kg · {shipment.status === 'urgent' ? 'Needs fast match' : 'Matching'}
-          </ThemedText>
-        </View>
-        <ThemedText style={styles.resultInfoText}>{shipment.handlingNotes}</ThemedText>
-      </View>
-    </ThemedView>
-  );
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function formatRelative(value: string) {
-  const target = new Date(value).getTime();
-  const diff = target - Date.now();
-  const days = Math.round(diff / (1000 * 60 * 60 * 24));
-
-  if (days < -1) {
-    return `${Math.abs(days)} days ago`;
-  }
-  if (days === -1) {
-    return 'Yesterday';
-  }
-  if (days === 0) {
-    return 'Today';
-  }
-  if (days === 1) {
-    return 'In 1 day';
-  }
-  return `In ${days} days`;
-}
 
 const styles = StyleSheet.create({
   container: {

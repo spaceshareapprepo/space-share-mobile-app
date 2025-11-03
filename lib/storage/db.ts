@@ -38,18 +38,18 @@ export async function fetchListings() {
               photos,
               is_verified,
               created_at,
-              owner:profiles!listings_owner_id_fkey (
+              owner:profiles!listings_owner_id_profiles_id_fk (
                 id,
                 full_name,
                 bucket_avatar_url
               ),
-              origin:airports!listings_origin_id_fkey (
+              origin:airports!listings_origin_id_airports_id_fk (
                 id,
                 city,
                 name,
                 iata_code
               ),
-              destination:airports!listings_destination_id_fkey (
+              destination:airports!listings_destination_id_airports_id_fk (
                 id,
                 city,
                 name,

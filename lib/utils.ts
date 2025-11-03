@@ -1,90 +1,61 @@
 import { clsx, type ClassValue } from "clsx";
-// import Papa from "papaparse";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// export interface AirportData {
-//   id: number;
-//   name: string;
-//   city: string | null;
-//   country: string | null;
-//   iataCode: string | null;
-//   icaoCode: string | null;
-//   latitude: number | null;
-//   longitude: number | null;
-//   elevationFt: number | null;
-//   timezoneOffset: number | null;
-//   dst: string | null;
-//   timezone: string | null;
-//   type: string | null;
-//   source: string | null;
-// }
 
-// export async function fetchAirportData(): Promise<string> {
+export function formatRelative(value: string) {
+  const target = new Date(value).getTime();
+  const diff = target - Date.now();
+  const days = Math.round(diff / (1000 * 60 * 60 * 24));
 
-//   console.log("Fetching airport data from OpenFlights...");
-//   const response = await fetch(
-//     "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-//   );
-//   if (!response.ok) {
-//     throw new Error(`Failed to fetch data: ${response.statusText}`);
-//   }
-//   return await response.text();
-// }
+  if (days < -1) {
+    return `${Math.abs(days)} days ago`;
+  }
+  if (days === -1) {
+    return 'Yesterday';
+  }
+  if (days === 0) {
+    return 'Today';
+  }
+  if (days === 1) {
+    return 'In 1 day';
+  }
+  return `In ${days} days`;
+}
 
-// export function parseAirportData(csvData: string): AirportData[] {
-//   console.log("Parsing airport data...");
-  
-//   const parsed = Papa.parse<string[]>(csvData, {
-//     header: false,
-//     skipEmptyLines: true,
-//     transform: (value: string) => {
-//       if (value === String.raw`\N` || value === '' || value === 'null') {
-//         return null;
-//       }
-//       return value;
-//     }
-//   });
+export function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
-//   return parsed.data
-//     .filter((row: string[]) => {
-//       const country = row[3];
-//       const iataCode = row[4]
-//       const timeZone = row[11]
-//       // Early filtering BEFORE parsing - more efficient
-//       return (country === "Ghana" || country === "United States")  && iataCode !== null && timeZone !== null;
-//     })
-//     .map((row: string[]) => {
-//       const parseFloatNum = (val: string | null): number | null => {
-//         if (!val || val === String.raw`\N`) return null;
-//         const num = Number(val);
-//         return Number.isNaN(num) ? null : num;
-//       };
+export function getInitials(value: string) {
+  const parts = value
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
-//       const parseIntNum = (val: string | null): number | null => {
-//         if (!val || val === String.raw`\N`) return null;
-//         const num = Number(val);
-//         return Number.isNaN(num) ? null : Math.floor(num);
-//       };
+  if (parts.length === 0) {
+    return '??';
+  }
 
-//       return {
-//         id: parseIntNum(row[0]) || 0,
-//         name: row[1] || 'Unknown Airport',
-//         city: row[2] || null,
-//         country: row[3] || null,
-//         iataCode: row[4] || null,
-//         icaoCode: row[5] || null,
-//         latitude: parseFloatNum(row[6]),
-//         longitude: parseFloatNum(row[7]),
-//         elevationFt: parseIntNum(row[8]),
-//         timezoneOffset: parseIntNum(row[9]),
-//         dst: row[10] || null,
-//         timezone: row[11] || null,
-//         type: row[12] || null,
-//         source: row[13] || null,
-//       };
-//     });
-// }
+  if (parts.length === 1) {
+    const [first] = parts;
+    if (!first) {
+      return '??';
+    }
+    const firstChar = first.charAt(0);
+    const secondChar = first.charAt(1) || firstChar;
+    return `${firstChar}${secondChar}`.toUpperCase();
+  }
+
+  const firstInitial = parts[0].charAt(0);
+  const secondInitial = parts[1].charAt(0) || parts[0].charAt(1) || firstInitial;
+  const initials = `${firstInitial}${secondInitial}`.toUpperCase();
+
+  return initials || '??';
+}
