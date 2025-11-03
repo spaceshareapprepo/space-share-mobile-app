@@ -1,15 +1,13 @@
-import { desc, eq, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import * as schema from "@/lib/storage/schema.drizzle";
+import { supabase } from '@/lib/supabase';
+import { config } from 'dotenv';
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL env var is required to run Supabase setup.");
+  throw new Error("DATABASE_URL is not set!");
 }
 
 const pool = new Pool({
@@ -22,36 +20,43 @@ const pool = new Pool({
 
 export const db = drizzle({ client: pool});
 
-// Create aliases for the airports table to join twice
-const originAirport = alias(schema.airports, "origin_airport");
-const destinationAirport = alias(schema.airports, "destination_airport");
-
 export async function fetchListings() {
   try {
-    const data = await db
-      .select({
-        id: schema.listings.id,
-        title: schema.listings.title,
-        origin: originAirport.city,
-        destination: destinationAirport.city,
-        flightDate: schema.listings.flightDate,
-        maxWeightKg: schema.listings.maxWeightKg,
-        pricePerUnit: schema.listings.pricePerUnit,
-        photos: schema.listings.photos,
-        isVerified: schema.listings.isVerified,
-        ownerId: schema.profiles.id,
-        ownerName: sql<string>`(${schema.profiles.fullName})`,
-        ownerImage: sql<string>`(${schema.profiles.bucketAvatarUrl})`,
-      })
-      .from(schema.listings)
-      .leftJoin(schema.profiles, eq(schema.profiles.id, schema.listings.ownerId))
-      .leftJoin(originAirport, eq(originAirport.id, schema.listings.origin))
-      .leftJoin(
-        destinationAirport,
-        eq(destinationAirport.id, schema.listings.destination)
-      )
-      .orderBy(desc(schema.listings.createdAt))
-      .limit(12);
+    const { data, error } = await supabase
+            .from('listings')
+            .select(`
+              id,
+              title,
+              description,
+              type_of_listing,
+              status_code,
+              shipment_code,
+              flight_date,
+              max_weight_kg,
+              price_per_unit,
+              currency_code,
+              photos,
+              is_verified,
+              created_at,
+              owner:profiles!listings_owner_id_fkey (
+                id,
+                full_name,
+                bucket_avatar_url
+              ),
+              origin:airports!listings_origin_id_fkey (
+                id,
+                city,
+                name,
+                iata_code
+              ),
+              destination:airports!listings_destination_id_fkey (
+                id,
+                city,
+                name,
+                iata_code
+              )
+            `)
+            .order('created_at', { ascending: false });
 
     return data;
   } catch (err) {

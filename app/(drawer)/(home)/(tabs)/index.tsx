@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { shipmentRequests, travellerListings } from '@/constants/mock-data';
+import type { ShipmentRequest, TravellerListing } from '@/constants/mock-data';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { supabase } from '@/lib/supabase';
+
 
 type SegmentKey = 'routes' | 'items';
 
@@ -29,6 +31,11 @@ const quickFilters: QuickFilter[] = [
 ];
 
 export default function SearchScreen() {
+  const [travelListings, setTravelListings] = useState<TravellerListing[]>([]);
+  const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const tintColor = useThemeColor({}, 'tint');
   const borderColor = useThemeColor(
     { light: '#D6E1FB', dark: '#2A3045' },
@@ -42,30 +49,109 @@ export default function SearchScreen() {
   const [segment, setSegment] = useState<SegmentKey>('routes');
   const [query, setQuery] = useState('');
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadListings = async () => {
+      setIsFetching(true);
+      setFetchError(null);
+
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          id,
+          title,
+          description,
+          type_of_listing,
+          status_code,
+          shipment_code,
+          flight_date,
+          max_weight_kg,
+          price_per_unit,
+          currency_code,
+          photos,
+          is_verified,
+          created_at,
+          owner:profiles!listings_owner_id_fkey (
+            id,
+            full_name,
+            bucket_avatar_url
+          ),
+          origin:airports!listings_origin_id_fkey (
+            id,
+            city,
+            name,
+            iata_code
+          ),
+          destination:airports!listings_destination_id_fkey (
+            id,
+            city,
+            name,
+            iata_code
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (error) {
+        console.error('Failed to fetch listings', error);
+        setFetchError('Unable to load listings right now. Please try again soon.');
+        setTravelListings([]);
+        setShipmentListings([]);
+      } else if (data) {
+        console.log(data);
+        const rows = (data as unknown) ?? [];
+
+        const travel = rows
+          .filter((row) => row.type_of_listing === 'travel')
+          .map(mapToTravellerListing);
+
+        const shipments = rows
+          .filter((row) => row.type_of_listing === 'shipment')
+          .map(mapToShipmentRequest);
+
+        setTravelListings(travel);
+        setShipmentListings(shipments);
+      }
+
+      setIsFetching(false);
+    };
+
+    void loadListings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const sortedTravellers = useMemo(
     () =>
-      [...travellerListings].sort(
+      [...travelListings].sort(
         (a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()
       ),
-    []
+    [travelListings]
   );
 
   const sortedShipments = useMemo(
     () =>
-      [...shipmentRequests].sort(
+      [...shipmentListings].sort(
         (a, b) => new Date(a.readyBy).getTime() - new Date(b.readyBy).getTime()
       ),
-    []
+    [shipmentListings]
   );
 
   const filteredTravellers = useMemo(() => filterTravellers(sortedTravellers, query), [query, sortedTravellers]);
   const filteredShipments = useMemo(() => filterShipments(sortedShipments, query), [query, sortedShipments]);
 
   const results = segment === 'routes' ? filteredTravellers : filteredShipments;
-  const emptyMessage =
+  const defaultEmptyMessage =
     segment === 'routes'
       ? 'No routes match this search yet. Try another airport code or departure date.'
       : 'No shipment posts match. Adjust item keywords or budget.';
+  const emptyMessage = fetchError ?? defaultEmptyMessage;
 
   return (
     <ParallaxScrollView
@@ -155,7 +241,12 @@ export default function SearchScreen() {
         </View>
 
         <View style={styles.resultsList}>
-          {results.length === 0 ? (
+          {isFetching ? (
+            <View style={styles.loadingState}>
+              <ActivityIndicator size="small" color={tintColor} />
+              <ThemedText style={styles.loadingText}>Loading listings...</ThemedText>
+            </View>
+          ) : results.length === 0 ? (
             <ThemedView style={[styles.emptyState, { borderColor }]}>
               <IconSymbol name="magnifyingglass" size={24} color={tintColor} />
               <ThemedText style={styles.emptyHeadline}>No matches yet</ThemedText>
@@ -176,7 +267,130 @@ export default function SearchScreen() {
   );
 }
 
-function filterTravellers(list: typeof travellerListings, query: string) {
+type RelatedAirport = {
+  id: string;
+  city: string | null;
+  name: string | null;
+  iata_code: string | null;
+};
+
+type RawListingRow = {
+  id: string;
+  title: string | null;
+  description: string | null;
+  type_of_listing: 'travel' | 'shipment' | null;
+  status_code: string | null;
+  shipment_code: string | null;
+  flight_date: string | null;
+  max_weight_kg: number | null;
+  price_per_unit: number | null;
+  currency_code: string | null;
+  photos: string[] | null;
+  is_verified: boolean | null;
+  created_at: string | null;
+  owner:
+    | {
+        id: string;
+        full_name: string | null;
+        bucket_avatar_url: string | null;
+      }
+    | null;
+  origin: RelatedAirport | null;
+  destination: RelatedAirport | null;
+};
+
+function mapToTravellerListing(row: RawListingRow): TravellerListing {
+  const name = row.owner?.full_name?.trim() || row.title?.trim() || 'Traveller';
+  const departure = row.flight_date ?? row.created_at ?? new Date().toISOString();
+  const capacity = row.max_weight_kg ?? 0;
+
+  return {
+    id: row.id,
+    name,
+    initials: getInitials(name),
+    origin: formatAirport(row.origin),
+    destination: formatAirport(row.destination),
+    departureDate: departure,
+    availableKg: capacity,
+    totalCapacityKg: capacity,
+    pricePerKgUsd: row.price_per_unit ?? 0,
+    status: mapTravelStatus(row.status_code),
+    verification: row.is_verified ? ['ID verified'] : [],
+    experience: row.owner ? 'Trusted community member' : 'New traveller',
+    focus: row.description ?? 'Ready to help move your items safely.',
+  };
+}
+
+function mapToShipmentRequest(row: RawListingRow): ShipmentRequest {
+  const ownerName = row.owner?.full_name?.trim() || 'Anonymous sender';
+  const readyBy = row.flight_date ?? row.created_at ?? new Date().toISOString();
+
+  return {
+    id: row.id,
+    owner: ownerName,
+    initials: getInitials(ownerName),
+    itemName: row.title ?? 'Shipment request',
+    summary: row.description ?? 'Details to be confirmed with the sender.',
+    origin: formatAirport(row.origin),
+    destination: formatAirport(row.destination),
+    readyBy,
+    weightKg: row.max_weight_kg ?? 0,
+    budgetUsd: row.price_per_unit ?? 0,
+    status: mapShipmentStatus(row.shipment_code),
+    handlingNotes:
+      row.shipment_code === 'urgent'
+        ? 'Sender marked this request as urgent. Please coordinate quickly.'
+        : 'Coordinate handling details directly with the sender.',
+  };
+}
+
+function formatAirport(airport: RelatedAirport | null) {
+  if (!airport) {
+    return 'Unknown location';
+  }
+
+  const city = airport.city ?? airport.name ?? 'Unknown location';
+  const code = airport.iata_code ?? '';
+
+  return code ? `${city} (${code})` : city;
+}
+
+function getInitials(value: string) {
+  const parts = value
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return '??';
+  }
+
+  if (parts.length === 1) {
+    const [first] = parts;
+    if (!first) {
+      return '??';
+    }
+    const firstChar = first.charAt(0);
+    const secondChar = first.charAt(1) || firstChar;
+    return `${firstChar}${secondChar}`.toUpperCase();
+  }
+
+  const firstInitial = parts[0].charAt(0);
+  const secondInitial = parts[1].charAt(0) || parts[0].charAt(1) || firstInitial;
+  const initials = `${firstInitial}${secondInitial}`.toUpperCase();
+
+  return initials || '??';
+}
+
+function mapTravelStatus(statusCode: string | null): TravellerListing['status'] {
+  return statusCode === '1' ? 'closingSoon' : 'open';
+}
+
+function mapShipmentStatus(code: string | null): ShipmentRequest['status'] {
+  return code === 'urgent' ? 'urgent' : 'matching';
+}
+
+function filterTravellers(list: TravellerListing[], query: string) {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
     return list;
@@ -187,7 +401,7 @@ function filterTravellers(list: typeof travellerListings, query: string) {
   });
 }
 
-function filterShipments(list: typeof shipmentRequests, query: string) {
+function filterShipments(list: ShipmentRequest[], query: string) {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
     return list;
@@ -203,7 +417,7 @@ function RouteResultCard({
   tintColor,
   borderColor,
 }: Readonly<{
-  listing: (typeof travellerListings)[number];
+  listing: TravellerListing;
   tintColor: string;
   borderColor: string;
 }>) {
@@ -253,7 +467,7 @@ function ShipmentResultCard({
   tintColor,
   borderColor,
 }: Readonly<{
-  shipment: (typeof shipmentRequests)[number];
+  shipment: ShipmentRequest;
   tintColor: string;
   borderColor: string;
 }>) {
@@ -393,6 +607,13 @@ const styles = StyleSheet.create({
   },
   resultsList: {
     gap: 16,
+  },
+  loadingState: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
   },
   resultCard: {
     borderRadius: 22,

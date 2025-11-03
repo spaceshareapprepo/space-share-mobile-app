@@ -4,6 +4,7 @@ import {
   timestamp,
   varchar,
   integer,
+  numeric,
   decimal,
   boolean,
   jsonb,
@@ -65,16 +66,19 @@ export const listings = pgTable("listings", {
     .references(() => profiles.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 180 }).notNull(),
   description: text("description").notNull(),
-  origin: uuid("origin_id")
+  originId: uuid("origin_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
-  destination: uuid("destination_id")
+  originName: text("origin_name"),
+  destinationId: uuid("destination_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
+  distinationName: text("destination_name"),
   flightDate: timestamp("flight_date", { withTimezone: true }).notNull(),
-  maxWeightKg: integer("max_weight_kg").notNull(),
-  pricePerUnit: integer("price_per_unit").notNull(),
-  currencyCode: currencyCodeEnum('currency_code').default('USD').notNull(),
+  maxWeightKg: numeric("max_weight_kg", { precision: 10, scale: 2 }),
+  maxWeightLb: numeric ("max_weight_lb", { precision: 10, scale: 2 }),
+  pricePerUnit: numeric("price_per_unit", { precision: 10, scale: 2 }),
+  currencyCode: currencyCodeEnum('currency_code').default('USD'),
   photos: jsonb("photos").$type<string[]>().default([]).notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
   typeOfListing: typeOfListingEnum('type_of_listing').notNull(),
@@ -152,4 +156,5 @@ export const airports = pgTable("airports", {
   timezone: varchar("timezone", { length: 50 }),
   type: varchar("type", { length: 20 }),
   source: varchar("source", { length: 50 }),
+  label: varchar('label', { length: 225 }).generatedAlwaysAs(sql`COALESCE(city, '') || ' (' || COALESCE(iata_code, '') || ' - ' || COALESCE(name, '') || ')'`)
 });

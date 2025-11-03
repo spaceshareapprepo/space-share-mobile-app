@@ -36,7 +36,7 @@ export async function createRLSPolicies(db: ReturnType<typeof drizzle>) {
   `);
 }
 
-export async function createAuthTriggers(db: ReturnType<typeof drizzle>) {
+export async function createFunctionsAndTriggers(db: ReturnType<typeof drizzle>) {
   console.log('Creating auth triggers...');
   
   // Create function for new users
@@ -104,9 +104,51 @@ export async function createAuthTriggers(db: ReturnType<typeof drizzle>) {
     WHEN (old.* IS DISTINCT FROM new.*)
     EXECUTE PROCEDURE public.handle_updated_user()
   `);
+
+  // Create index for searching by label
+  await db.execute(sql`
+    CREATE INDEX idx_airports_label ON public.airports(label)
+  `);
+
+  //Function to copy airport names
+  await db.execute(sql`
+    CREATE OR REPLACE FUNCTION copy_airport_names()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      -- Get origin airport name
+      SELECT name INTO NEW.origin_name
+      FROM airports
+      WHERE id = NEW.origin_id;
+      
+      -- Get destination airport name
+      SELECT name INTO NEW.destination_name
+      FROM airports
+      WHERE id = NEW.destination_id;
+      
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+  `);
+
+  // Trigger on INSERT
+  await db.execute(sql`
+    CREATE TRIGGER set_airport_names_on_insert
+    BEFORE INSERT ON listings
+    FOR EACH ROW
+    EXECUTE FUNCTION copy_airport_names();
+  `);
+
+  // Trigger on UPDATE (in case origin/destination changes)
+  await db.execute(sql`
+    CREATE TRIGGER set_airport_names_on_update
+    BEFORE UPDATE OF origin_id, destination_id ON listings
+    FOR EACH ROW
+    WHEN (OLD.origin_id IS DISTINCT FROM NEW.origin_id OR OLD.destination_id IS DISTINCT FROM NEW.destination_id)
+    EXECUTE FUNCTION copy_airport_names();
+  `);
 }
 
-export async function setupStorage(db: ReturnType<typeof drizzle>) {
+export async function createPolicies(db: ReturnType<typeof drizzle>) {
   console.log('Setting up storage...');
   
   // Create avatars bucket
@@ -139,8 +181,8 @@ export async function setupSupabaseSchema(db: ReturnType<typeof drizzle>) {
     
     await enableRLS(db);
     await createRLSPolicies(db);
-    await createAuthTriggers(db);
-    await setupStorage(db);
+    await createFunctionsAndTriggers(db);
+    await createPolicies(db);
     
     console.log('✅ Schema setup completed successfully!');
   } catch (error) {
