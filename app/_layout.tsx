@@ -17,8 +17,8 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AuthProvider from "@/providers/auth-provider";
-import { ActivityIndicator } from "react-native";
 import { useEffect } from "react";
+import { ActivityIndicator } from "react-native";
 
 export const unstable_settings = {
   anchor: "(tabs)",

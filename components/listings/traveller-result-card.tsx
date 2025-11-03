@@ -1,9 +1,9 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { formatRelative, formatDate } from '@/lib/utils';
-import { StyleSheet, View } from 'react-native';
+import { IconSymbol, IconSymbolFeather } from '@/components/ui/icon-symbol';
 import type { TravellerListing } from '@/constants/types';
+import { formatDate, formatRelative } from '@/lib/utils';
+import { StyleSheet, View } from 'react-native';
 
 export function RouteResultCard({
   listing,
@@ -37,7 +37,7 @@ export function RouteResultCard({
       <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
       <View style={styles.resultFooter}>
         <View style={styles.resultInfoRow}>
-          <IconSymbol name="cube.box.fill" size={18} color={tintColor} />
+          <IconSymbolFeather name="cube.box" size={18} color={tintColor} />
           <ThemedText style={styles.resultInfoText}>
             {listing.availableKg}kg free of {listing.totalCapacityKg}kg capacity
           </ThemedText>

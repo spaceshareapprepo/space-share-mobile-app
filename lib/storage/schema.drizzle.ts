@@ -1,18 +1,38 @@
+import { config } from 'dotenv';
+import { sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
 import {
+  boolean,
+  decimal,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgSchema,
   pgTable,
   text,
   timestamp,
-  varchar,
-  integer,
-  numeric,
-  decimal,
-  boolean,
-  jsonb,
   uuid,
-  pgSchema,
-  pgEnum,
+  varchar,
 } from "drizzle-orm/pg-core";
-import  { sql } from "drizzle-orm";
+import { Pool } from "pg";
+config({ path: '.env.local' });
+
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set!");
+}
+
+const pool = new Pool({
+  connectionString,
+  ssl:
+    connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
+      ? false
+      : { rejectUnauthorized: false },
+});
+
+export const db = drizzle({ client: pool});
 
 // ============================================
 // SCHEMA DEFINITION
@@ -69,12 +89,10 @@ export const listings = pgTable("listings", {
   originId: uuid("origin_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
-  originName: text("origin_name"),
   destinationId: uuid("destination_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
-  distinationName: text("destination_name"),
-  flightDate: timestamp("flight_date", { withTimezone: true }).notNull(),
+  departureDate: timestamp("departure_date", { withTimezone: true }).notNull(),
   maxWeightKg: numeric("max_weight_kg", { precision: 10, scale: 2 }),
   maxWeightLb: numeric ("max_weight_lb", { precision: 10, scale: 2 }),
   pricePerUnit: numeric("price_per_unit", { precision: 10, scale: 2 }),

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ShipmentResultCard } from '@/components/listings/shipment-result-card';
@@ -9,18 +9,13 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { ShipmentRequest, TravellerListing } from '@/constants/mock-data';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { supabase } from '@/lib/supabase';
-import { getInitials } from "@/lib/utils";
 
-import type { RawListingRow, RelatedAirport } from "@/constants/types";
-
-type SegmentKey = 'routes' | 'items';
-
-type QuickFilter = {
-  label: string;
-  value: string;
-  segment: SegmentKey;
-};
+import type { 
+  SegmentKey,
+  QuickFilter, 
+  ListingsResponse,
+  SearchSegment
+} from "@/constants/types";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: 'routes', label: 'Travellers' },
@@ -28,17 +23,42 @@ const segments: { key: SegmentKey; label: string }[] = [
 ];
 
 const quickFilters: QuickFilter[] = [
-  { label: 'JFK → ACC departures', value: 'JFK ACC', segment: 'routes' },
+  { label: 'JFK → ACC departures', value: 'JFK', segment: 'routes' },
   { label: 'Urgent medical', value: 'medication', segment: 'items' },
-  { label: 'Atlanta arrivals', value: 'Atlanta', segment: 'routes' },
+  { label: 'Atlanta arrivals', value: 'ATL', segment: 'routes' },
   { label: 'Fashion samples', value: 'fashion', segment: 'items' },
 ];
+
+async function fetchListingsData(
+  searchTerm: string,
+  segment: SearchSegment = 'all'
+): Promise<ListingsResponse> {
+  const params = new URLSearchParams();
+  const trimmed = searchTerm.trim();
+
+  if (trimmed.length > 0) {
+    params.set('q', trimmed);
+  }
+
+  params.set('segment', segment);
+
+  const response = await fetch(`/search?${params.toString()}`);
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to load listings');
+  }
+
+  return (await response.json()) as ListingsResponse;
+}
 
 export default function SearchScreen() {
   const [travelListings, setTravelListings] = useState<TravellerListing[]>([]);
   const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>([]);
-  const [isFetching, setIsFetching] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [appliedQuery, setAppliedQuery] = useState('');
 
   const tintColor = useThemeColor({}, 'tint');
   const borderColor = useThemeColor(
@@ -53,83 +73,31 @@ export default function SearchScreen() {
   const [segment, setSegment] = useState<SegmentKey>('routes');
   const [query, setQuery] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
+  const performSearch = useCallback(
+    async (searchTerm?: string, segmentOverride: SearchSegment = 'all') => {
+      const term = (searchTerm ?? query).trim();
 
-    const loadListings = async () => {
       setIsFetching(true);
       setFetchError(null);
+      setAppliedQuery(term);
 
-      const { data, error } = await supabase
-        .from('listings')
-        .select(`
-          id,
-          title,
-          description,
-          type_of_listing,
-          status_code,
-          shipment_code,
-          flight_date,
-          max_weight_kg,
-          price_per_unit,
-          currency_code,
-          photos,
-          is_verified,
-          created_at,
-          owner:profiles!listings_owner_id_profiles_id_fk (
-            id,
-            full_name,
-            bucket_avatar_url
-          ),
-          origin:airports!listings_origin_id_airports_id_fk (
-            id,
-            city,
-            name,
-            iata_code
-          ),
-          destination:airports!listings_destination_id_airports_id_fk (
-            id,
-            city,
-            name,
-            iata_code
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (error) {
-        console.error('Failed to fetch listings', error);
-        setFetchError('Unable to load listings right now. Please try again soon.');
+      try {
+        const response = await fetchListingsData(term, segmentOverride);
+        setTravelListings(response.travellers ?? []);
+        setShipmentListings(response.shipments ?? []);
+        setHasSearched(true);
+      } catch (error) {
+        console.error('Failed to search listings:', error);
         setTravelListings([]);
         setShipmentListings([]);
-      } else if (data) {
-        console.log(data);
-        const rows = (data as unknown as RawListingRow[]) ?? [];
-
-        const travel = rows
-          .filter((row) => row.type_of_listing === 'travel')
-          .map(mapToTravellerListing);
-
-        const shipments = rows
-          .filter((row) => row.type_of_listing === 'shipment')
-          .map(mapToShipmentRequest);
-
-        setTravelListings(travel);
-        setShipmentListings(shipments);
+        setFetchError('Unable to load listings right now. Please try again soon.');
+        setHasSearched(true);
+      } finally {
+        setIsFetching(false);
       }
-
-      setIsFetching(false);
-    };
-
-    void loadListings();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    },
+    [query]
+  );
 
   const sortedTravellers = useMemo(
     () =>
@@ -147,15 +115,50 @@ export default function SearchScreen() {
     [shipmentListings]
   );
 
-  const filteredTravellers = useMemo(() => filterTravellers(sortedTravellers, query), [query, sortedTravellers]);
-  const filteredShipments = useMemo(() => filterShipments(sortedShipments, query), [query, sortedShipments]);
+  const filteredTravellers = useMemo(() => filterTravellers(sortedTravellers, appliedQuery), [query, sortedTravellers]);
+  const filteredShipments = useMemo(() => filterShipments(sortedShipments, appliedQuery), [query, sortedShipments]);
 
   const results = segment === 'routes' ? filteredTravellers : filteredShipments;
   const defaultEmptyMessage =
     segment === 'routes'
-      ? 'No routes match this search yet. Try another airport code or departure date.'
-      : 'No shipment posts match. Adjust item keywords or budget.';
+      ? appliedQuery
+        ? `No travellers match “${appliedQuery}”. Try another airport code, name, or date.`
+        : 'No traveller listings yet. Try a different search.'
+      : appliedQuery
+        ? `No shipments match “${appliedQuery}”. Adjust the item keywords or origin.`
+        : 'No shipment requests yet. Try searching with another filter.';
   const emptyMessage = fetchError ?? defaultEmptyMessage;
+
+  const renderResults = () => {
+    if (isFetching) {
+      return (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="small" color={tintColor} />
+          <ThemedText style={styles.loadingText}>Loading listings...</ThemedText>
+        </View>
+      );
+    }
+
+    if (results.length === 0) {
+      return (
+        <ThemedView style={[styles.emptyState, { borderColor }]}>
+          <IconSymbol name="magnifyingglass" size={24} color={tintColor} />
+          <ThemedText style={styles.emptyHeadline}>No matches yet</ThemedText>
+          <ThemedText style={styles.emptyBody}>{emptyMessage}</ThemedText>
+        </ThemedView>
+      );
+    }
+
+    if (segment === 'routes') {
+      return results.map((listing) => (
+        <RouteResultCard key={listing.id} listing={listing} tintColor={tintColor} borderColor={borderColor} />
+      ));
+    }
+
+    return results.map((shipment) => (
+      <ShipmentResultCard key={shipment.id} shipment={shipment} tintColor={tintColor} borderColor={borderColor} />
+    ));
+  };
 
   return (
     <ParallaxScrollView
@@ -181,25 +184,29 @@ export default function SearchScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
+              onSubmitEditing={() => void performSearch()}
+              returnKeyType="search"
               placeholder="Search airport, city, traveller, or item"
               placeholderTextColor="#94A3B8"
               style={styles.searchInput}
               accessibilityLabel="Search routes and shipments"
+              submitBehavior="blurAndSubmit"
             />
             {query.length > 0 && (
-              <Pressable onPress={() => setQuery('')}>
+              <Pressable onPress={() => void performSearch()}>
                 <ThemedText style={[styles.clearText, { color: tintColor }]}>Clear</ThemedText>
               </Pressable>
             )}
           </View>
 
-          <View style={styles.quickFilters}>
+          <View style={[styles.quickFilters]}>
             {quickFilters.map((filter) => (
               <Pressable
                 key={filter.label}
                 onPress={() => {
                   setSegment(filter.segment);
                   setQuery(filter.value);
+                  void performSearch(filter.value, filter.segment);
                 }}
                 style={[styles.filterChip, { backgroundColor: `${tintColor}15` }]}>
                 <ThemedText style={[styles.filterChipText, { color: tintColor }]}>
@@ -210,7 +217,7 @@ export default function SearchScreen() {
           </View>
         </ThemedView>
 
-        <View style={styles.segmentRow}>
+        <View style={[styles.segmentedControl, { borderColor }]}>
           {segments.map((item) => {
             const isActive = item.key === segment;
             return (
@@ -219,8 +226,7 @@ export default function SearchScreen() {
                 onPress={() => setSegment(item.key)}
                 style={[
                   styles.segmentButton,
-                  { borderColor },
-                  isActive && { backgroundColor: tintColor, borderColor: tintColor },
+                  isActive && { backgroundColor: tintColor },
                 ]}>
                 <ThemedText
                   style={[
@@ -244,95 +250,10 @@ export default function SearchScreen() {
           </ThemedText>
         </View>
 
-        <View style={styles.resultsList}>
-          {isFetching ? (
-            <View style={styles.loadingState}>
-              <ActivityIndicator size="small" color={tintColor} />
-              <ThemedText style={styles.loadingText}>Loading listings...</ThemedText>
-            </View>
-          ) : results.length === 0 ? (
-            <ThemedView style={[styles.emptyState, { borderColor }]}>
-              <IconSymbol name="magnifyingglass" size={24} color={tintColor} />
-              <ThemedText style={styles.emptyHeadline}>No matches yet</ThemedText>
-              <ThemedText style={styles.emptyBody}>{emptyMessage}</ThemedText>
-            </ThemedView>
-          ) : segment === 'routes' ? (
-            results.map((listing) => (
-              <RouteResultCard key={listing.id} listing={listing} tintColor={tintColor} borderColor={borderColor} />
-            ))
-          ) : (
-            results.map((shipment) => (
-              <ShipmentResultCard key={shipment.id} shipment={shipment} tintColor={tintColor} borderColor={borderColor} />
-            ))
-          )}
-        </View>
+        <View style={styles.resultsList}>{renderResults()}</View>
       </ThemedView>
     </ParallaxScrollView>
   );
-}
-
-function mapToTravellerListing(row: RawListingRow): TravellerListing {
-  const name = row.owner?.full_name?.trim() || row.title?.trim() || 'Traveller';
-  const departure = row.flight_date ?? row.created_at ?? new Date().toISOString();
-  const capacity = row.max_weight_kg ?? 0;
-
-  return {
-    id: row.id,
-    name,
-    initials: getInitials(name),
-    origin: formatAirport(row.origin),
-    destination: formatAirport(row.destination),
-    departureDate: departure,
-    availableKg: capacity,
-    totalCapacityKg: capacity,
-    pricePerKgUsd: row.price_per_unit ?? 0,
-    status: mapTravelStatus(row.status_code),
-    verification: row.is_verified ? ['ID verified'] : [],
-    experience: row.owner ? 'Trusted community member' : 'New traveller',
-    focus: row.description ?? 'Ready to help move your items safely.',
-  };
-}
-
-function mapToShipmentRequest(row: RawListingRow): ShipmentRequest {
-  const ownerName = row.owner?.full_name?.trim() || 'Anonymous sender';
-  const readyBy = row.flight_date ?? row.created_at ?? new Date().toISOString();
-
-  return {
-    id: row.id,
-    owner: ownerName,
-    initials: getInitials(ownerName),
-    itemName: row.title ?? 'Shipment request',
-    summary: row.description ?? 'Details to be confirmed with the sender.',
-    origin: formatAirport(row.origin),
-    destination: formatAirport(row.destination),
-    readyBy,
-    weightKg: row.max_weight_kg ?? 0,
-    budgetUsd: row.price_per_unit ?? 0,
-    status: mapShipmentStatus(row.shipment_code),
-    handlingNotes:
-      row.shipment_code === 'urgent'
-        ? 'Sender marked this request as urgent. Please coordinate quickly.'
-        : 'Coordinate handling details directly with the sender.',
-  };
-}
-
-function formatAirport(airport: RelatedAirport | null) {
-  if (!airport) {
-    return 'Unknown location';
-  }
-
-  const city = airport.city ?? airport.name ?? 'Unknown location';
-  const code = airport.iata_code ?? '';
-
-  return code ? `${city} (${code})` : city;
-}
-
-function mapTravelStatus(statusCode: string | null): TravellerListing['status'] {
-  return statusCode === '1' ? 'closingSoon' : 'open';
-}
-
-function mapShipmentStatus(code: string | null): ShipmentRequest['status'] {
-  return code === 'urgent' ? 'urgent' : 'matching';
 }
 
 function filterTravellers(list: TravellerListing[], query: string) {
@@ -408,16 +329,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  segmentRow: {
+  segmentedControl: {
+    borderWidth: 1,
+    borderRadius: 999,
     flexDirection: 'row',
-    gap: 10,
+    gap: 4,
+    padding: 4,
   },
   segmentButton: {
     flex: 1,
     borderRadius: 999,
-    borderWidth: 1,
     paddingVertical: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentLabel: {
     fontWeight: '600',

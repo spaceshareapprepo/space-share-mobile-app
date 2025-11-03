@@ -1,66 +1,86 @@
 import { supabase } from '@/lib/supabase';
-import { config } from 'dotenv';
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-config({ path: '.env.local' });
-
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not set!");
-}
-
-const pool = new Pool({
-  connectionString,
-  ssl:
-    connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
-      ? false
-      : { rejectUnauthorized: false },
-});
-
-export const db = drizzle({ client: pool});
+import type { ListingType, SupabaseListingRow } from '@/constants/types';
+import { SELECT_COLUMNS_LISTINGS } from '@/constants/db';
 
 export async function fetchListings() {
   try {
     const { data, error } = await supabase
-            .from('listings')
-            .select(`
-              id,
-              title,
-              description,
-              type_of_listing,
-              status_code,
-              shipment_code,
-              flight_date,
-              max_weight_kg,
-              price_per_unit,
-              currency_code,
-              photos,
-              is_verified,
-              created_at,
-              owner:profiles!listings_owner_id_profiles_id_fk (
-                id,
-                full_name,
-                bucket_avatar_url
-              ),
-              origin:airports!listings_origin_id_airports_id_fk (
-                id,
-                city,
-                name,
-                iata_code
-              ),
-              destination:airports!listings_destination_id_airports_id_fk (
-                id,
-                city,
-                name,
-                iata_code
-              )
-            `)
-            .order('created_at', { ascending: false });
+      .from('listings')
+      .select(SELECT_COLUMNS_LISTINGS)
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-    return data;
+    if (error) {
+      throw error;
+    }
+
+    return { data: data ?? [], error: null };
   } catch (err) {
-    console.error(`Database Error: ${err}`);
-    throw new Error("Failed to fetch all listings data.");
+    console.error('Failed to fetch listings:', err);
+    return { data: [], error: err as Error };
+  }
+}
+
+export async function fetchListingsQuery({ 
+  query, 
+  typeFilter 
+}: {
+  query: string | null;
+  typeFilter: ListingType | null;
+}) {
+  try {
+    let supabaseQuery = supabase
+      .from('listings')
+      .select(SELECT_COLUMNS_LISTINGS)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (query) {
+      const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
+      supabaseQuery = supabaseQuery.or(
+        `title.ilike.${searchPattern},description.ilike.${searchPattern}`
+      );
+    }
+
+    if (typeFilter) {
+      supabaseQuery = supabaseQuery.eq('type_of_listing', typeFilter);
+    }
+
+    const { data, error } = await supabaseQuery.overrideTypes<
+      SupabaseListingRow[],
+      { merge: false }
+    >();
+
+    if (error) {
+      throw error;
+    }
+
+    const listingData = data ?? [];
+
+    if (!query) {
+      return { data: listingData, error: null };
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const filteredData = listingData.filter((listing) => {
+      const matchesListing =
+        listing?.title?.toLowerCase().includes(lowerQuery) ||
+        listing?.description?.toLowerCase().includes(lowerQuery);
+
+      const matchesOrigin =
+        listing?.origin?.city?.toLowerCase().includes(lowerQuery) ||
+        listing?.origin?.name?.toLowerCase().includes(lowerQuery);
+
+      const matchesDestination =
+        listing.destination?.city?.toLowerCase().includes(lowerQuery) ||
+        listing.destination?.name?.toLowerCase().includes(lowerQuery);
+
+      return matchesListing || matchesOrigin || matchesDestination;
+    });
+
+    return { data: filteredData, error: null };
+  } catch (err) {
+    console.error('Failed to fetch listings:', err);
+    return { data: [], error: err as Error };
   }
 }
