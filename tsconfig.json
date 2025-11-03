@@ -1,9 +1,6 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "jsx": "react-native",
-    "module": "ESNext",
-    "target": "ES2022",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "paths": {

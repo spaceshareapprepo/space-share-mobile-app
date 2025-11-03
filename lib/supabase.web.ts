@@ -21,7 +21,7 @@ export const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_KEY ?? '',
   {
     auth: {
-      ...(Platform.OS !== "web" ? { storage: ExpoWebSecureStoreAdapter as any } : {}),
+      ...(Platform.OS === "web" ? {} : { storage: ExpoWebSecureStoreAdapter as any }),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

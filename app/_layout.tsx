@@ -63,7 +63,8 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(auth)/sign-in" />
+        <Stack.Screen name="(auth)/sign-up" />
       </Stack.Protected>
       <Stack.Screen name="+not-found" />
     </Stack>
