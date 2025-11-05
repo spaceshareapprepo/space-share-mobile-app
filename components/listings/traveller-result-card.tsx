@@ -3,7 +3,8 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol, IconSymbolFeather } from '@/components/ui/icon-symbol';
 import type { TravellerListing } from '@/constants/types';
 import { formatDate, formatRelative } from '@/lib/utils';
-import { StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 export function RouteResultCard({
   listing,
@@ -16,41 +17,72 @@ export function RouteResultCard({
 }>) {
   return (
     <ThemedView style={[styles.resultCard, { borderColor }]}>
-      <View style={styles.resultHeader}>
-        <View style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}>
-          <IconSymbol name="airplane.circle.fill" size={20} color={tintColor} />
+      <Pressable
+        key={listing.id}
+        onPress={() => {
+          router.navigate({
+            pathname: "./listings/[id]",
+            params: {
+              id: listing.id,
+            },
+          });
+        }}
+      >
+        <View style={styles.resultHeader}>
+          <View
+            style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}
+          >
+            <IconSymbol
+              name="airplane.circle.fill"
+              size={20}
+              color={tintColor}
+            />
+          </View>
+          <View style={styles.resultHeaderText}>
+            <ThemedText type="subtitle">
+              {listing.origin} → {listing.destination}
+            </ThemedText>
+            <ThemedText style={styles.resultMetaText}>
+              Departs {formatDate(listing.departureDate)} ·{" "}
+              {formatRelative(listing.departureDate)}
+            </ThemedText>
+          </View>
+          <View
+            style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
+          >
+            <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
+              ${listing.pricePerKgUsd}/kg
+            </ThemedText>
+          </View>
         </View>
-        <View style={styles.resultHeaderText}>
-          <ThemedText type="subtitle">
-            {listing.origin} → {listing.destination}
-          </ThemedText>
-          <ThemedText style={styles.resultMetaText}>
-            Departs {formatDate(listing.departureDate)} · {formatRelative(listing.departureDate)}
-          </ThemedText>
+        <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
+        <View style={styles.resultFooter}>
+          <View style={styles.resultInfoRow}>
+            <IconSymbolFeather name="cube.box" size={18} color={tintColor} />
+            <ThemedText style={styles.resultInfoText}>
+              {listing.availableKg}kg free of {listing.totalCapacityKg}kg
+              capacity
+            </ThemedText>
+          </View>
+          <View style={styles.badgeRow}>
+            {listing.verification.slice(0, 2).map((badge) => (
+              <View
+                key={badge}
+                style={[styles.badge, { backgroundColor: `${tintColor}12` }]}
+              >
+                <IconSymbol
+                  name="checkmark.seal.fill"
+                  size={14}
+                  color={tintColor}
+                />
+                <ThemedText style={[styles.badgeText, { color: tintColor }]}>
+                  {badge}
+                </ThemedText>
+              </View>
+            ))}
+          </View>
         </View>
-        <View style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}>
-          <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-            ${listing.pricePerKgUsd}/kg
-          </ThemedText>
-        </View>
-      </View>
-      <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
-      <View style={styles.resultFooter}>
-        <View style={styles.resultInfoRow}>
-          <IconSymbolFeather name="cube.box" size={18} color={tintColor} />
-          <ThemedText style={styles.resultInfoText}>
-            {listing.availableKg}kg free of {listing.totalCapacityKg}kg capacity
-          </ThemedText>
-        </View>
-        <View style={styles.badgeRow}>
-          {listing.verification.slice(0, 2).map((badge) => (
-            <View key={badge} style={[styles.badge, { backgroundColor: `${tintColor}12` }]}>
-              <IconSymbol name="checkmark.seal.fill" size={14} color={tintColor} />
-              <ThemedText style={[styles.badgeText, { color: tintColor }]}>{badge}</ThemedText>
-            </View>
-          ))}
-        </View>
-      </View>
+      </Pressable>
     </ThemedView>
   );
 }
