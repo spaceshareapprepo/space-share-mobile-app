@@ -2,18 +2,18 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
-import ParallaxScrollView from "@/src/components/parallax-scroll-view";
-import { ThemedText } from "@/src/components/themed-text";
-import { ThemedView } from "@/src/components/themed-view";
-import { IconSymbol } from "@/src/components/ui/icon-symbol";
-import { shipmentRequests, travellerListings } from "@/src/constants/mock-data";
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { shipmentRequests, travellerListings } from "@/constants/mock-data";
 import type {
   SegmentKey,
   ShipmentRequest,
   TravellerListing,
-} from "@/src/constants/types";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
-import { formatDate, formatRelative } from "@/src/lib/utils";
+} from "@/constants/types";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { formatDate, formatRelative } from "@/lib/utils";
 
 type ListingMatch =
   | { type: "traveller"; data: TravellerListing }

@@ -1,14 +1,14 @@
 import { StyleSheet, View } from 'react-native';
 
-import ParallaxScrollView from '@/src/components/parallax-scroll-view';
-import { ThemedText } from '@/src/components/themed-text';
-import { ThemedView } from '@/src/components/themed-view';
-import { IconSymbol } from '@/src/components/ui/icon-symbol';
-import { shipmentRequests, travellerListings } from '@/src/constants/mock-data';
-import { useThemeColor } from '@/src/hooks/use-theme-color';
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { shipmentRequests, travellerListings } from '@/constants/mock-data';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
-import { useAuthContext } from "@/src/hooks/use-auth-context";
-import { supabase } from "@/src/lib/supabase";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 
@@ -17,7 +17,7 @@ import {
   AvatarBadge,
   AvatarFallbackText,
   AvatarImage,
-} from '@/src/components/ui/avatar';
+} from '@/components/ui/avatar';
 
 const verifiedBadges = [
   'Government ID uploaded',

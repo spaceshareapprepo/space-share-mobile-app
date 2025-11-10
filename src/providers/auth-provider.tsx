@@ -1,5 +1,5 @@
-import { AuthContext } from "@/src/hooks/use-auth-context";
-import { supabase } from "@/src/lib/supabase";
+import { AuthContext } from "@/hooks/use-auth-context";
+import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 

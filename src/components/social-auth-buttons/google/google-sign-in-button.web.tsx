@@ -1,4 +1,4 @@
-import { supabase } from "@/src/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import type { GoogleLoginProps } from "@react-oauth/google";
 import {
   CredentialResponse,

@@ -9,14 +9,14 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
-import "./global.css";
+import "../../global.css";
 
-import { SplashScreenController } from "@/src/components/splash-screen-controller";
+import { SplashScreenController } from "@/components/splash-screen-controller";
 
-import { GluestackUIProvider } from "@/src/components/ui/gluestack-ui-provider";
-import { useAuthContext } from "@/src/hooks/use-auth-context";
-import { useColorScheme } from "@/src/hooks/use-color-scheme";
-import AuthProvider from "@/src/providers/auth-provider";
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import AuthProvider from "@/providers/auth-provider";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 
@@ -43,7 +43,7 @@ function RootNavigator() {
     }
 
     if (isLoggedIn && (inAuthGroup || isOnGoogleAuth)) {
-      router.replace("/search");
+      router.replace("/");
     }
   }, [isLoggedIn, session, segments, router]);
 
@@ -76,7 +76,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    SpaceMono: require("../../assets/fonts/SpaceMono-Regular.ttf"),
   });
   if (!loaded) {
     // Async font loading only occurs in development.

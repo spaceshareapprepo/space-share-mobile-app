@@ -1,4 +1,4 @@
-import { useAuthContext } from "@/src/hooks/use-auth-context";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef } from "react";

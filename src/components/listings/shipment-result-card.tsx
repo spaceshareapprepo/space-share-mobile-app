@@ -1,8 +1,8 @@
-import { ThemedText } from '@/src/components/themed-text';
-import { ThemedView } from '@/src/components/themed-view';
-import { IconSymbol } from '@/src/components/ui/icon-symbol';
-import type { ShipmentRequest } from '@/src/constants/types';
-import { formatRelative } from '@/src/lib/utils';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import type { ShipmentRequest } from '@/constants/types';
+import { formatRelative } from '@/lib/utils';
 import { StyleSheet, View } from 'react-native';
 
 export function ShipmentResultCard({

@@ -1,8 +1,8 @@
-import { ThemedText } from '@/src/components/themed-text';
-import { ThemedView } from '@/src/components/themed-view';
-import { IconSymbol, IconSymbolFeather } from '@/src/components/ui/icon-symbol';
-import type { TravellerListing } from '@/src/constants/types';
-import { formatDate, formatRelative } from '@/src/lib/utils';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { IconSymbol, IconSymbolFeather } from '@/components/ui/icon-symbol';
+import type { TravellerListing } from '@/constants/types';
+import { formatDate, formatRelative } from '@/lib/utils';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 

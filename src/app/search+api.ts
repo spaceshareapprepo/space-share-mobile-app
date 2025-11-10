@@ -1,15 +1,15 @@
 
 import type {
   ListingsResponse,
-} from "@/src/constants/types";
-import { fetchListingsQuery } from "@/src/lib/storage/db";
+} from "@/constants/types";
+import { fetchListingsQuery } from "@/lib/storage/db";
 import {
   mapToShipmentRequest,
   mapToTravellerListing,
   normaliseSearchTerm,
   normaliseSegment,
   segmentToListingType
-} from "@/src/lib/utils";
+} from "@/lib/utils";
 
 export async function GET(request: Request) {
   const start = Date.now();
@@ -22,10 +22,10 @@ export async function GET(request: Request) {
   try {
     const rows = await fetchListingsQuery({query, typeFilter });
 
-    const travellers = rows.data.filter((row) => row.type_of_listing === "travel")
+    const travellers = rows.data.filter((row: any) => row.type_of_listing === "travel")
       .map(mapToTravellerListing);
 
-    const shipments = rows.data.filter((row) => row.type_of_listing === "shipment")
+    const shipments = rows.data.filter((row: any) => row.type_of_listing === "shipment")
       .map(mapToShipmentRequest);
 
     const duration = Date.now() - start;

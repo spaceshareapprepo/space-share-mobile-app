@@ -1,5 +1,5 @@
-import AuthButton from "@/src/components/auth/auth-button";
-import { Input, InputField } from "@/src/components/ui/input";
+import AuthButton from "@/components/auth/auth-button";
+import { Input, InputField } from "@/components/ui/input";
 import React, { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { supabase } from "../lib/supabase";

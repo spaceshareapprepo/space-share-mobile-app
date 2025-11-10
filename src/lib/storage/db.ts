@@ -1,6 +1,6 @@
-import { SELECT_COLUMNS_LISTINGS } from '@/src/constants/db';
-import type { ListingType, SupabaseListingRow } from '@/src/constants/types';
-import { supabase } from '@/src/lib/supabase';
+import { SELECT_COLUMNS_LISTINGS } from '@/constants/db';
+import type { ListingType, SupabaseListingRow } from '@/constants/types';
+import { supabase } from '@/lib/supabase';
 
 export async function fetchListings() {
   try {

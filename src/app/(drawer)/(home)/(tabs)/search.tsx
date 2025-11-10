@@ -7,21 +7,21 @@ import {
   View,
 } from "react-native";
 
-import { ShipmentResultCard } from "@/src/components/listings/shipment-result-card";
-import { RouteResultCard } from "@/src/components/listings/traveller-result-card";
-import ParallaxScrollView from "@/src/components/parallax-scroll-view";
-import { ThemedText } from "@/src/components/themed-text";
-import { ThemedView } from "@/src/components/themed-view";
-import { IconSymbol } from "@/src/components/ui/icon-symbol";
-import type { ShipmentRequest, TravellerListing } from "@/src/constants/mock-data";
-import { useThemeColor } from "@/src/hooks/use-theme-color";
+import { ShipmentResultCard } from "@/components/listings/shipment-result-card";
+import { RouteResultCard } from "@/components/listings/traveller-result-card";
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import type { ShipmentRequest, TravellerListing } from "@/constants/mock-data";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 import type {
   ListingsResponse,
   QuickFilter,
   SearchSegment,
   SegmentKey,
-} from "@/src/constants/types";
+} from "@/constants/types";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },

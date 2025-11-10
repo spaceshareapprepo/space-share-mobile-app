@@ -4,11 +4,11 @@ import type {
   ShipmentRequest,
   SupabaseListingRow,
   TravellerListing
-} from "@/src/constants/types";
+} from "../constants/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
+export const cn = (...inputs: ClassValue[]):string => {
   return twMerge(clsx(inputs))
 }
 

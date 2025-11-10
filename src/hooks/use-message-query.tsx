@@ -1,7 +1,7 @@
 'use client';
 
-import type { ChatMessage } from '@/src/hooks/use-realtime-chat';
-import { supabase } from '@/src/lib/supabase';
+import type { ChatMessage } from '@/hooks/use-realtime-chat';
+import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 
 interface MessagesQueryResult {

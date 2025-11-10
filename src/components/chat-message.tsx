@@ -1,6 +1,6 @@
-import { ThemedView } from '@/src/components/themed-view';
-import type { ChatMessage } from '@/src/hooks/use-realtime-chat';
-import { cn } from '@/src/lib/utils';
+import { ThemedView } from '@/components/themed-view';
+import type { ChatMessage } from '@/hooks/use-realtime-chat';
+import { cn } from '@/lib/utils';
 import { Text } from 'react-native';
 
 interface ChatMessageItemProps {

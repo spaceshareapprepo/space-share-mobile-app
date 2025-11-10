@@ -1,17 +1,17 @@
 'use client'
 
-import { ChatMessageItem } from '@/src/components/chat-message'
-import { ThemedView } from '@/src/components/themed-view'
-import { Button } from '@/src/components/ui/button'
+import { ChatMessageItem } from '@/components/chat-message'
+import { ThemedView } from '@/components/themed-view'
+import { Button } from '@/components/ui/button'
 import {
   FormControl,
-} from '@/src/components/ui/form-control'
-import { Input, InputField } from '@/src/components/ui/input'
-import { useChatScroll } from '@/src/hooks/use-chat-scroll'
+} from '@/components/ui/form-control'
+import { Input, InputField } from '@/components/ui/input'
+import { useChatScroll } from '@/hooks/use-chat-scroll'
 import {
   type ChatMessage,
   useRealtimeChat,
-} from '@/src/hooks/use-realtime-chat'
+} from '@/hooks/use-realtime-chat'
 import { Send } from 'lucide-react-native'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native'

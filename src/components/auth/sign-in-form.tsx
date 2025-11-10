@@ -1,17 +1,17 @@
-import AuthButton from "@/src/components/auth/auth-button";
-import { ThemedText } from '@/src/components/themed-text';
-import { ThemedView } from '@/src/components/themed-view';
-import { Alert, AlertIcon, AlertText } from "@/src/components/ui/alert";
-import { Input, InputField } from "@/src/components/ui/input";
-import { supabase } from "@/src/lib/supabase";
+import AuthButton from "@/components/auth/auth-button";
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
+import { Input, InputField } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 
-import { AlertCircleIcon, InfoIcon } from '@/src/components/ui/icon';
+import { AlertCircleIcon, InfoIcon } from '@/components/ui/icon';
 
-import GoogleSignInButton from '@/src/components/social-auth-buttons/google/google-sign-in-button';
-import { Divider } from "@/src/components/ui/divider";
+import GoogleSignInButton from '@/components/social-auth-buttons/google/google-sign-in-button';
+import { Divider } from "@/components/ui/divider";
 import {
   FormControl,
   FormControlError,
@@ -21,9 +21,9 @@ import {
   FormControlHelperText,
   FormControlLabel,
   FormControlLabelText,
-} from '@/src/components/ui/form-control';
-import { HStack } from "@/src/components/ui/hstack";
-import { VStack } from '@/src/components/ui/vstack';
+} from '@/components/ui/form-control';
+import { HStack } from "@/components/ui/hstack";
+import { VStack } from '@/components/ui/vstack';
 
 type ValidationErrors = Partial<Record<"email" | "password", string>>;
 

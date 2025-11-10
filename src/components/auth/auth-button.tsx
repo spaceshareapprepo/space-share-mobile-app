@@ -1,4 +1,4 @@
-import { Button, ButtonText } from '@/src/components/ui/button';
+import { Button, ButtonText } from '@/components/ui/button';
 import React from 'react';
 
 type AuthButtonProps = React.ComponentProps<typeof Button> & {

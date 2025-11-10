@@ -4,10 +4,12 @@ config({ path: '.env.local' });
 
 export default defineConfig({
   out: './drizzle',
-  schema: './lib/storage/schema.drizzle.ts',
+  schema: './src/lib/storage/schema.drizzle.ts',
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL!,
     ssl: false
   },
 });
+
+// src\lib\storage\schema.drizzle.ts

@@ -1,5 +1,5 @@
-import AuthButton from "@/src/components/auth/auth-button";
-import { supabase } from "@/src/lib/supabase";
+import AuthButton from "@/components/auth/auth-button";
+import { supabase } from "@/lib/supabase";
 import React, { useState } from "react";
 
 export default function SignOutButton() {

@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import ParallaxScrollView from '@/src/components/parallax-scroll-view';
-import { RealtimeChat } from '@/src/components/realtime-chat';
-import { ThemedText } from '@/src/components/themed-text';
-import { ThemedView } from '@/src/components/themed-view';
-import { IconSymbol } from '@/src/components/ui/icon-symbol';
-import { shipmentRequests, travellerListings } from '@/src/constants/mock-data';
-import { useThemeColor } from '@/src/hooks/use-theme-color';
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { RealtimeChat } from '@/components/realtime-chat';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { shipmentRequests, travellerListings } from '@/constants/mock-data';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 type SegmentKey = 'messages' | 'notifications';
 

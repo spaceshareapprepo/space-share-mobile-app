@@ -1,4 +1,4 @@
-import { db } from "@/src/lib/storage/db";
+import { db } from "@/lib/storage/db";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 

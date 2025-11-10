@@ -1,5 +1,5 @@
-import * as schema from "@/src/lib/storage/schema.drizzle";
-import { db } from "@/src/lib/storage/schema.drizzle";
+import * as schema from "@/lib/storage/schema.drizzle";
+import { db } from "@/lib/storage/schema.drizzle";
 import { eq } from "drizzle-orm";
 
 async function seedListings() {
