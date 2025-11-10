@@ -21,7 +21,7 @@ import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: "(drawer)",
 };
 
 // Separate RootNavigator so we can access the AuthContext
