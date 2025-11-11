@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol, IconSymbolFeather } from '@/components/ui/icon-symbol';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { TravellerListing } from '@/constants/types';
 import { formatDate, formatRelative } from '@/lib/utils';
 import { router } from 'expo-router';
@@ -58,7 +58,7 @@ export function RouteResultCard({
         <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
         <View style={styles.resultFooter}>
           <View style={styles.resultInfoRow}>
-            <IconSymbolFeather name="cube.box" size={18} color={tintColor} />
+            <IconSymbol name="cube.box" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
               {listing.availableKg}kg free of {listing.totalCapacityKg}kg
               capacity

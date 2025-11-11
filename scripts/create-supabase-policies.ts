@@ -1,4 +1,4 @@
-import { db } from "@/lib/storage/db";
+import { db } from "@/lib/storage/schema.drizzle";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 
@@ -7,16 +7,42 @@ import { drizzle } from "drizzle-orm/node-postgres";
 // ============================================
 
 export async function enableRLS(db: ReturnType<typeof drizzle>) {
-  console.log('Enabling Row Level Security...');
-  
+  console.log("Enabling Row Level Security...");
+
   await db.execute(sql`
     ALTER TABLE profiles ENABLE ROW LEVEL SECURITY
   `);
 }
 
 export async function createRLSPolicies(db: ReturnType<typeof drizzle>) {
-  console.log('Creating RLS policies...');
-  
+  console.log("Creating RLS policies...");
+
+  await db.execute(sql`
+      -- Drop storage objects and buckets
+      DELETE FROM storage.objects WHERE bucket_id = 'avatars';
+      DELETE FROM storage.buckets WHERE id = 'avatars';
+    `);
+
+  await db.execute(sql`
+      -- Drop existing policies
+      DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON profiles;
+      DROP POLICY IF EXISTS "Users can insert their own profile." ON profiles;
+      DROP POLICY IF EXISTS "Users can update own profile." ON profiles;
+      DROP POLICY IF EXISTS "Avatar images are publicly accessible." ON storage.objects;
+      DROP POLICY IF EXISTS "Anyone can upload an avatar." ON storage.objects;
+    `);
+
+  await db.execute(sql`
+      -- Drop triggers and functions
+      DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+      DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+      DROP TRIGGER IF EXISTS set_airport_names_on_insert ON public.listings;
+      DROP TRIGGER IF EXISTS set_airport_names_on_update ON public.listings;
+      DROP INDEX IF EXISTS idx_airports_label;
+      DROP FUNCTION IF EXISTS public.handle_new_user;
+      DROP FUNCTION IF EXISTS public.handle_updated_user;
+    `);
+
   await db.execute(sql`
     CREATE POLICY "Public profiles are viewable by everyone." 
     ON profiles FOR SELECT 
@@ -36,9 +62,11 @@ export async function createRLSPolicies(db: ReturnType<typeof drizzle>) {
   `);
 }
 
-export async function createFunctionsAndTriggers(db: ReturnType<typeof drizzle>) {
-  console.log('Creating auth triggers...');
-  
+export async function createFunctionsAndTriggers(
+  db: ReturnType<typeof drizzle>
+) {
+  console.log("Creating auth triggers...");
+
   // Create function for new users
   await db.execute(sql`
     CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -149,8 +177,8 @@ export async function createFunctionsAndTriggers(db: ReturnType<typeof drizzle>)
 }
 
 export async function createPolicies(db: ReturnType<typeof drizzle>) {
-  console.log('Setting up storage...');
-  
+  console.log("Setting up storage...");
+
   // Create avatars bucket
   await db.execute(sql`
     INSERT INTO storage.buckets (id, name)
@@ -177,16 +205,16 @@ export async function createPolicies(db: ReturnType<typeof drizzle>) {
 
 export async function setupSupabaseSchema(db: ReturnType<typeof drizzle>) {
   try {
-    console.log('Starting Supabase schema setup...');
-    
+    console.log("Starting Supabase schema setup...");
+
     await enableRLS(db);
     await createRLSPolicies(db);
     await createFunctionsAndTriggers(db);
     await createPolicies(db);
-    
-    console.log('✅ Schema setup completed successfully!');
+
+    console.log("✅ Schema setup completed successfully!");
   } catch (error) {
-    console.error('❌ Error setting up schema:', error);
+    console.error("❌ Error setting up schema:", error);
     throw error;
   }
 }

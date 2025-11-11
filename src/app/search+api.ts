@@ -1,17 +1,15 @@
-
-import type {
-  ListingsResponse,
-} from "@/constants/types";
+import type { ListingsResponse } from "@/constants/types";
 import { fetchListingsQuery } from "@/lib/storage/db";
 import {
   mapToShipmentRequest,
   mapToTravellerListing,
   normaliseSearchTerm,
   normaliseSegment,
-  segmentToListingType
+  segmentToListingType,
 } from "@/lib/utils";
 
 export async function GET(request: Request) {
+  
   const start = Date.now();
   const url = new URL(request.url);
 
@@ -20,12 +18,14 @@ export async function GET(request: Request) {
   const typeFilter = segmentToListingType(segment);
 
   try {
-    const rows = await fetchListingsQuery({query, typeFilter });
+    const rows = await fetchListingsQuery({ query, typeFilter });
 
-    const travellers = rows.data.filter((row: any) => row.type_of_listing === "travel")
+    const travellers = rows.data
+      .filter((row: any) => row.type_of_listing === "travel")
       .map(mapToTravellerListing);
 
-    const shipments = rows.data.filter((row: any) => row.type_of_listing === "shipment")
+    const shipments = rows.data
+      .filter((row: any) => row.type_of_listing === "shipment")
       .map(mapToShipmentRequest);
 
     const duration = Date.now() - start;
@@ -42,6 +42,7 @@ export async function GET(request: Request) {
     };
 
     return Response.json(body);
+
   } catch (error) {
     console.error("Failed to search listings:", error);
     return new Response(
@@ -55,4 +56,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

@@ -1,12 +1,11 @@
 import * as schema from "@/lib/storage/schema.drizzle";
-import { db } from "@/lib/storage/schema.drizzle";
 import { eq } from "drizzle-orm";
 
 async function seedListings() {
   console.log("Seeding listings...");
 
   // Get the user
-  const [user] = await db
+  const [user] = await schema.db
     .select({ id: schema.profiles.id })
     .from(schema.profiles)
     .where(eq(schema.profiles.email, "spaceshareapp@gmail.com"));
@@ -16,38 +15,38 @@ async function seedListings() {
   }
 
   // Get airport IDs for US airports
-  const JFK = await db
+  const JFK = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "JFK"))
     .then((result) => result[0]?.id);
 
-  const IAD = await db
+  const IAD = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "IAD"))
     .then((result) => result[0]?.id);
 
-  const ORD = await db
+  const ORD = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "ORD"))
     .then((result) => result[0]?.id);
 
-  const LAX = await db
+  const LAX = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "LAX"))
     .then((result) => result[0]?.id);
 
-  const ATL = await db
+  const ATL = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "ATL"))
     .then((result) => result[0]?.id);
 
   // Get Ghana airport
-  const ACC = await db
+  const ACC = await schema.db
     .select({ id: schema.airports.id })
     .from(schema.airports)
     .where(eq(schema.airports.iataCode, "ACC"))
@@ -58,14 +57,14 @@ async function seedListings() {
   }
 
   // Insert 5 listings
-  await db.insert(schema.listings).values([
+  await schema.db.insert(schema.listings).values([
     {
       ownerId: user.id,
       title: "New York (JFK) to Accra - 20kg Available",
       description: "Flying to Accra for the holidays. Have extra 20kg in checked baggage. Can carry documents, gifts, or small items. No liquids or prohibited items please.",
       originId: JFK,
       destinationId: ACC,
-      flightDate: new Date("2024-12-15T10:00:00Z"),
+      departureDate: new Date("2024-12-15T10:00:00Z"),
       maxWeightKg: "20.00",
       maxWeightLb: "44.09",
       pricePerUnit: "150.00",
@@ -82,7 +81,7 @@ async function seedListings() {
       description: "Traveling to Ghana next month. Willing to carry packages up to 15kg. Prefer electronics, clothing, or documents.",
       originId: IAD,
       destinationId: ACC,
-      flightDate: new Date("2024-12-20T18:30:00Z"),
+      departureDate: new Date("2024-12-20T18:30:00Z"),
       maxWeightKg: "15.00",
       maxWeightLb: "33.07",
       pricePerUnit: "120.00",
@@ -99,7 +98,7 @@ async function seedListings() {
       description: "Have 10kg available in my checked luggage. Flying next week. Can help with gifts, documents, or personal items.",
       originId: ORD,
       destinationId: ACC,
-      flightDate: new Date("2024-12-10T14:00:00Z"),
+      departureDate: new Date("2024-12-10T14:00:00Z"),
       maxWeightKg: "10.00",
       maxWeightLb: "22.05",
       pricePerUnit: "80.00",
@@ -116,7 +115,7 @@ async function seedListings() {
       description: "Making a trip home for Christmas. Have plenty of space - up to 25kg. Can transport clothing, electronics, books, or gifts. Reliable and verified traveler.",
       originId: LAX,
       destinationId: ACC,
-      flightDate: new Date("2024-12-18T22:00:00Z"),
+      departureDate: new Date("2024-12-18T22:00:00Z"),
       maxWeightKg: "25.00",
       maxWeightLb: "55.12",
       pricePerUnit: "200.00",
@@ -133,7 +132,7 @@ async function seedListings() {
       description: "Need to send a small package to family in Accra. Looking for a traveler who can help. Contains clothes and personal items. Will pay for your trouble.",
       originId: ATL,
       destinationId: ACC,
-      flightDate: new Date("2024-12-25T16:45:00Z"),
+      departureDate: new Date("2024-12-25T16:45:00Z"),
       maxWeightKg: "5.00",
       maxWeightLb: "11.02",
       pricePerUnit: "50.00",

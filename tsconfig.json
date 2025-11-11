@@ -7,11 +7,10 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src",
+    "scripts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts",
-    "scripts/**/*"
+    "nativewind-env.d.ts"
   ]
 }

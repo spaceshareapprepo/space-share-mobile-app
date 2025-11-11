@@ -50,12 +50,13 @@ async function fetchListingsData(
 
   const response = await fetch(`/search?${params.toString()}`);
 
+  const rawBody = await response.text();
+
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Failed to load listings");
+    throw new Error(rawBody || "Failed to load listings");
   }
 
-  return (await response.json()) as ListingsResponse;
+  return JSON.parse(rawBody) as ListingsResponse;
 }
 
 function getDefaultEmptyMessage(

@@ -77,10 +77,11 @@ export async function fetchListingsQuery({
 
       return matchesListing || matchesOrigin || matchesDestination;
     });
-
+    
     return { data: filteredData, error: null };
+    
   } catch (err) {
-    console.error('Failed to fetch listings:', err);
+    console.error('Failed to connect to supabase public.listings:', err);
     return { data: [], error: err as Error };
   }
 }
