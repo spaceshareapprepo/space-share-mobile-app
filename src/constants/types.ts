@@ -41,6 +41,7 @@ export type TravellerListing = {
   verification: string[];
   experience: string;
   focus: string;
+  type: 'traveller'
 };
 
 export type ShipmentRequest = {
@@ -56,6 +57,7 @@ export type ShipmentRequest = {
   budgetUsd: number;
   status: 'matching' | 'urgent';
   handlingNotes: string;
+  type: 'shipment'
 };
 
 export type RelatedAirport = {

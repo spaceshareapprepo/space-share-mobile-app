@@ -33,7 +33,7 @@ export function formatRelative(value: string) {
 }
 
 export function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
+  return new Date(value).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   });
@@ -115,6 +115,7 @@ export function mapToTravellerListing(row: SupabaseListingRow): TravellerListing
     verification: row.is_verified ? ["ID verified"] : [],
     experience: row.profile ? "Trusted community member" : "New traveller",
     focus: row.description ?? "Ready to help move your items safely.",
+    type: 'traveller'
   };
 }
 
@@ -139,5 +140,6 @@ export function mapToShipmentRequest(row: SupabaseListingRow): ShipmentRequest {
       row.shipment_code === "urgent"
         ? "Sender marked this request as urgent. Please coordinate quickly."
         : "Coordinate handling details directly with the sender.",
+    type: 'shipment'
   };
 }

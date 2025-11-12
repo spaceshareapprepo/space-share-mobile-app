@@ -1,3 +1,4 @@
+
 import type { ListingsResponse } from "@/constants/types";
 import { fetchListingsQuery } from "@/lib/storage/db";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@/lib/utils";
 
 export async function GET(request: Request) {
-  
+
   const start = Date.now();
   const url = new URL(request.url);
 

@@ -1,12 +1,13 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { shipmentRequests, travellerListings } from "@/constants/mock-data";
+
 import type {
   SegmentKey,
   ShipmentRequest,
@@ -50,44 +51,45 @@ export default function ListingDetailsScreen() {
   }>();
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  const [cachedListing, setCachedListing] = useState<TravellerListing | ShipmentRequest | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchCached() {
+      if (!id) return;
+      try {
+        const raw = await AsyncStorage.getItem(`listing:${id}`);
+        if (!raw || !isMounted) return;
+
+        setCachedListing(JSON.parse(raw));
+      } catch (err) {
+        console.warn("Failed to load cached listing", err);
+      }
+    }
+
+    fetchCached();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
   const segmentParam = Array.isArray(params.segment)
     ? params.segment[0]
     : params.segment;
+
   const segment: SegmentKey | null =
     segmentParam === "routes" || segmentParam === "items" ? segmentParam : null;
 
-    console.log(segment)
-  const listing = useMemo<ListingMatch | null>(() => {
-    if (!id) {
-      return null;
-    }
+  const listing: ListingMatch | null =
+  id && cachedListing
+    ? cachedListing.type === "traveller"
+      ? { type: "traveller", data: cachedListing }
+      : { type: "shipment", data: cachedListing }
+    : null;
 
-    if (segment === "routes") {
-      const match = travellerListings.find((item) => item.id === id);
-      if (match) {
-        return { type: "traveller", data: match };
-      }
-    }
-
-    if (segment === "items") {
-      const match = shipmentRequests.find((item) => item.id === id);
-      if (match) {
-        return { type: "shipment", data: match };
-      }
-    }
-
-    const fallbackTraveller = travellerListings.find((item) => item.id === id);
-    if (fallbackTraveller) {
-      return { type: "traveller", data: fallbackTraveller };
-    }
-
-    const fallbackShipment = shipmentRequests.find((item) => item.id === id);
-    if (fallbackShipment) {
-      return { type: "shipment", data: fallbackShipment };
-    }
-
-    return null;
-  }, [id, segment]);
+  console.log(`Listing: ${JSON.stringify(listing)}`)
 
   const tintColor = useThemeColor({}, "tint");
   const borderColor = useThemeColor(

@@ -24,6 +24,7 @@ export function RouteResultCard({
             pathname: '/(drawer)/(home)/listings/[id]',
             params: {
               id: listing.id,
+              segment: "routes"
             },
           });
         }}

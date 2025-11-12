@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { useEffect } from "react";
 import { TouchableOpacity } from "react-native";
 
-import { expo } from "@/app.json";
+import { expo } from "@/../app.json";
 import { Text } from "@react-navigation/elements";
 import { Image } from "expo-image";
 import * as WebBrowser from "expo-web-browser";

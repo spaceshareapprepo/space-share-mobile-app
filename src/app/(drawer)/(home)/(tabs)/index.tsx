@@ -1,3 +1,4 @@
+"use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,20 +8,22 @@ import {
   View,
 } from "react-native";
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ShipmentResultCard } from "@/components/listings/shipment-result-card";
 import { RouteResultCard } from "@/components/listings/traveller-result-card";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import type { ShipmentRequest, TravellerListing } from "@/constants/mock-data";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
 import type {
   ListingsResponse,
   QuickFilter,
   SearchSegment,
-  SegmentKey,
+  SegmentKey, 
+  ShipmentRequest, 
+  TravellerListing
 } from "@/constants/types";
 
 const segments: { key: SegmentKey; label: string }[] = [
@@ -34,6 +37,13 @@ const quickFilters: QuickFilter[] = [
   { label: "Atlanta arrivals", value: "ATL", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
+
+async function cacheListing(listing: TravellerListing | ShipmentRequest) {
+  await AsyncStorage.setItem(
+    `listing:${listing.id}`,
+    JSON.stringify(listing),
+  );
+}
 
 async function fetchListingsData(
   searchTerm: string,
@@ -52,11 +62,24 @@ async function fetchListingsData(
 
   const rawBody = await response.text();
 
+  const rawJson = JSON.parse(rawBody);
+
+  if (rawJson.travellers) {
+    for (const listing of rawJson.travellers) {
+      void cacheListing(listing);
+    }
+  }
+  if (rawJson.shipments) {
+    for (const listing of rawJson.shipments) {
+      void cacheListing(listing);
+    }
+  }
+
   if (!response.ok) {
     throw new Error(rawBody || "Failed to load listings");
   }
 
-  return JSON.parse(rawBody) as ListingsResponse;
+  return rawJson as ListingsResponse;
 }
 
 function getDefaultEmptyMessage(
