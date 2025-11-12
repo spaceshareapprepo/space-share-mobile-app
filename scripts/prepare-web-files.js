@@ -28,4 +28,14 @@ function copyRecursive(src, dest) {
 // Copy all server files to client
 copyRecursive(serverDir, clientDir);
 
+// Copy the main index.html to the root for proper routing
+const mainIndexPath = path.join(clientDir, '(drawer)', '(home)', '(tabs)', 'index.html');
+const rootIndexPath = path.join(clientDir, 'index.html');
+
+if (fs.existsSync(mainIndexPath)) {
+  fs.copyFileSync(mainIndexPath, rootIndexPath);
+  console.log('✅ Copied index.html to root for proper routing');
+}
+
+
 console.log('✅ Netlify build prepared: merged server and client directories');
