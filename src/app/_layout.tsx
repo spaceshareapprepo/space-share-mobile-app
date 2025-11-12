@@ -7,7 +7,7 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
 import "../../global.css";
 
@@ -84,7 +84,7 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaView edges={["top", "bottom"]}>
+    <SafeAreaProvider>
       <GluestackUIProvider>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <AuthProvider>
@@ -94,6 +94,6 @@ export default function RootLayout() {
           </AuthProvider>
         </ThemeProvider>
       </GluestackUIProvider>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
