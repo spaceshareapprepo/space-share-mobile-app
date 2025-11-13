@@ -59,7 +59,7 @@ async function fetchListingsData(
 
   const response = await fetch(`/search?${params.toString()}`);
 
-  const rawBody = await response.text();
+  const rawBody = await response.json();
 
   const rawJson = JSON.parse(rawBody);
 
@@ -75,7 +75,7 @@ async function fetchListingsData(
   }
 
   if (!response.ok) {
-    throw new Error(rawBody || "Failed to load listings");
+    throw new Error(rawJson || "Failed to load listings");
   }
 
   return rawJson as ListingsResponse;
