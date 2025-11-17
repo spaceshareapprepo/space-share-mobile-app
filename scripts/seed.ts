@@ -1,4 +1,4 @@
-import * as schema from "@/lib/storage/schema.drizzle";
+import * as schema from "@/lib/database/schema.drizzle";
 import { eq } from "drizzle-orm";
 
 async function seedListings() {

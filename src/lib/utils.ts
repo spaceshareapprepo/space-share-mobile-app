@@ -2,7 +2,7 @@ import type {
   ListingType,
   SearchSegment,
   ShipmentRequest,
-  SupabaseListingRow,
+  ListingRow,
   TravellerListing
 } from "../constants/types";
 import { clsx, type ClassValue } from "clsx";
@@ -84,7 +84,7 @@ export function normaliseSearchTerm(raw: string | null) {
 }
 
 export function formatAirport(
-  airport: SupabaseListingRow["origin"]
+  airport: ListingRow["origin"]
 ): string {
   if (!airport) return "Unknown location";
 
@@ -94,52 +94,54 @@ export function formatAirport(
   return code ? `${city} (${code})` : city;
 }
 
-export function mapToTravellerListing(row: SupabaseListingRow): TravellerListing {
+export function mapToTravellerListing(row: ListingRow): TravellerListing {
   const name =
-    row.profile?.full_name?.trim() || row.title?.trim() || "Traveller";
+    row.owner?.full_name?.trim() || "Traveller";
   const departure =
-    row.flight_date ?? row.created_at ?? new Date().toISOString();
+    row.departure_date ?? new Date().toISOString();
   const capacity = row.max_weight_kg ?? 0;
 
   return {
     id: row.id,
-    name,
+    ownerName: name,
     initials: getInitials(name),
     origin: formatAirport(row.origin),
     destination: formatAirport(row.destination),
     departureDate: departure,
-    availableKg: capacity,
-    totalCapacityKg: capacity,
-    pricePerKgUsd: row.price_per_unit ?? 0,
-    status: row.status_code === "1" ? "closingSoon" : "open",
-    verification: row.is_verified ? ["ID verified"] : [],
-    experience: row.profile ? "Trusted community member" : "New traveller",
-    focus: row.description ?? "Ready to help move your items safely.",
-    type: 'traveller'
+    maxWeightKg: capacity,
+    pricePerUnit: row.price_per_unit ?? 0,
+    isVerified: row.is_verified,
+    title: row.title,
+    experience: row.is_verified ? "Trusted community member" : "New member",
+    description: row.description ?? "Ready to help move your items safely.",
+    photos: row.photos,
+    type: row.type_of_listing
   };
 }
 
-export function mapToShipmentRequest(row: SupabaseListingRow): ShipmentRequest {
-  const ownerName = row.profile?.full_name?.trim() || "Anonymous sender";
-  const readyBy =
-    row.flight_date ?? row.created_at ?? new Date().toISOString();
-
+export function mapToShipmentRequest(row: ListingRow): ShipmentRequest {
+  const name = row.owner?.full_name?.trim() || "Anonymous sender";
+  const readyBy = row.departure_date ?? new Date().toISOString();
+  const capacity = row.max_weight_kg ?? 0;
   return {
     id: row.id,
-    owner: ownerName,
-    initials: getInitials(ownerName),
-    itemName: row.title ?? "Shipment request",
-    summary: row.description ?? "Details to be confirmed with the sender.",
+    ownerName: name,
+    initials: getInitials(name),
     origin: formatAirport(row.origin),
     destination: formatAirport(row.destination),
-    readyBy,
-    weightKg: row.max_weight_kg ?? 0,
-    budgetUsd: row.price_per_unit ?? 0,
-    status: row.shipment_code === "urgent" ? "urgent" : "matching",
+    departureDate: readyBy,
+    maxWeightKg: capacity,
+    pricePerUnit: row.price_per_unit ?? 0,
+    isVerified: row.is_verified,
+    title: row.title,
+    experience: row.is_verified ? "Trusted community member" : "New member",
+    description: row.description ?? "Ready to help move your items safely.",
+    photos: row.photos,
+    shipmentCode: row.shipment_code === "urgent" ? "urgent" : "matching",
     handlingNotes:
       row.shipment_code === "urgent"
         ? "Sender marked this request as urgent. Please coordinate quickly."
         : "Coordinate handling details directly with the sender.",
-    type: 'shipment'
+    type: row.type_of_listing
   };
 }

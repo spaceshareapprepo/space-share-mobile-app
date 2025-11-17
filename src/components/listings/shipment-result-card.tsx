@@ -36,27 +36,27 @@ export function ShipmentResultCard({
             <IconSymbol name="cube.box.fill" size={20} color={tintColor} />
           </View>
           <View style={styles.resultHeaderText}>
-            <ThemedText type="subtitle">{shipment.itemName}</ThemedText>
+            <ThemedText type="subtitle">{shipment.title}</ThemedText>
             <ThemedText style={styles.resultMetaText}>
               {shipment.origin} → {shipment.destination} · Ready{" "}
-              {formatRelative(shipment.readyBy)}
+              {formatRelative(shipment.departureDate)}
             </ThemedText>
           </View>
           <View
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-              Budget ${shipment.budgetUsd}
+              Budget ${shipment.pricePerUnit}
             </ThemedText>
           </View>
         </View>
-        <ThemedText style={styles.resultBody}>{shipment.summary}</ThemedText>
+        <ThemedText style={styles.resultBody}>{shipment.description}</ThemedText>
         <View style={styles.resultFooter}>
           <View style={styles.resultInfoRow}>
             <IconSymbol name="clock.fill" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
-              {shipment.weightKg}kg ·{" "}
-              {shipment.status === "urgent" ? "Needs fast match" : "Matching"}
+              {shipment.maxWeightKg}kg ·{" "}
+              {shipment.shipmentCode === "urgent" ? "Needs fast match" : "Matching"}
             </ThemedText>
           </View>
           <ThemedText style={styles.resultInfoText}>

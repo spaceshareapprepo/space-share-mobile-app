@@ -1,5 +1,5 @@
 import { SELECT_COLUMNS_LISTINGS } from '@/constants/db';
-import type { ListingType, SupabaseListingRow } from '@/constants/types';
+import type { ListingType, ListingRow } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 
 export async function fetchListings() {
@@ -47,7 +47,7 @@ export async function fetchListingsQuery({
     }
 
     const { data, error } = await supabaseQuery.overrideTypes<
-      SupabaseListingRow[],
+      ListingRow[],
       { merge: false }
     >();
 
@@ -78,6 +78,8 @@ export async function fetchListingsQuery({
       return matchesListing || matchesOrigin || matchesDestination;
     });
     
+    // console.log(`FilteredFromSupabase: ${JSON.stringify(filteredData)}`)
+
     return { data: filteredData, error: null };
     
   } catch (err) {

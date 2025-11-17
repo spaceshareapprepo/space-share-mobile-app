@@ -1,5 +1,5 @@
 
-import { db } from "@/lib/storage/schema.drizzle";
+import { db } from "@/lib/database/schema.drizzle";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 

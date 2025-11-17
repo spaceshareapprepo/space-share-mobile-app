@@ -1,3 +1,5 @@
+import { Json, Database, Tables, Enums } from "@/lib/database/supabase.types"
+
 export type SegmentKey = 'routes' | 'items';
 
 export type QuickFilter = {
@@ -29,35 +31,38 @@ export type Listing = {
 
 export type TravellerListing = {
   id: string;
-  name: string;
+  ownerName: string;
   initials: string;
   origin: string;
   destination: string;
   departureDate: string;
-  availableKg: number;
-  totalCapacityKg: number;
-  pricePerKgUsd: number;
-  status: 'open' | 'closingSoon';
-  verification: string[];
+  maxWeightKg: number;
+  pricePerUnit: number;
+  isVerified: boolean;
+  title: string;
   experience: string;
-  focus: string;
-  type: 'traveller'
+  description: string;
+  photos: Json;
+  type: string; 
 };
 
 export type ShipmentRequest = {
   id: string;
-  owner: string;
+  ownerName: string;
   initials: string;
-  itemName: string;
-  summary: string;
   origin: string;
   destination: string;
-  readyBy: string;
-  weightKg: number;
-  budgetUsd: number;
-  status: 'matching' | 'urgent';
+  maxWeightKg: number;
+  departureDate: string;
+  pricePerUnit: number;
+  isVerified: boolean;
+  title: string;
+  experience: string;
+  description: string;
+  photos: Json;
+  shipmentCode: 'matching' | 'urgent';
   handlingNotes: string;
-  type: 'shipment'
+  type: string;
 };
 
 export type RelatedAirport = {
@@ -65,31 +70,6 @@ export type RelatedAirport = {
   city: string | null;
   name: string | null;
   iata_code: string | null;
-};
-
-export type RawListingRow = {
-  id: string;
-  title: string | null;
-  description: string | null;
-  type_of_listing: 'travel' | 'shipment' | null;
-  status_code: string | null;
-  shipment_code: string | null;
-  flight_date: string | null;
-  max_weight_kg: number | null;
-  price_per_unit: number | null;
-  currency_code: string | null;
-  photos: string[] | null;
-  is_verified: boolean | null;
-  created_at: string | null;
-  owner:
-    | {
-        id: string;
-        full_name: string | null;
-        bucket_avatar_url: string | null;
-      }
-    | null;
-  origin: RelatedAirport | null;
-  destination: RelatedAirport | null;
 };
 
 export type SearchSegment = "routes" | "items" | "all";
@@ -102,14 +82,14 @@ export type SupabaseListingRow = {
   type_of_listing: ListingType | null;
   status_code: string | null;
   shipment_code: string | null;
-  flight_date: string | null;
+  departure_date: string | null;
   max_weight_kg: number | null;
   price_per_unit: number | null;
   currency_code: string | null;
   photos: string[] | null;
   is_verified: boolean | null;
   created_at: string | null;
-  profile: {
+  owner: {
     id: string;
     full_name: string | null;
     bucket_avatar_url: string | null;
@@ -138,3 +118,23 @@ export type ListingsResponse = {
     segment: SearchSegment;
   };
 };
+
+export type ListingRow = Omit<Tables<'listings'>, 'owner_id,origin_id,destination_id,'> & {
+  owner: {
+    id: string;
+    full_name: string | null;
+    bucket_avatar_url: string | null;
+  } | null;
+  origin: {
+    id: string;
+    city: string | null;
+    name: string | null;
+    iata_code: string | null;
+  } | null;
+  destination: {
+    id: string;
+    city: string | null;
+    name: string | null;
+    iata_code: string | null;
+  } | null;
+}

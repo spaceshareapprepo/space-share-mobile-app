@@ -52,21 +52,21 @@ export function RouteResultCard({
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-              ${listing.pricePerKgUsd}/kg
+              ${listing.pricePerUnit}/kg
             </ThemedText>
           </View>
         </View>
-        <ThemedText style={styles.resultBody}>{listing.focus}</ThemedText>
+        <ThemedText style={styles.resultBody}>{listing.description}</ThemedText>
         <View style={styles.resultFooter}>
           <View style={styles.resultInfoRow}>
             <IconSymbol name="cube.box" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
-              {listing.availableKg}kg free of {listing.totalCapacityKg}kg
+              Available weight: {listing.pricePerUnit}kg
               capacity
             </ThemedText>
           </View>
           <View style={styles.badgeRow}>
-            {listing.verification.slice(0, 2).map((badge) => (
+            {/* {listing.isVerified.map((badge) => (
               <View
                 key={badge}
                 style={[styles.badge, { backgroundColor: `${tintColor}12` }]}
@@ -80,7 +80,7 @@ export function RouteResultCard({
                   {badge}
                 </ThemedText>
               </View>
-            ))}
+            ))} */}
           </View>
         </View>
       </Pressable>

@@ -58,10 +58,7 @@ async function fetchListingsData(
   params.set("segment", segment);
 
   const response = await fetch(`/search?${params.toString()}`);
-
-  const rawBody = await response.json();
-
-  const rawJson = JSON.parse(rawBody);
+  const rawJson = await response.json();
 
   if (rawJson.travellers) {
     for (const listing of rawJson.travellers) {
@@ -165,7 +162,7 @@ export default function SearchScreen() {
   const sortedShipments = useMemo(
     () =>
       [...shipmentListings].sort(
-        (a, b) => new Date(a.readyBy).getTime() - new Date(b.readyBy).getTime()
+        (a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()
       ),
     [shipmentListings]
   );
@@ -357,7 +354,7 @@ function filterTravellers(list: TravellerListing[], query: string) {
   }
   return list.filter((traveller) => {
     const haystack =
-      `${traveller.origin} ${traveller.destination} ${traveller.name} ${traveller.focus}`.toLowerCase();
+      `${traveller.origin} ${traveller.destination} ${traveller.ownerName} ${traveller.description}`.toLowerCase();
     return haystack.includes(trimmed);
   });
 }
@@ -369,7 +366,7 @@ function filterShipments(list: ShipmentRequest[], query: string) {
   }
   return list.filter((shipment) => {
     const haystack =
-      `${shipment.itemName} ${shipment.summary} ${shipment.origin} ${shipment.destination}`.toLowerCase();
+      `${shipment.title} ${shipment.description} ${shipment.origin} ${shipment.destination}`.toLowerCase();
     return haystack.includes(trimmed);
   });
 }

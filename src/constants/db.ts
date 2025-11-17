@@ -12,7 +12,6 @@ export const SELECT_COLUMNS_LISTINGS = `
         photos,
         is_verified,
         created_at,
-        type_of_listing,
         owner:profiles!listings_owner_id_profiles_id_fk(
           id,
           full_name,
