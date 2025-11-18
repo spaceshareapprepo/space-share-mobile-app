@@ -25,6 +25,8 @@ import type {
   TravellerListing,
 } from "@/constants/types";
 
+import Constants from "expo-constants";
+
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
   { key: "items", label: "Shipments" },
@@ -51,8 +53,35 @@ async function fetchListingsData(
     params.set("q", trimmed);
   }
   params.set("segment", segment);
-  console.log(`Search API URL: ${process.env.EXPO_PUBLIC_API_URL}/search?${params.toString()}`);
-  const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/search?${params.toString()}`);
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+  const generateAPIUrl = (relativePath: string) => {
+    //console.log("Constants", Constants.experienceUrl);
+    const origin =
+      Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
+
+    const path = relativePath.startsWith("/")
+      ? relativePath
+      : `/${relativePath}`;
+
+    if (process.env.NODE_ENV === "development") {
+      return origin?.concat(path);
+    }
+
+    if (!API_URL) {
+      throw new Error("API_URL environment variable is not defined");
+    }
+
+    return API_URL.concat(path);
+  };
+
+  console.log(
+    `Search API URL: ${generateAPIUrl('/api/search')}?${params.toString()}`
+  );
+  const response = await fetch(
+    `${generateAPIUrl('/api/search')}?${params.toString()}`
+  );
   const rawJson = await response.json();
   if (rawJson.travellers) {
     for (const listing of rawJson.travellers) {
@@ -218,8 +247,9 @@ export default function SearchScreen() {
         <ThemedView style={[styles.heroCard, { borderColor }]}>
           <ThemedText type="title">Find your perfect match</ThemedText>
           <ThemedText style={styles.heroSubtitle}>
-            Search real travellers and shipment requests across the USA to Ghana corridor. Filter by route, item type, or urgency
-            to start a trusted conversation.
+            Search real travellers and shipment requests across the USA to Ghana
+            corridor. Filter by route, item type, or urgency to start a trusted
+            conversation.
           </ThemedText>
           <View
             style={[
@@ -298,12 +328,13 @@ export default function SearchScreen() {
             </View>
             <View style={styles.resultsMeta}>
               <ThemedText type="subtitle">
-                {`${results.length} ${segment === "routes" ? "traveller" : "shipment"} ${
-                  results.length === 1 ? "match" : "matches"
-                }`}
+                {`${results.length} ${
+                  segment === "routes" ? "traveller" : "shipment"
+                } ${results.length === 1 ? "match" : "matches"}`}
               </ThemedText>
               <ThemedText style={styles.resultsSubtitle}>
-                Tap a card to review verification badges, connect, and agree on pricing terms.
+                Tap a card to review verification badges, connect, and agree on
+                pricing terms.
               </ThemedText>
             </View>
             <View style={styles.resultsList}>{renderResults()}</View>

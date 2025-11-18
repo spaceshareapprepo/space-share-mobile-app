@@ -1,4 +1,4 @@
-import { Json, Database, Tables, Enums } from "@/lib/database/supabase.types"
+import { Json, Tables } from "@/lib/database/supabase.types"
 
 export type SegmentKey = 'routes' | 'items';
 
@@ -27,7 +27,6 @@ export type Listing = {
   focus: string;
   
 };
-
 
 export type TravellerListing = {
   id: string;

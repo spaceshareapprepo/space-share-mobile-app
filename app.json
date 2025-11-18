@@ -37,7 +37,11 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
+      [
+        "expo-router",
+      {
+        "origin":"https://space-share-mobile-app.vercel.app"
+      }],
       [
         "expo-splash-screen",
         {

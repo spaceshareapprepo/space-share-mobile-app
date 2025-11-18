@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
-import "../../global.css";
+import "@/styles/global.css";
 
 import { SplashScreenController } from "@/components/splash-screen-controller";
 
@@ -56,7 +56,6 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isLoggedIn}>
         <Stack.Screen name="(drawer)" />
-        <Stack.Screen name="search" />
       </Stack.Protected>
       <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
