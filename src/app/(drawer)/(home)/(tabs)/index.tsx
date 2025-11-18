@@ -31,7 +31,7 @@ const segments: { key: SegmentKey; label: string }[] = [
 ];
 
 const quickFilters: QuickFilter[] = [
-  { label: "JFK → ACC departures", value: "JFK", segment: "routes" },
+  { label: "JFK → ACC departures", value: "JFK to ACC", segment: "routes" },
   { label: "Urgent medical", value: "medication", segment: "items" },
   { label: "Atlanta arrivals", value: "ATL", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
@@ -169,8 +169,7 @@ export default function SearchScreen() {
         <View style={styles.loadingState}>
           <ActivityIndicator size="small" color={tintColor} />
           <ThemedText style={styles.loadingText}>
-            {" "}
-            Loading listings...{" "}
+            Loading listings...
           </ThemedText>
         </View>
       );
@@ -219,10 +218,8 @@ export default function SearchScreen() {
         <ThemedView style={[styles.heroCard, { borderColor }]}>
           <ThemedText type="title">Find your perfect match</ThemedText>
           <ThemedText style={styles.heroSubtitle}>
-            {" "}
-            Search real travellers and shipment requests across the{" "}
-            {"USA <-> Ghana"} corridor. Filter by route, item type, or urgency
-            to start a trusted conversation.{" "}
+            Search real travellers and shipment requests across the USA to Ghana corridor. Filter by route, item type, or urgency
+            to start a trusted conversation.
           </ThemedText>
           <View
             style={[
@@ -241,18 +238,16 @@ export default function SearchScreen() {
               style={styles.searchInput}
               accessibilityLabel="Search routes and shipments"
               submitBehavior="blurAndSubmit"
-            />{" "}
+            />
             {query.length > 0 ? (
               <Pressable onPress={() => void performSearch()}>
                 <ThemedText style={[styles.clearText, { color: tintColor }]}>
-                  {" "}
-                  Search{" "}
+                  Search
                 </ThemedText>
               </Pressable>
-            ) : null}{" "}
+            ) : null}
           </View>
           <View style={[styles.quickFilters]}>
-            {" "}
             {quickFilters.map((filter) => (
               <Pressable
                 key={filter.label}
@@ -269,17 +264,15 @@ export default function SearchScreen() {
                 <ThemedText
                   style={[styles.filterChipText, { color: tintColor }]}
                 >
-                  {" "}
-                  {filter.label}{" "}
+                  {filter.label}
                 </ThemedText>
               </Pressable>
-            ))}{" "}
+            ))}
           </View>
-        </ThemedView>{" "}
+        </ThemedView>
         {hasSearched && (
           <>
             <View style={[styles.segmentedControl, { borderColor }]}>
-              {" "}
               {segments.map((item) => {
                 const isActive = item.key === segment;
                 return (
@@ -297,29 +290,25 @@ export default function SearchScreen() {
                         isActive ? styles.segmentLabelActive : undefined,
                       ]}
                     >
-                      {" "}
-                      {item.label}{" "}
+                      {item.label}
                     </ThemedText>
                   </Pressable>
                 );
-              })}{" "}
+              })}
             </View>
             <View style={styles.resultsMeta}>
               <ThemedText type="subtitle">
-                {" "}
-                {results.length}{" "}
-                {segment === "routes" ? "traveller" : "shipment"}{" "}
-                {results.length === 1 ? "match" : "matches"}{" "}
+                {`${results.length} ${segment === "routes" ? "traveller" : "shipment"} ${
+                  results.length === 1 ? "match" : "matches"
+                }`}
               </ThemedText>
               <ThemedText style={styles.resultsSubtitle}>
-                {" "}
-                Tap a card to review verification badges, connect, and agree on
-                pricing terms.{" "}
+                Tap a card to review verification badges, connect, and agree on pricing terms.
               </ThemedText>
             </View>
             <View style={styles.resultsList}>{renderResults()}</View>
           </>
-        )}{" "}
+        )}
       </ThemedView>
     </ParallaxScrollView>
   );

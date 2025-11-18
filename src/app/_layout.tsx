@@ -56,6 +56,7 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={isLoggedIn}>
         <Stack.Screen name="(drawer)" />
+        <Stack.Screen name="search" />
       </Stack.Protected>
       <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
