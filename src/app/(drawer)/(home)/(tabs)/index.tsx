@@ -51,6 +51,7 @@ async function fetchListingsData(
     params.set("q", trimmed);
   }
   params.set("segment", segment);
+  console.log(`Search API URL: ${process.env.EXPO_PUBLIC_API_URL}/search?${params.toString()}`);
   const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/search?${params.toString()}`);
   const rawJson = await response.json();
   if (rawJson.travellers) {
