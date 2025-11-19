@@ -15,10 +15,22 @@ import type {
 } from "@/constants/types";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { formatDate, formatRelative } from "@/lib/utils";
+import { Link } from 'expo-router';
 
 type ListingMatch =
   | { type: "traveller"; data: TravellerListing }
   | { type: "shipment"; data: ShipmentRequest };
+
+function isShipmentListing(
+  listing: TravellerListing | ShipmentRequest
+): listing is ShipmentRequest {
+  return (
+    listing !== null &&
+    typeof listing === "object" &&
+    "shipmentCode" in listing &&
+    "handlingNotes" in listing
+  );
+}
 
 type SectionIcon =
   | "airplane.circle.fill"
@@ -83,11 +95,11 @@ export default function ListingDetailsScreen() {
     segmentParam === "routes" || segmentParam === "items" ? segmentParam : null;
 
   const listing: ListingMatch | null =
-  id && cachedListing
-    ? cachedListing.type === "traveller"
-      ? { type: "traveller", data: cachedListing }
-      : { type: "shipment", data: cachedListing }
-    : null;
+    id && cachedListing
+      ? isShipmentListing(cachedListing)
+        ? { type: "shipment", data: cachedListing }
+        : { type: "traveller", data: cachedListing }
+      : null;
 
   console.log(`Listing: ${JSON.stringify(listing)}`)
 
@@ -103,17 +115,17 @@ export default function ListingDetailsScreen() {
 
   const headerTitle =
     listing?.type === "traveller"
-      ? listing.data.name
+      ? listing.data.ownerName
       : listing?.type === "shipment"
-      ? listing.data.itemName
-      : "Listing";
+        ? listing.data.ownerName
+        : "Listing";
 
   const heroInitials =
     listing?.type === "traveller"
       ? listing.data.initials
       : listing?.type === "shipment"
-      ? listing.data.initials
-      : "--";
+        ? listing.data.initials
+        : "--";
 
   const heroRoute =
     listing?.type === "traveller" || listing?.type === "shipment"
@@ -123,24 +135,24 @@ export default function ListingDetailsScreen() {
   const heroMeta =
     listing?.type === "traveller"
       ? `Departs ${formatDate(listing.data.departureDate)} · ${formatRelative(
+        listing.data.departureDate
+      )}`
+      : listing?.type === "shipment"
+        ? `Ready ${formatDate(listing.data.departureDate)} · ${formatRelative(
           listing.data.departureDate
         )}`
-      : listing?.type === "shipment"
-      ? `Ready ${formatDate(listing.data.readyBy)} · ${formatRelative(
-          listing.data.readyBy
-        )}`
-      : "";
+        : "";
 
   const statusLabel =
     listing?.type === "traveller"
-      ? listing.data.status === "closingSoon"
+      ? listing.data.isVerified === true
         ? "Closing soon"
         : "Open for offers"
       : listing?.type === "shipment"
-      ? listing.data.status === "urgent"
-        ? "Urgent match"
-        : "Matching"
-      : "";
+        ? listing.data.isVerified === true
+          ? "Urgent match"
+          : "Matching"
+        : "";
 
   const headerIcon =
     listing?.type === "shipment" ? "cube.box.fill" : "airplane.circle.fill";
@@ -186,7 +198,7 @@ export default function ListingDetailsScreen() {
                 ) : null}
                 {listing?.type === "shipment" ? (
                   <ThemedText style={styles.heroCaption}>
-                    Requested by {listing.data.owner}
+                    Requested by {listing.data.ownerName || "Unknown Sender"}
                   </ThemedText>
                 ) : null}
               </View>
@@ -258,16 +270,16 @@ export default function ListingDetailsScreen() {
                       Space available
                     </ThemedText>
                     <ThemedText style={styles.metricValue}>
-                      {listing.data.availableKg}kg
+                      {listing.data.maxWeightKg}kg
                     </ThemedText>
                     <ThemedText style={styles.metricHint}>
-                      of {listing.data.totalCapacityKg}kg total
+                      of {listing.data.maxWeightKg}kg total
                     </ThemedText>
                   </View>
                   <View style={[styles.metricCard, { borderColor }]}>
                     <ThemedText style={styles.metricLabel}>Rate</ThemedText>
                     <ThemedText style={styles.metricValue}>
-                      ${listing.data.pricePerKgUsd}/kg
+                      ${listing.data.pricePerUnit}/kg
                     </ThemedText>
                     <ThemedText style={styles.metricHint}>
                       Fixed rate provided by traveller
@@ -275,7 +287,7 @@ export default function ListingDetailsScreen() {
                   </View>
                 </View>
                 <ThemedText style={styles.bodyText}>
-                  {listing.data.focus}
+                  {listing.data.description}
                 </ThemedText>
               </ThemedView>
 
@@ -290,7 +302,7 @@ export default function ListingDetailsScreen() {
                   tintColor={tintColor}
                   title="Trust signals"
                 />
-                {listing.data.verification.length > 0 ? (
+                {/* {listing.data.verification.length > 0 ? (
                   <View style={styles.badgeRow}>
                     {listing.data.verification.map((badge) => (
                       <View
@@ -318,7 +330,7 @@ export default function ListingDetailsScreen() {
                     This traveller has not shared verification badges yet. Start
                     a chat to learn more.
                   </ThemedText>
-                )}
+                )} */}
                 <ThemedText style={styles.bodyText}>
                   {listing.data.experience}
                 </ThemedText>
@@ -343,18 +355,18 @@ export default function ListingDetailsScreen() {
                   <View style={[styles.metricCard, { borderColor }]}>
                     <ThemedText style={styles.metricLabel}>Ready by</ThemedText>
                     <ThemedText style={styles.metricValue}>
-                      {formatDate(listing.data.readyBy)}
+                      {formatDate(listing.data.departureDate)}
                     </ThemedText>
                     <ThemedText
                       style={[styles.metricHint, { color: tintColor }]}
                     >
-                      {formatRelative(listing.data.readyBy)}
+                      {formatRelative(listing.data.departureDate)}
                     </ThemedText>
                   </View>
                   <View style={[styles.metricCard, { borderColor }]}>
                     <ThemedText style={styles.metricLabel}>Weight</ThemedText>
                     <ThemedText style={styles.metricValue}>
-                      {listing.data.weightKg}kg
+                      {listing.data.maxWeightKg}kg
                     </ThemedText>
                     <ThemedText style={styles.metricHint}>
                       Estimated package size
@@ -363,7 +375,7 @@ export default function ListingDetailsScreen() {
                   <View style={[styles.metricCard, { borderColor }]}>
                     <ThemedText style={styles.metricLabel}>Budget</ThemedText>
                     <ThemedText style={styles.metricValue}>
-                      ${listing.data.budgetUsd}
+                      ${listing.data.pricePerUnit}
                     </ThemedText>
                     <ThemedText style={styles.metricHint}>
                       Negotiable with sender
@@ -371,7 +383,7 @@ export default function ListingDetailsScreen() {
                   </View>
                 </View>
                 <ThemedText style={styles.bodyText}>
-                  {listing.data.summary}
+                  {listing.data.description}
                 </ThemedText>
               </ThemedView>
 
@@ -393,6 +405,35 @@ export default function ListingDetailsScreen() {
             </>
           ) : null}
         </ThemedView>
+
+        {/* <ThemedView style={styles.stepContainer}>
+          <Link href="/modal">
+            <Link.Trigger>
+              <ThemedText type="subtitle">Step 2: Explore</ThemedText>
+            </Link.Trigger>
+            <Link.Preview />
+            <Link.Menu>
+              <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
+              <Link.MenuAction
+                title="Share"
+                icon="square.and.arrow.up"
+                onPress={() => alert('Share pressed')}
+              />
+              <Link.Menu title="More" icon="ellipsis">
+                <Link.MenuAction
+                  title="Delete"
+                  icon="trash"
+                  destructive
+                  onPress={() => alert('Delete pressed')}
+                />
+              </Link.Menu>
+            </Link.Menu>
+          </Link>
+          <ThemedText>
+            {`Tap the Explore tab to learn more about what's included in this starter app.`}
+          </ThemedText>
+        </ThemedView> */}
+
       </ParallaxScrollView>
     </>
   );
@@ -402,6 +443,10 @@ const styles = StyleSheet.create({
   container: {
     gap: 20,
     paddingBottom: 48,
+  },
+  stepContainer: {
+    gap: 8,
+    marginBottom: 8,
   },
   headerIcon: {
     bottom: -40,

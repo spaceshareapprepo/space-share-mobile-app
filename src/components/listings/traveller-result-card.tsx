@@ -21,7 +21,7 @@ export function RouteResultCard({
         key={listing.id}
         onPress={() => {
           router.navigate({
-            pathname: '/(drawer)/(home)/listings/[id]',
+            pathname: '/listings/[id]',
             params: {
               id: listing.id,
               segment: "routes"

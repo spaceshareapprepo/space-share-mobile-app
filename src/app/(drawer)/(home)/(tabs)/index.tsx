@@ -7,7 +7,6 @@ import {
   View,
 } from "react-native";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ShipmentResultCard } from "@/components/listings/shipment-result-card";
 import { RouteResultCard } from "@/components/listings/traveller-result-card";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
@@ -15,6 +14,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type {
   ListingsResponse,
@@ -33,9 +33,9 @@ const segments: { key: SegmentKey; label: string }[] = [
 ];
 
 const quickFilters: QuickFilter[] = [
-  { label: "JFK → ACC departures", value: "JFK to ACC", segment: "routes" },
-  { label: "Urgent medical", value: "medication", segment: "items" },
-  { label: "Atlanta arrivals", value: "ATL", segment: "routes" },
+  { label: "JFK → ACC", value: "JFK ", segment: "routes" },
+  { label: "LAX → ACC", value: "LAX", segment: "routes" },
+  { label: "Atlanta departures", value: "ATL", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
 
@@ -57,23 +57,45 @@ async function fetchListingsData(
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const generateAPIUrl = (relativePath: string) => {
-    //console.log("Constants", Constants.experienceUrl);
+    const normalisePath = (path: string) =>
+      path.startsWith("/") ? path : `/${path}`;
+
+    const resolveDevOrigin = () => {
+      if (Constants?.experienceUrl) {
+        return Constants.experienceUrl.replace("exp://", "http://");
+      }
+
+      const debuggerHost =
+        Constants?.expoGoConfig?.debuggerHost ??
+        Constants?.expoConfig?.hostUri;
+
+      if (!debuggerHost) return undefined;
+
+      const sanitized = debuggerHost.replace(
+        /^(exp|http|https):\/\//,
+        ""
+      );
+      const [host, port] = sanitized.split(":");
+      const resolvedPort = port ?? "8081";
+      return `http://${host}:${resolvedPort}`;
+    };
+
     const origin =
-      Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
+      process.env.NODE_ENV === "development"
+        ? resolveDevOrigin() ?? API_URL
+        : API_URL;
 
-    const path = relativePath.startsWith("/")
-      ? relativePath
-      : `/${relativePath}`;
-
-    if (process.env.NODE_ENV === "development") {
-      return origin?.concat(path);
+    if (!origin) {
+      throw new Error(
+        "API origin could not be determined. Set EXPO_PUBLIC_API_URL."
+      );
     }
 
-    if (!API_URL) {
-      throw new Error("API_URL environment variable is not defined");
-    }
+    const trimmedOrigin = origin.endsWith("/")
+      ? origin.slice(0, -1)
+      : origin;
 
-    return API_URL.concat(path);
+    return `${trimmedOrigin}${normalisePath(relativePath)}`;
   };
 
   console.log(

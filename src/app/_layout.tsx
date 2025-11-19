@@ -1,3 +1,4 @@
+import "@/styles/global.css";
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,7 +10,6 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
-import "@/styles/global.css";
 
 import { SplashScreenController } from "@/components/splash-screen-controller";
 
@@ -33,9 +33,9 @@ function RootNavigator() {
   useEffect(() => {
     if (session === undefined) return;
 
-    const [firstSegment] = segments;
-    const inAuthGroup = firstSegment === "(auth)";
-    const isOnGoogleAuth = firstSegment === "google-auth";
+    const [first] = segments;
+    const inAuthGroup = first === "(auth)";
+    const isOnGoogleAuth = first === "google-auth";
 
     if (!isLoggedIn && !inAuthGroup) {
       router.replace("/sign-in");
@@ -53,21 +53,30 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack>
       <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(drawer)" />
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }}/>
+        <Stack.Screen name="listings/(manage)/create" options={{ headerShown: false }}/>
+        <Stack.Screen name="listings/(manage)/[edit]" options={{ headerShown: false }}/>
       </Stack.Protected>
       <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="(auth)/sign-in" />
         <Stack.Screen name="(auth)/sign-up" />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-        <Stack.Screen name="+not-found" />
       </Stack.Protected>
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="listings/[id]"
+                options={{
+                  title: 'Listing Detail',
+                  headerTintColor: '#fff',
+                  headerTitleStyle: {
+                    fontWeight: 'bold',
+                  },
+                  headerTitle: "",
+                  headerTransparent: true,
+                }}
+              />
+        <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
