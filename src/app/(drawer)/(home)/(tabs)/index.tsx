@@ -26,7 +26,6 @@ import type {
 } from "@/constants/types";
 
 import Constants from "expo-constants";
-import { useLocalSearchParams } from "expo-router";
 import { fetch } from "expo/fetch";
 
 const segments: { key: SegmentKey; label: string }[] = [
@@ -45,27 +44,20 @@ async function cacheListing(listing: TravellerListing | ShipmentRequest) {
   await AsyncStorage.setItem(`listing:${listing.id}`, JSON.stringify(listing));
 }
 
-async function fetchListingsData(
-  searchTerm: string,
-  segment: SearchSegment = "all",
-  content: string[] = []
-): Promise<ListingsResponse> {
+async function fetchListingsData(searchTerm: string, segment: SearchSegment = "all"): Promise<ListingsResponse> {
   
   const params = new URLSearchParams();
   
-
-  console.log(`Params: ${params}`);
-
   const trimmed = searchTerm.trim();
   if (trimmed.length > 0) {
     params.set("q", trimmed);
   }
   params.set("segment", segment);
 
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  
 
   const generateAPIUrl = (relativePath: string) => {
-    //console.log("Constants", Constants.experienceUrl);
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
     const origin =
       Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
 
@@ -84,16 +76,8 @@ async function fetchListingsData(
     return API_URL.concat(path);
   };
 
-  console.log(
-    `Search API URL: ${generateAPIUrl('/api/search')}?${params.toString()}`
-  );
-
   const response = await fetch(`${generateAPIUrl('/api/search')}?${params.toString()}`,{
-    method: "POST",
-    headers:{
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ content }),
+    method: "GET",
   });
   const rawJson = await response.json();
   if (rawJson.travellers) {
@@ -131,7 +115,6 @@ function getDefaultEmptyMessage(
 export default function SearchScreen() {
   const [travelListings, setTravelListings] = useState<TravellerListing[]>([]);
   const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>([]);
-  const { content } = useLocalSearchParams();
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -145,18 +128,6 @@ export default function SearchScreen() {
     { light: "#FFFFFF", dark: "#1B1F2E" },
     "background"
   );
-  const { content: contentParam } = useLocalSearchParams<{
-    content?: string | string[];
-  }>();
-  const content = useMemo(() => {
-    if (Array.isArray(contentParam)) {
-      return contentParam;
-    }
-    if (typeof contentParam === "string" && contentParam.trim().length > 0) {
-      return [contentParam];
-    }
-    return [];
-  }, [contentParam]);
   const [segment, setSegment] = useState<SegmentKey>("routes");
   const [query, setQuery] = useState("");
   const performSearch = useCallback(
@@ -166,7 +137,7 @@ export default function SearchScreen() {
       setFetchError(null);
       setAppliedQuery(term);
       try {
-        const response = await fetchListingsData(term, segmentOverride, content);
+        const response = await fetchListingsData(term, segmentOverride);
         setTravelListings(response.travellers ?? []);
         setShipmentListings(response.shipments ?? []);
         setHasSearched(true);
@@ -183,7 +154,7 @@ export default function SearchScreen() {
         setIsFetching(false);
       }
     },
-    [content, query]
+    [query]
   );
   const sortedTravellers = useMemo(
     () =>
