@@ -26,6 +26,8 @@ import type {
 } from "@/constants/types";
 
 import Constants from "expo-constants";
+import { useLocalSearchParams } from "expo-router";
+import { fetch } from "expo/fetch";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -33,9 +35,9 @@ const segments: { key: SegmentKey; label: string }[] = [
 ];
 
 const quickFilters: QuickFilter[] = [
-  { label: "JFK → ACC", value: "JFK ", segment: "routes" },
-  { label: "LAX → ACC", value: "LAX", segment: "routes" },
-  { label: "Atlanta departures", value: "ATL", segment: "routes" },
+  { label: "JFK → ACC departures", value: "JFK", segment: "routes" },
+  { label: "Urgent medical", value: "medication", segment: "items" },
+  { label: "ATL → ACC departures", value: "ATL", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
 
@@ -45,9 +47,15 @@ async function cacheListing(listing: TravellerListing | ShipmentRequest) {
 
 async function fetchListingsData(
   searchTerm: string,
-  segment: SearchSegment = "all"
+  segment: SearchSegment = "all",
+  content: string[] = []
 ): Promise<ListingsResponse> {
+  
   const params = new URLSearchParams();
+  
+
+  console.log(`Params: ${params}`);
+
   const trimmed = searchTerm.trim();
   if (trimmed.length > 0) {
     params.set("q", trimmed);
@@ -57,53 +65,36 @@ async function fetchListingsData(
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const generateAPIUrl = (relativePath: string) => {
-    const normalisePath = (path: string) =>
-      path.startsWith("/") ? path : `/${path}`;
-
-    const resolveDevOrigin = () => {
-      if (Constants?.experienceUrl) {
-        return Constants.experienceUrl.replace("exp://", "http://");
-      }
-
-      const debuggerHost =
-        Constants?.expoGoConfig?.debuggerHost ??
-        Constants?.expoConfig?.hostUri;
-
-      if (!debuggerHost) return undefined;
-
-      const sanitized = debuggerHost.replace(
-        /^(exp|http|https):\/\//,
-        ""
-      );
-      const [host, port] = sanitized.split(":");
-      const resolvedPort = port ?? "8081";
-      return `http://${host}:${resolvedPort}`;
-    };
-
+    //console.log("Constants", Constants.experienceUrl);
     const origin =
-      process.env.NODE_ENV === "development"
-        ? resolveDevOrigin() ?? API_URL
-        : API_URL;
+      Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
 
-    if (!origin) {
-      throw new Error(
-        "API origin could not be determined. Set EXPO_PUBLIC_API_URL."
-      );
+    const path = relativePath.startsWith("/")
+      ? relativePath
+      : `/${relativePath}`;
+
+    if (process.env.NODE_ENV === "development") {
+      return origin?.concat(path);
     }
 
-    const trimmedOrigin = origin.endsWith("/")
-      ? origin.slice(0, -1)
-      : origin;
+    if (!API_URL) {
+      throw new Error("API_URL environment variable is not defined");
+    }
 
-    return `${trimmedOrigin}${normalisePath(relativePath)}`;
+    return API_URL.concat(path);
   };
 
   console.log(
     `Search API URL: ${generateAPIUrl('/api/search')}?${params.toString()}`
   );
-  const response = await fetch(
-    `${generateAPIUrl('/api/search')}?${params.toString()}`
-  );
+
+  const response = await fetch(`${generateAPIUrl('/api/search')}?${params.toString()}`,{
+    method: "POST",
+    headers:{
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
   const rawJson = await response.json();
   if (rawJson.travellers) {
     for (const listing of rawJson.travellers) {
@@ -139,9 +130,8 @@ function getDefaultEmptyMessage(
 
 export default function SearchScreen() {
   const [travelListings, setTravelListings] = useState<TravellerListing[]>([]);
-  const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>(
-    []
-  );
+  const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>([]);
+  const { content } = useLocalSearchParams();
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -155,6 +145,18 @@ export default function SearchScreen() {
     { light: "#FFFFFF", dark: "#1B1F2E" },
     "background"
   );
+  const { content: contentParam } = useLocalSearchParams<{
+    content?: string | string[];
+  }>();
+  const content = useMemo(() => {
+    if (Array.isArray(contentParam)) {
+      return contentParam;
+    }
+    if (typeof contentParam === "string" && contentParam.trim().length > 0) {
+      return [contentParam];
+    }
+    return [];
+  }, [contentParam]);
   const [segment, setSegment] = useState<SegmentKey>("routes");
   const [query, setQuery] = useState("");
   const performSearch = useCallback(
@@ -164,7 +166,7 @@ export default function SearchScreen() {
       setFetchError(null);
       setAppliedQuery(term);
       try {
-        const response = await fetchListingsData(term, segmentOverride);
+        const response = await fetchListingsData(term, segmentOverride, content);
         setTravelListings(response.travellers ?? []);
         setShipmentListings(response.shipments ?? []);
         setHasSearched(true);
@@ -181,7 +183,7 @@ export default function SearchScreen() {
         setIsFetching(false);
       }
     },
-    [query]
+    [content, query]
   );
   const sortedTravellers = useMemo(
     () =>
