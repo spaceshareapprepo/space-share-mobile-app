@@ -25,7 +25,6 @@ import type {
   TravellerListing,
 } from "@/constants/types";
 
-import Constants from "expo-constants";
 import { fetch } from "expo/fetch";
 
 const segments: { key: SegmentKey; label: string }[] = [
@@ -54,31 +53,7 @@ async function fetchListingsData(searchTerm: string, segment: SearchSegment = "a
   }
   params.set("segment", segment);
 
-  
-
-  const generateAPIUrl = (relativePath: string) => {
-    const API_URL = process.env.EXPO_PUBLIC_API_URL;
-    const origin =
-      Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
-
-    const path = relativePath.startsWith("/")
-      ? relativePath
-      : `/${relativePath}`;
-
-    if (process.env.NODE_ENV === "development") {
-      return origin?.concat(path);
-    }
-
-    if (!API_URL) {
-      throw new Error("API_URL environment variable is not defined");
-    }
-
-    return API_URL.concat(path);
-  };
-
-  const response = await fetch(`${generateAPIUrl('/api/search')}?${params.toString()}`,{
-    method: "GET",
-  });
+  const response = await fetch(`/api/search?${params.toString()}`, { method: "GET" });
   const rawJson = await response.json();
   if (rawJson.travellers) {
     for (const listing of rawJson.travellers) {

@@ -7,10 +7,31 @@ import type {
 } from "../constants/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Constants from "expo-constants";
 
 export const cn = (...inputs: ClassValue[]):string => {
   return twMerge(clsx(inputs))
 }
+
+export const generateAPIUrl = (relativePath: string) => {
+    const API_URL = process.env.EXPO_PUBLIC_API_URL;
+    const origin =
+      Constants?.experienceUrl?.replace("exp://", "http://") || API_URL;
+
+    const path = relativePath.startsWith("/")
+      ? relativePath
+      : `/${relativePath}`;
+
+    if (process.env.NODE_ENV === "development") {
+      return origin?.concat(path);
+    }
+
+    if (!API_URL) {
+      throw new Error("API_URL environment variable is not defined");
+    }
+
+    return API_URL.concat(path);
+  };
 
 export function formatRelative(value: string) {
   const target = new Date(value).getTime();
