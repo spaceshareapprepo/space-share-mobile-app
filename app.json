@@ -40,7 +40,7 @@
       [
         "expo-router",
       {
-        "origin":"https://space-share-mobile-app.vercel.app"
+        "origin":"https://space-share-mobile-app.expo.app"
       }],
       [
         "expo-splash-screen",
