@@ -36,7 +36,7 @@ const segments: { key: SegmentKey; label: string }[] = [
 const quickFilters: QuickFilter[] = [
   { label: "JFK → ACC departures", value: "JFK", segment: "routes" },
   { label: "Urgent medical", value: "medication", segment: "items" },
-  { label: "ATL → ACC departures", value: "ATL", segment: "routes" },
+  { label: "LAX → ACC departures", value: "LAX", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
 
@@ -174,7 +174,7 @@ export default function SearchScreen() {
       ),
     [shipmentListings]
   );
-  // This sets the hasSearch to false that hides the result section  useEffect(() => {    if (query.length === 0) {      setHasSearched(false);    }  }, [query]);
+
   const filteredTravellers = useMemo(
     () => filterTravellers(sortedTravellers, appliedQuery),
     [query, sortedTravellers]
