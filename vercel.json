@@ -1,6 +1,6 @@
 {
-  "buildCommand": "expo export -p web",
-  "outputDirectory": "dist/server",
+  "buildCommand": "expo export -p web && node ./scripts/prepare-web-files.js",
+  "outputDirectory": "dist/client",
   "devCommand": "expo",
   "cleanUrls": true,
   "framework": null,
