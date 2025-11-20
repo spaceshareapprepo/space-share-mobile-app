@@ -1,1 +1,16 @@
-{"projectId":"prj_Hqd43pQgn1fC3vAiMhEbr0XskbAb","orgId":"team_6G3AH3F9ahbTKTBeIj7OEhzK","projectName":"space-share-mobile-app"}
+{
+  "projectId": "prj_Hqd43pQgn1fC3vAiMhEbr0XskbAb",
+  "orgId": "team_6G3AH3F9ahbTKTBeIj7OEhzK",
+  "projectName": "space-share-mobile-app",
+  "settings": {
+    "createdAt": 1762737499264,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": "npm install",
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}
