@@ -64,6 +64,7 @@ function RootNavigator() {
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }}/>
         <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false }}/>
       </Stack.Protected>
+        <Stack.Screen name="index" options={{ title: 'Hello World' }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="listings/[id]"
                 options={{

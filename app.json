@@ -74,6 +74,9 @@
     "extra": {
       "eas": {
         "projectId": "508d6c20-1ab0-4025-8e8e-6090fa9d9e8c"
+      },
+      "router": {
+        "origin": "https://space-share-mobile-app.expo.app"
       }
     },
     "owner": "spaceshareapp"

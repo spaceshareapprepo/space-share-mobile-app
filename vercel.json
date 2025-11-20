@@ -1,13 +1,16 @@
 {
-  "buildCommand": "expo export -p web && node ./scripts/prepare-web-files.js",
+  "buildCommand": "expo export -p web",
   "outputDirectory": "dist/client",
-  "devCommand": "expo",
-  "cleanUrls": true,
-  "framework": null,
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@5.1.8",
+      "includeFiles": "dist/server/**"
+    }
+  },
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "/"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ]
 }
