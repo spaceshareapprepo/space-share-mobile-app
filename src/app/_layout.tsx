@@ -36,14 +36,15 @@ function RootNavigator() {
     const [first] = segments;
     const inAuthGroup = first === "(auth)";
     const isOnGoogleAuth = first === "google-auth";
+    const isLanding = first === undefined;
 
-    if (!isLoggedIn && !inAuthGroup) {
-      router.replace("/sign-in");
+    if (!isLoggedIn && !inAuthGroup && !isLanding) {
+      router.replace("/");
       return;
     }
 
-    if (isLoggedIn && (inAuthGroup || isOnGoogleAuth)) {
-      router.replace("/");
+    if (isLoggedIn && (inAuthGroup || isOnGoogleAuth || isLanding)) {
+      router.replace("/(drawer)/(home)/(tabs)");
     }
   }, [isLoggedIn, session, segments, router]);
 
@@ -58,13 +59,12 @@ function RootNavigator() {
         <Stack.Screen name="(drawer)" options={{ headerShown: false }}/>
         <Stack.Screen name="listings/(manage)/create" options={{ headerShown: false }}/>
         <Stack.Screen name="listings/(manage)/[edit]" options={{ headerShown: false }}/>
+        <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       </Stack.Protected>
-      <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }}/>
         <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false }}/>
-      </Stack.Protected>
-        <Stack.Screen name="index" options={{ title: 'Hello World' }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="listings/[id]"
                 options={{
@@ -78,6 +78,7 @@ function RootNavigator() {
                 }}
               />
         <Stack.Screen name="+not-found" />
+      </Stack.Protected>
     </Stack>
   );
 }
