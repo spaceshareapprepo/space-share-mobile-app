@@ -2,6 +2,7 @@
 
 import { ChatMessageItem } from '@/components/chat-message'
 import { ThemedView } from '@/components/themed-view'
+import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button'
 import {
   FormControl,
@@ -97,9 +98,9 @@ export const RealtimeChat = ({
         >
           {allMessages.length === 0 ? (
             <ThemedView className="items-center py-10">
-              <Text className="text-sm text-muted-foreground">
+              <ThemedText className="text-sm text-muted-foreground">
                 No messages yet. Start the conversation!
-              </Text>
+              </ThemedText>
             </ThemedView>
           ) : (
             allMessages.map((message, index) => {

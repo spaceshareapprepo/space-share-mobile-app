@@ -40,6 +40,7 @@ const ICON_MAPPING: Record<string, IconConfig> = {
   "plus.circle.outline": { library: 'MaterialIcons', name: "add-circle-outline" },
   "workspace.outline": { library: 'MaterialIcons', name: "workspaces-outline" },
   "account.circle": { library: 'MaterialIcons', name: "account-circle" },
+  "clear": { library: 'MaterialIcons', name: "clear" },
   
   // Feather Icons
   "cube.box": { library: 'Feather', name: "box" },

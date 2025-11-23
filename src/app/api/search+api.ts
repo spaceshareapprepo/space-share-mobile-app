@@ -1,5 +1,5 @@
 import type { ListingsResponse } from "@/constants/types";
-import { fetchListingsQuery } from "@/lib/database/db";
+import { fetchListingsAPI } from "@/lib/database/db";
 import {
   mapToShipmentRequest,
   mapToTravellerListing,
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const typeFilter = segmentToListingType(segment);
 
   try {
-    const rows = await fetchListingsQuery({ query, typeFilter });
+    const rows = await fetchListingsAPI({ query, typeFilter });
 
     const travellers = rows.data
       .filter((row: any) => row.type_of_listing === "travel")

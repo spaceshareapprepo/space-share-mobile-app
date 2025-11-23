@@ -7,17 +7,12 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { shipmentRequests, travellerListings } from '@/constants/mock-data';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { AutocompleteDropdownControl } from '@/components/autocomplete-dropdown';
 
 export default function PublishScreen() {
   const tintColor = useThemeColor({}, 'tint');
-  const borderColor = useThemeColor(
-    { light: '#D9E2F9', dark: '#252B3E' },
-    'background'
-  );
-  const bannerBackground = useThemeColor(
-    { light: '#F2F6FF', dark: '#151B2A' },
-    'background'
-  );
+  const borderColor = useThemeColor({},'background');
+  const backgroundColor = useThemeColor({},'background');
 
   const nextDeparture = useMemo(() => travellerListings[0], []);
   const urgentShipment = useMemo(
@@ -37,14 +32,14 @@ export default function PublishScreen() {
         />
       }>
       <ThemedView style={styles.container}>
-        <ThemedView style={[styles.heroCard, { backgroundColor: bannerBackground, borderColor }]}>
-          <View style={styles.heroHeader}>
+        <ThemedView style={[styles.heroCard]}>
+          <ThemedView style={styles.heroHeader}>
             <ThemedText type="title">Publish to the marketplace</ThemedText>
             <ThemedText style={styles.heroSubtitle}>
               Share your extra luggage space or post an item you need hand-delivered between the {'USA <-> Ghana'} corridor. Drafts auto-save and moderators review high-risk items within 30 minutes.
             </ThemedText>
-          </View>
-          <View style={styles.heroActions}>
+          </ThemedView>
+          <ThemedView style={styles.heroActions}>
             <ActionButton
               icon="airplane.circle.fill"
               title="I have space"
@@ -58,19 +53,19 @@ export default function PublishScreen() {
               tintColor={tintColor}
               outlined
             />
-          </View>
-          <View style={styles.heroFooter}>
+          </ThemedView>
+          <ThemedView style={styles.heroFooter}>
             <IconSymbol name="checkmark.seal.fill" color={tintColor} size={18} />
             <ThemedText style={styles.heroFooterText}>
               Safety-first: ID verification, document uploads, and escrow (roadmap) protect both
               sides.
             </ThemedText>
-          </View>
+          </ThemedView>
         </ThemedView>
 
-        <View style={styles.section}>
+        <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Quick-start templates</ThemedText>
-          <View style={styles.templateList}>
+          <ThemedView style={styles.templateList}>
             <TemplateCard
               icon="airplane.circle.fill"
               title={`${nextDeparture.origin} → ${nextDeparture.destination}`}
@@ -98,25 +93,25 @@ export default function PublishScreen() {
                 highlighted
               />
             ) : null}
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
 
-        <View style={styles.section}>
+        <ThemedView style={styles.section}>
           <ThemedText type="subtitle">Compliance checklist</ThemedText>
           <ThemedText style={styles.sectionDescription}>
             Reduce back-and-forth by providing complete documentation. SpaceShare validates each
             step before your post goes live.
           </ThemedText>
-          <View style={styles.checklist}>
+          <ThemedView style={styles.checklist}>
             {checklistItems.map((item) => (
               <ChecklistItem key={item.title} item={item} tintColor={tintColor} />
             ))}
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
 
         <ThemedView style={[styles.sectionCard, { borderColor }]}>
           <ThemedText type="subtitle">Coming soon</ThemedText>
-          <View style={styles.roadmapList}>
+          <ThemedView style={styles.roadmapList}>
             <RoadmapItem
               icon="megaphone.fill"
               tintColor={tintColor}
@@ -129,8 +124,9 @@ export default function PublishScreen() {
               title="Smart alerts"
               description="Automated notifications when a match aligns with your draft criteria."
             />
-          </View>
+          </ThemedView>
         </ThemedView>
+        <AutocompleteDropdownControl />
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -200,12 +196,12 @@ function TemplateCard({
       style={[
         styles.templateCard,
         { borderColor },
-        highlighted ? { borderColor: tintColor, backgroundColor: `${tintColor}10` } : null,
+        highlighted ? { borderColor: tintColor, backgroundColor: `${tintColor}15` } : null,
       ]}>
-      <View style={[styles.templateIcon, { backgroundColor: `${tintColor}15` }]}>
+      <ThemedView style={[styles.templateIcon, { backgroundColor: `${tintColor}15` }]}>
         <IconSymbol name={icon} color={tintColor} size={20} />
-      </View>
-      <View style={styles.templateText}>
+      </ThemedView>
+      <ThemedView style={styles.templateText}>
         <ThemedText type="subtitle" style={styles.templateTitle}>
           {title}
         </ThemedText>
@@ -215,7 +211,7 @@ function TemplateCard({
             • {detail}
           </ThemedText>
         ))}
-      </View>
+      </ThemedView>
       <Pressable style={[styles.templateAction, { backgroundColor: tintColor }]}>
         <ThemedText style={styles.templateActionLabel}>{actionLabel}</ThemedText>
       </Pressable>
@@ -249,15 +245,15 @@ const checklistItems: ChecklistItemType[] = [
 
 function ChecklistItem({ item, tintColor }: { item: ChecklistItemType; tintColor: string }) {
   return (
-    <View style={styles.checklistItem}>
-      <View style={[styles.checklistBullet, { backgroundColor: `${tintColor}15` }]}>
+    <ThemedView style={styles.checklistItem}>
+      <ThemedView style={[styles.checklistBullet, { backgroundColor: `${tintColor}15` }]}>
         <IconSymbol name="checkmark.seal.fill" color={tintColor} size={16} />
-      </View>
-      <View style={styles.checklistText}>
+      </ThemedView>
+      <ThemedView style={styles.checklistText}>
         <ThemedText style={styles.checklistTitle}>{item.title}</ThemedText>
         <ThemedText style={styles.checklistDescription}>{item.description}</ThemedText>
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 
@@ -270,15 +266,15 @@ type RoadmapItemProps = {
 
 function RoadmapItem({ icon, title, description, tintColor }: RoadmapItemProps) {
   return (
-    <View style={styles.roadmapItem}>
-      <View style={[styles.roadmapIcon, { backgroundColor: `${tintColor}18` }]}>
+    <ThemedView style={styles.roadmapItem}>
+      <ThemedView style={[styles.roadmapIcon, { backgroundColor: `${tintColor}18` }]}>
         <IconSymbol name={icon} color={tintColor} size={18} />
-      </View>
-      <View style={styles.roadmapText}>
+      </ThemedView>
+      <ThemedView style={styles.roadmapText}>
         <ThemedText style={styles.roadmapTitle}>{title}</ThemedText>
         <ThemedText style={styles.roadmapDescription}>{description}</ThemedText>
-      </View>
-    </View>
+      </ThemedView>
+    </ThemedView>
   );
 }
 

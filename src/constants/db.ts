@@ -30,3 +30,8 @@ export const SELECT_COLUMNS_LISTINGS = `
           iata_code
         )
       `;
+
+export const SELECT_COLUMNS_AIRPORTS = `
+        id,
+        label
+      `;

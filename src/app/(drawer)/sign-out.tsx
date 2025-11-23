@@ -1,8 +1,8 @@
-import { supabase } from "../../lib/supabase";
+import { ThemedText } from '@/components/themed-text';
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator } from "react-native";
+import { supabase } from "../../lib/supabase";
 
 export default function SignOutScreen() {
   const [loading, setLoading] = useState(false);
@@ -37,32 +37,14 @@ export default function SignOutScreen() {
   }, [handleSignOut]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <>
       <ActivityIndicator size="large" animating={loading} />
-      <Text style={styles.message}>
+      <ThemedText className="text-16">
         {errorMessage ? "We couldn't sign you out." : "Signing you out..."}
-      </Text>
+      </ThemedText>
       {errorMessage && (
-        <Text style={styles.error}>{errorMessage}</Text>
+        <ThemedText className="text-14 text-center text-[#B00020]">{errorMessage}</ThemedText>
       )}
-    </SafeAreaView>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    gap: 16,
-  },
-  message: {
-    fontSize: 16,
-  },
-  error: {
-    fontSize: 14,
-    textAlign: "center",
-    color: "#B00020",
-  },
-});

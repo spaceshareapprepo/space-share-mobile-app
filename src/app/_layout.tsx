@@ -8,17 +8,17 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
 
 import { SplashScreenController } from "@/components/splash-screen-controller";
-
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AuthProvider from "@/providers/auth-provider";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
+import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 
 export const unstable_settings = {
   anchor: "(drawer)",
@@ -56,27 +56,27 @@ function RootNavigator() {
   return (
     <Stack>
       <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(drawer)" options={{ headerShown: false }}/>
-        <Stack.Screen name="listings/(manage)/create" options={{ headerShown: false }}/>
-        <Stack.Screen name="listings/(manage)/[edit]" options={{ headerShown: false }}/>
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="listings/(manage)/create" options={{ headerShown: false }} />
+        <Stack.Screen name="listings/(manage)/[edit]" options={{ headerShown: false }} />
         <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }}/>
-        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false }}/>
+        <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="listings/[id]"
-                options={{
-                  title: 'Listing Detail',
-                  headerTintColor: '#fff',
-                  headerTitleStyle: {
-                    fontWeight: 'bold',
-                  },
-                  headerTitle: "",
-                  headerTransparent: true,
-                }}
-              />
+          options={{
+            title: 'Listing Detail',
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+            headerTitle: "",
+            headerTransparent: true,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack.Protected>
     </Stack>
@@ -96,15 +96,19 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <GluestackUIProvider>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <AuthProvider>
-            <SplashScreenController />
-            <RootNavigator />
-            <StatusBar style="auto" />
-          </AuthProvider>
-        </ThemeProvider>
-      </GluestackUIProvider>
+      <SafeAreaView className="flex flex-1 justify-center" edges={["top", "bottom"]}>
+        <GluestackUIProvider>
+          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+            <AuthProvider>
+              <SplashScreenController />
+              <AutocompleteDropdownContextProvider>
+                <RootNavigator />
+              </AutocompleteDropdownContextProvider>
+              <StatusBar style="auto" />
+            </AuthProvider>
+          </ThemeProvider>
+        </GluestackUIProvider>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

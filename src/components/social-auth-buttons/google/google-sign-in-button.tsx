@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { TouchableOpacity } from "react-native";
 
 import { expo } from "@/../app.json";
-import { Text } from "@react-navigation/elements";
+import { ThemedText } from "@/components/themed-text";
 import { Image } from "expo-image";
 import * as WebBrowser from "expo-web-browser";
 
@@ -129,7 +129,7 @@ export default function GoogleSignInButton({
         }}
         style={{ width: 24, height: 24, marginRight: 10 }}
       />
-      <Text
+      <ThemedText
         style={{
           fontSize: 16,
           color: "#757575",
@@ -138,7 +138,7 @@ export default function GoogleSignInButton({
         }}
       >
         {buttonText}
-      </Text>
+      </ThemedText>
     </TouchableOpacity>
   );
 }

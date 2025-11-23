@@ -1,9 +1,9 @@
+import { ThemedText } from '@/components/themed-text';
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef } from "react";
-import { ActivityIndicator, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ActivityIndicator } from "react-native";
 
 export default function GoogleAuthCallback() {
   const { isLoggedIn, isLoading } = useAuthContext();
@@ -36,22 +36,9 @@ export default function GoogleAuthCallback() {
     : "Redirecting to sign-in...";
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <>
       <ActivityIndicator size="large" />
-      <Text style={styles.message}>{message}</Text>
-    </SafeAreaView>
+      <ThemedText className="mt-16 text-16">{message}</ThemedText>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  message: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-});

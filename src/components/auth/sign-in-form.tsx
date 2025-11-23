@@ -6,7 +6,6 @@ import { Input, InputField } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
 
 import { AlertCircleIcon, InfoIcon } from '@/components/ui/icon';
 
@@ -83,7 +82,7 @@ export default function SignInForm() {
     }
   }
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView className="mt-10 p-10 w-full">
       <VStack space="lg" className="w-full">
         <ThemedView>
           <ThemedText
@@ -218,11 +217,3 @@ export default function SignInForm() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 10,
-    padding: 10,
-    width: "100%",
-  },
-});

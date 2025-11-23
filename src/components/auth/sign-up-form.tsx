@@ -21,7 +21,6 @@ import { VStack } from "@/components/ui/vstack";
 import { supabase } from "@/lib/supabase";
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
 
 type ValidationErrors = Partial<
   Record<"firstName" | "lastName" | "username" | "email" | "password", string>
@@ -123,7 +122,7 @@ export default function SignUpForm() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView className="mt-10 p-10 w-full">
       <VStack space="lg" className="w-full">
         <ThemedView>
           <ThemedText type="title" accessibilityRole="header" className="mb-3">
@@ -371,11 +370,3 @@ export default function SignUpForm() {
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 10,
-    padding: 10,
-    width: "100%",
-  },
-});

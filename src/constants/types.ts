@@ -1,4 +1,4 @@
-import { Json, Tables } from "@/lib/database/supabase.types"
+import { Json, Tables } from "@/lib/database/supabase.types";
 
 export type SegmentKey = 'routes' | 'items';
 
@@ -115,6 +115,20 @@ export type ListingsResponse = {
   params: {
     q: string | null;
     segment: SearchSegment;
+  };
+};
+
+export type LocationsArray = Pick<Tables<"airports">, "id" | "label"> & {
+  id: string;
+  label: string | null;
+};
+
+export type LocationsResponse = {
+  data: LocationsArray[];
+  total: number;
+  tookMs: number;
+  params: {
+    q: string | null;
   };
 };
 

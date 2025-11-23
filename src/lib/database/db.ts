@@ -1,5 +1,8 @@
-import { SELECT_COLUMNS_LISTINGS } from '@/constants/db';
-import type { ListingType, ListingRow } from '@/constants/types';
+import { 
+  SELECT_COLUMNS_LISTINGS,
+  SELECT_COLUMNS_AIRPORTS
+ } from '@/constants/db';
+import type { ListingType, ListingRow, LocationsArray } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 
 export async function fetchListings() {
@@ -21,7 +24,7 @@ export async function fetchListings() {
   }
 }
 
-export async function fetchListingsQuery({ 
+export async function fetchListingsAPI({ 
   query, 
   typeFilter 
 }: {
@@ -78,12 +81,44 @@ export async function fetchListingsQuery({
       return matchesListing || matchesOrigin || matchesDestination;
     });
     
-    // console.log(`FilteredFromSupabase: ${JSON.stringify(filteredData)}`)
-
     return { data: filteredData, error: null };
     
   } catch (err) {
     console.error('Failed to connect to supabase public.listings:', err);
+    return { data: [], error: err as Error };
+  }
+}
+
+
+export async function fetchLocationsAPI({ 
+  query
+}: {
+  query: string | null;
+}) {
+  try {
+    let supabaseQuery = supabase
+      .from('airports')
+      .select(SELECT_COLUMNS_AIRPORTS)
+      .order('city', { ascending: true })
+      .limit(5);
+    if (query) {
+      const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
+      supabaseQuery = supabaseQuery.or(
+        `city.ilike.${searchPattern},name.ilike.${searchPattern},iata_code.ilike.${searchPattern}`
+      );
+    }
+    const { data, error } = await supabaseQuery.overrideTypes<
+      LocationsArray[],
+      { merge: false }
+    >();
+
+    if (error) {
+      throw error;
+    }
+
+    return { data: data ?? [], error: null };
+  } catch (err) {
+    console.error('Failed to fetch locations:', err);
     return { data: [], error: err as Error };
   }
 }
