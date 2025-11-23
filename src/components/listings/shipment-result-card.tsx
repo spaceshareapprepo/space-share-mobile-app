@@ -4,7 +4,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import type { ShipmentRequest } from '@/constants/types';
 import { formatRelative } from '@/lib/utils';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 export function ShipmentResultCard({
   shipment,
@@ -15,56 +15,61 @@ export function ShipmentResultCard({
   tintColor: string;
   borderColor: string;
 }>) {
+  const handlePress = () =>
+    router.navigate({
+      pathname: "/listings/[id]",
+      params: {
+        id: shipment.id,
+        segment: "items",
+      },
+    });
+
   return (
-    <ThemedView style={[styles.resultCard, { borderColor }]}>
-      <Pressable
-        key={shipment.id}
-        onPress={() => {
-          router.navigate({
-            pathname: "/listings/[id]",
-            params: {
-              id: shipment.id,
-              segment: "items",
-            },
-          });
-        }}
-      >
-        <View style={styles.resultHeader}>
-          <View
+    <Pressable
+      key={shipment.id}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`View shipment ${shipment.title}`}
+    >
+      <ThemedView style={[styles.resultCard, { borderColor }]}>
+        <ThemedView style={styles.resultHeader}>
+          <ThemedView
             style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}
           >
             <IconSymbol name="cube.box.fill" size={20} color={tintColor} />
-          </View>
-          <View style={styles.resultHeaderText}>
+          </ThemedView>
+          <ThemedView style={styles.resultHeaderText}>
             <ThemedText type="subtitle">{shipment.title}</ThemedText>
             <ThemedText style={styles.resultMetaText}>
-              {shipment.origin} → {shipment.destination} · Ready{" "}
+              {shipment.origin} to {shipment.destination} | {" "}
               {formatRelative(shipment.departureDate)}
             </ThemedText>
-          </View>
-          <View
+          </ThemedView>
+          <ThemedView
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
               Budget ${shipment.pricePerUnit}
             </ThemedText>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
         <ThemedText style={styles.resultBody}>{shipment.description}</ThemedText>
-        <View style={styles.resultFooter}>
-          <View style={styles.resultInfoRow}>
+        <ThemedView style={styles.resultFooter}>
+          <ThemedView style={styles.resultInfoRow}>
             <IconSymbol name="clock.fill" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
-              {shipment.maxWeightKg}kg ·{" "}
-              {shipment.shipmentCode === "urgent" ? "Needs fast match" : "Matching"}
+              {shipment.maxWeightKg}kg {" "}
+              {shipment.shipmentCode === "urgent"
+                ? "Needs fast match"
+                : "Matching"}
             </ThemedText>
-          </View>
+          </ThemedView>
           <ThemedText style={styles.resultInfoText}>
             {shipment.handlingNotes}
           </ThemedText>
-        </View>
-      </Pressable>
-    </ThemedView>
+        </ThemedView>
+      </ThemedView>
+    </Pressable>
   );
 }
 

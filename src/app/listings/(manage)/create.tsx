@@ -30,6 +30,7 @@ import { useRouter } from "expo-router";
 import type { Tables, TablesInsert } from "@/lib/database/supabase.types";
 import { supabase } from "@/lib/supabase";
 import { HStack } from "@/components/ui/hstack";
+import { AutocompleteDropdownControl } from '@/components/autocomplete-dropdown';
 
 type ListingType = Tables<'listings'>["type_of_listing"];
 type ShipmentCode = Tables<'listings'>["shipment_code"];
@@ -498,6 +499,7 @@ export default function CreateListing() {
               </FormControlError>
             )}
           </FormControl>
+          <AutocompleteDropdownControl />
 
           {typeOfListing === "shipment" && (
             <ThemedView style={styles.segmentSection}>

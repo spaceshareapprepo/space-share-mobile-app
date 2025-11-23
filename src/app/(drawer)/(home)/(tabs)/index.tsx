@@ -213,15 +213,15 @@ export default function SearchScreen() {
         />
       }
     >
-      <ThemedView style={styles.container}>
-        <ThemedView style={[styles.heroCard, { borderColor }]}>
+      <ThemedView style={ styles.container }>
+        <ThemedView style={ [styles.heroCard, { borderColor }] }>
           <ThemedText type="title">Find your perfect match</ThemedText>
           <ThemedText style={styles.heroSubtitle}>
             Search real travellers and shipment requests across the USA to Ghana
             corridor. Filter by route, item type, or urgency to start a trusted
             conversation.
           </ThemedText>
-          <View
+          <ThemedView
             style={[
               styles.searchField,
               { backgroundColor: inputBackground, borderColor },
@@ -234,20 +234,20 @@ export default function SearchScreen() {
               onSubmitEditing={() => void performSearch()}
               returnKeyType="search"
               placeholder="Search airport, city, traveller, or item"
-              placeholderTextColor="#94A3B8"
-              style={styles.searchInput}
+              placeholderTextColor= {tintColor}
+              style={ [styles.searchInput, {color:tintColor}] }
               accessibilityLabel="Search routes and shipments"
               submitBehavior="blurAndSubmit"
             />
-            {query.length > 0 ? (
+            {query.length > 3 ? (
               <Pressable onPress={() => void performSearch()}>
-                <ThemedText style={[styles.clearText, { color: tintColor }]}>
+                <ThemedText style={ [styles.clearText, { color: tintColor }] }>
                   Search
                 </ThemedText>
               </Pressable>
             ) : null}
-          </View>
-          <View style={[styles.quickFilters]}>
+          </ThemedView>
+          <ThemedView style={[styles.quickFilters]}>
             {quickFilters.map((filter) => (
               <Pressable
                 key={filter.label}
@@ -264,15 +264,15 @@ export default function SearchScreen() {
                 <ThemedText
                   style={[styles.filterChipText, { color: tintColor }]}
                 >
-                  {filter.label}
+                  { filter.label }
                 </ThemedText>
               </Pressable>
             ))}
-          </View>
+          </ThemedView>
         </ThemedView>
         {hasSearched && (
           <>
-            <View style={[styles.segmentedControl, { borderColor }]}>
+            <ThemedView style={[styles.segmentedControl, { borderColor }]}>
               {segments.map((item) => {
                 const isActive = item.key === segment;
                 return (
@@ -295,8 +295,8 @@ export default function SearchScreen() {
                   </Pressable>
                 );
               })}
-            </View>
-            <View style={styles.resultsMeta}>
+            </ThemedView>
+            <ThemedView style={styles.resultsMeta}>
               <ThemedText type="subtitle">
                 {`${results.length} ${
                   segment === "routes" ? "traveller" : "shipment"
@@ -306,8 +306,8 @@ export default function SearchScreen() {
                 Tap a card to review verification badges, connect, and agree on
                 pricing terms.
               </ThemedText>
-            </View>
-            <View style={styles.resultsList}>{renderResults()}</View>
+            </ThemedView>
+            <ThemedView style={styles.resultsList}>{renderResults()}</ThemedView>
           </>
         )}
       </ThemedView>
@@ -353,7 +353,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  searchInput: { flex: 1, fontSize: 16 },
+  searchInput: { 
+    flex: 1, 
+    fontSize: 16 
+  },
   clearText: { fontWeight: "600" },
   quickFilters: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   filterChip: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },

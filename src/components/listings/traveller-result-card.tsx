@@ -1,10 +1,10 @@
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import type { TravellerListing } from '@/constants/types';
-import { formatDate, formatRelative } from '@/lib/utils';
-import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import type { TravellerListing } from "@/constants/types";
+import { formatDate, formatRelative } from "@/lib/utils";
+import { router } from "expo-router";
+import { Pressable, StyleSheet } from "react-native";
 
 export function RouteResultCard({
   listing,
@@ -15,22 +15,25 @@ export function RouteResultCard({
   tintColor: string;
   borderColor: string;
 }>) {
+  const handlePress = () =>
+    router.navigate({
+      pathname: "/listings/[id]",
+      params: {
+        id: listing.id,
+        segment: "items",
+      },
+    });
+
   return (
-    <ThemedView style={[styles.resultCard, { borderColor }]}>
-      <Pressable
-        key={listing.id}
-        onPress={() => {
-          router.navigate({
-            pathname: '/listings/[id]',
-            params: {
-              id: listing.id,
-              segment: "routes"
-            },
-          });
-        }}
-      >
-        <View style={styles.resultHeader}>
-          <View
+    <Pressable
+      key={listing.id}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`View listing from ${listing.origin} to ${listing.destination}`}
+    >
+      <ThemedView style={[styles.resultCard, { borderColor }]}>
+        <ThemedView style={styles.resultHeader}>
+          <ThemedView
             style={[styles.resultIcon, { backgroundColor: `${tintColor}15` }]}
           >
             <IconSymbol
@@ -38,8 +41,8 @@ export function RouteResultCard({
               size={20}
               color={tintColor}
             />
-          </View>
-          <View style={styles.resultHeaderText}>
+          </ThemedView>
+          <ThemedView style={styles.resultHeaderText}>
             <ThemedText type="subtitle">
               {listing.origin} → {listing.destination}
             </ThemedText>
@@ -47,28 +50,27 @@ export function RouteResultCard({
               Departs {formatDate(listing.departureDate)} ·{" "}
               {formatRelative(listing.departureDate)}
             </ThemedText>
-          </View>
-          <View
+          </ThemedView>
+          <ThemedView
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
               ${listing.pricePerUnit}/kg
             </ThemedText>
-          </View>
-        </View>
+          </ThemedView>
+        </ThemedView>
         <ThemedText style={styles.resultBody}>{listing.description}</ThemedText>
-        <View style={styles.resultFooter}>
-          <View style={styles.resultInfoRow}>
+        <ThemedView style={styles.resultFooter}>
+          <ThemedView style={styles.resultInfoRow}>
             <IconSymbol name="cube.box" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
               Available weight: {listing.pricePerUnit}kg
-              capacity
             </ThemedText>
-          </View>
-          <View style={styles.badgeRow}>
-            {/* {listing.isVerified.map((badge) => (
-              <View
-                key={badge}
+          </ThemedView>
+          <ThemedView style={styles.badgeRow}>
+            {listing.isVerified && (
+              <ThemedView
+                key="badge"
                 style={[styles.badge, { backgroundColor: `${tintColor}12` }]}
               >
                 <IconSymbol
@@ -77,14 +79,14 @@ export function RouteResultCard({
                   color={tintColor}
                 />
                 <ThemedText style={[styles.badgeText, { color: tintColor }]}>
-                  {badge}
+                  {"verified"}
                 </ThemedText>
-              </View>
-            ))} */}
-          </View>
-        </View>
-      </Pressable>
-    </ThemedView>
+              </ThemedView>
+            )}
+          </ThemedView>
+        </ThemedView>
+      </ThemedView>
+    </Pressable>
   );
 }
 
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
   headerIcon: {
     bottom: -50,
     left: -30,
-    position: 'absolute',
+    position: "absolute",
   },
   heroCard: {
     borderRadius: 24,
@@ -113,8 +115,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   searchInput: {
@@ -122,11 +124,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   clearText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   quickFilters: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   filterChip: {
@@ -136,10 +138,10 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   segmentRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   segmentButton: {
@@ -147,14 +149,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   segmentLabel: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 14,
   },
   segmentLabelActive: {
-    color: '#fff',
+    color: "#fff",
   },
   resultsMeta: {
     gap: 6,
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingState: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 12,
   },
   loadingText: {
@@ -180,16 +182,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   resultHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   resultIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   resultHeaderText: {
     flex: 1,
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
   },
   pricePillText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   resultBody: {
     fontSize: 15,
@@ -216,22 +218,22 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   resultInfoRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   resultInfoText: {
     fontSize: 14,
     lineHeight: 20,
   },
   badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
     paddingHorizontal: 10,
@@ -239,17 +241,17 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyState: {
     borderRadius: 22,
     borderWidth: 1,
     padding: 24,
     gap: 10,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   emptyHeadline: {
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 18,
   },
   emptyBody: {

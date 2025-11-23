@@ -1,475 +1,624 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { shipmentRequests, travellerListings } from '@/constants/mock-data';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import AuthButton from "@/components/auth/auth-button";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
+import {
+  FormControl,
+  FormControlError,
+  FormControlErrorIcon,
+  FormControlErrorText,
+  FormControlHelper,
+  FormControlHelperText,
+  FormControlLabel,
+  FormControlLabelText,
+} from "@/components/ui/form-control";
+import { AlertCircleIcon, CheckCircleIcon } from "@/components/ui/icon";
+import { Input, InputField } from "@/components/ui/input";
+import { VStack } from "@/components/ui/vstack";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useRouter } from "expo-router";
+
+import type { Tables, TablesInsert } from "@/lib/database/supabase.types";
+import { supabase } from "@/lib/supabase";
+import { HStack } from "@/components/ui/hstack";
 import { AutocompleteDropdownControl } from '@/components/autocomplete-dropdown';
 
-export default function PublishScreen() {
-  const tintColor = useThemeColor({}, 'tint');
-  const borderColor = useThemeColor({},'background');
-  const backgroundColor = useThemeColor({},'background');
+type ListingType = Tables<'listings'>["type_of_listing"];
+type ShipmentCode = Tables<'listings'>["shipment_code"];
 
-  const nextDeparture = useMemo(() => travellerListings[0], []);
-  const urgentShipment = useMemo(
-    () => shipmentRequests.find((shipment) => shipment.status === 'urgent'),
-    []
-  );
+type ValidationErrors = Partial<
+  Record<
+    | "title"
+    | "description"
+    | "originId"
+    | "destinationId"
+    | "departureDate"
+    | "type"
+    | "price"
+    | "maxWeight"
+    | "currency"
+    | "owner"
+    | "submit",
+    string
+  >
+>;
 
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#041937', dark: '#050F1E' }}
-      headerImage={
-        <IconSymbol
-          name="plus.circle.fill"
-          size={260}
-          color="rgba(255,255,255,0.25)"
-          style={styles.headerIcon}
-        />
-      }>
-      <ThemedView style={styles.container}>
-        <ThemedView style={[styles.heroCard]}>
-          <ThemedView style={styles.heroHeader}>
-            <ThemedText type="title">Publish to the marketplace</ThemedText>
-            <ThemedText style={styles.heroSubtitle}>
-              Share your extra luggage space or post an item you need hand-delivered between the {'USA <-> Ghana'} corridor. Drafts auto-save and moderators review high-risk items within 30 minutes.
-            </ThemedText>
-          </ThemedView>
-          <ThemedView style={styles.heroActions}>
-            <ActionButton
-              icon="airplane.circle.fill"
-              title="I have space"
-              description="Post your route, departure date, and price per kg."
-              tintColor={tintColor}
-            />
-            <ActionButton
-              icon="cube.box.fill"
-              title="I have an item"
-              description="Upload photos, declare the value, and set your budget."
-              tintColor={tintColor}
-              outlined
-            />
-          </ThemedView>
-          <ThemedView style={styles.heroFooter}>
-            <IconSymbol name="checkmark.seal.fill" color={tintColor} size={18} />
-            <ThemedText style={styles.heroFooterText}>
-              Safety-first: ID verification, document uploads, and escrow (roadmap) protect both
-              sides.
-            </ThemedText>
-          </ThemedView>
-        </ThemedView>
+type StatusMessage =
+  | { variant: "error" | "success"; text: string }
+  | null;
 
-        <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Quick-start templates</ThemedText>
-          <ThemedView style={styles.templateList}>
-            <TemplateCard
-              icon="airplane.circle.fill"
-              title={`${nextDeparture.origin} → ${nextDeparture.destination}`}
-              subtitle={`Departs ${formatDate(nextDeparture.departureDate)} · ${nextDeparture.pricePerKgUsd}/kg`}
-              details={[
-                `${nextDeparture.availableKg}kg free of ${nextDeparture.totalCapacityKg}kg`,
-                nextDeparture.focus,
-              ]}
-              actionLabel="Continue traveller draft"
-              tintColor={tintColor}
-              borderColor={borderColor}
-            />
-            {urgentShipment ? (
-              <TemplateCard
-                icon="cube.box.fill"
-                title={urgentShipment.itemName}
-                subtitle={`${urgentShipment.origin} → ${urgentShipment.destination}`}
-                details={[
-                  `Ready ${formatRelative(urgentShipment.readyBy)}`,
-                  `${urgentShipment.weightKg}kg · budget $${urgentShipment.budgetUsd}`,
-                ]}
-                actionLabel="Finish shipment details"
-                tintColor={tintColor}
-                borderColor={borderColor}
-                highlighted
-              />
-            ) : null}
-          </ThemedView>
-        </ThemedView>
-
-        <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Compliance checklist</ThemedText>
-          <ThemedText style={styles.sectionDescription}>
-            Reduce back-and-forth by providing complete documentation. SpaceShare validates each
-            step before your post goes live.
-          </ThemedText>
-          <ThemedView style={styles.checklist}>
-            {checklistItems.map((item) => (
-              <ChecklistItem key={item.title} item={item} tintColor={tintColor} />
-            ))}
-          </ThemedView>
-        </ThemedView>
-
-        <ThemedView style={[styles.sectionCard, { borderColor }]}>
-          <ThemedText type="subtitle">Coming soon</ThemedText>
-          <ThemedView style={styles.roadmapList}>
-            <RoadmapItem
-              icon="megaphone.fill"
-              tintColor={tintColor}
-              title="Boosted listings"
-              description="Promote urgent trips or shipments to reach verified matches faster."
-            />
-            <RoadmapItem
-              icon="bell.fill"
-              tintColor={tintColor}
-              title="Smart alerts"
-              description="Automated notifications when a match aligns with your draft criteria."
-            />
-          </ThemedView>
-        </ThemedView>
-        <AutocompleteDropdownControl />
-      </ThemedView>
-    </ParallaxScrollView>
-  );
-}
-
-type ActionButtonProps = Readonly<{
-  icon: Parameters<typeof IconSymbol>[0]['name'];
-  title: string;
-  description: string;
-  tintColor: string;
-  outlined?: boolean;
-}>;
-
-function ActionButton({ icon, title, description, tintColor, outlined }: ActionButtonProps) {
-  return (
-    <Pressable
-      style={[
-        styles.actionButton,
-        outlined
-          ? { borderColor: tintColor, backgroundColor: `${tintColor}12`, borderWidth: 1 }
-          : { backgroundColor: tintColor },
-      ]}>
-      <View style={[styles.actionIcon, { backgroundColor: outlined ? '#fff0' : 'rgba(255,255,255,0.15)' }]}>
-        <IconSymbol name={icon} size={20} color={outlined ? tintColor : '#fff'} />
-      </View>
-      <ThemedText
-        style={[
-          styles.actionTitle,
-          outlined ? { color: tintColor } : { color: '#fff' },
-        ]}>
-        {title}
-      </ThemedText>
-      <ThemedText
-        style={[
-          styles.actionDescription,
-          outlined ? { color: tintColor, opacity: 0.8 } : { color: 'rgba(255,255,255,0.85)' },
-        ]}>
-        {description}
-      </ThemedText>
-    </Pressable>
-  );
-}
-
-type TemplateCardProps = Readonly<{
-  icon: Parameters<typeof IconSymbol>[0]['name'];
-  title: string;
-  subtitle: string;
-  details: string[];
-  actionLabel: string;
-  tintColor: string;
-  borderColor: string;
-  highlighted?: boolean;
-}>;
-
-function TemplateCard({
-  icon,
-  title,
-  subtitle,
-  details,
-  actionLabel,
-  tintColor,
-  borderColor,
-  highlighted,
-}: TemplateCardProps) {
-  return (
-    <ThemedView
-      style={[
-        styles.templateCard,
-        { borderColor },
-        highlighted ? { borderColor: tintColor, backgroundColor: `${tintColor}15` } : null,
-      ]}>
-      <ThemedView style={[styles.templateIcon, { backgroundColor: `${tintColor}15` }]}>
-        <IconSymbol name={icon} color={tintColor} size={20} />
-      </ThemedView>
-      <ThemedView style={styles.templateText}>
-        <ThemedText type="subtitle" style={styles.templateTitle}>
-          {title}
-        </ThemedText>
-        <ThemedText style={styles.templateSubtitle}>{subtitle}</ThemedText>
-        {details.map((detail) => (
-          <ThemedText key={detail} style={styles.templateDetail}>
-            • {detail}
-          </ThemedText>
-        ))}
-      </ThemedView>
-      <Pressable style={[styles.templateAction, { backgroundColor: tintColor }]}>
-        <ThemedText style={styles.templateActionLabel}>{actionLabel}</ThemedText>
-      </Pressable>
-    </ThemedView>
-  );
-}
-
-type ChecklistItemType = {
-  title: string;
-  description: string;
-};
-
-const checklistItems: ChecklistItemType[] = [
-  {
-    title: 'Verify your identity',
-    description: 'Upload government ID, selfie, and a live check of your travel document.',
-  },
-  {
-    title: 'Detail the contents',
-    description: 'Describe each item, include receipts or prescriptions, and declare the value.',
-  },
-  {
-    title: 'Confirm drop-off & pick-up',
-    description: 'List safe meeting points in the USA and Ghana. SpaceShare suggests vetted hubs.',
-  },
-  {
-    title: 'Set pricing & contingencies',
-    description: 'Define price per kg, insurance add-ons, and Plan B for delays.',
-  },
+const listingTypeOptions: { label: string; value: ListingType; helper: string }[] = [
+  { label: "Space to sell", value: "travel", helper: "List extra luggage space and routes" },
+  { label: "Item to send", value: "shipment", helper: "Post items that need a traveller" },
 ];
 
-function ChecklistItem({ item, tintColor }: { item: ChecklistItemType; tintColor: string }) {
+export default function CreateListing() {
+  const router = useRouter();
+  const { session } = useAuthContext();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [originId, setOriginId] = useState("");
+  const [destinationId, setDestinationId] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [typeOfListing, setTypeOfListing] = useState<ListingType>("travel");
+  const [shipmentCode, setShipmentCode] = useState<ShipmentCode>("matching");
+  const [pricePerUnit, setPricePerUnit] = useState("");
+  const [maxWeight, setMaxWeight] = useState("");
+  const [currencyCode, setCurrencyCode] = useState<"USD" | "GHS">("USD");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [statusMessage, setStatusMessage] = useState<StatusMessage>(null);
+
+  const ownerId = session?.user?.id ?? null;
+
+  const parsedDepartureDate = useMemo(() => {
+    const date = new Date(departureDate);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }, [departureDate]);
+
+  function validate(): boolean {
+    const errors: ValidationErrors = {};
+
+    if (!ownerId) {
+      errors.owner = "You must be signed in to create a listing.";
+    }
+
+    if (!title.trim()) {
+      errors.title = "Title is required.";
+    } else if (title.trim().length < 6) {
+      errors.title = "Title must be at least 6 characters.";
+    }
+
+    if (!description.trim()) {
+      errors.description = "Description is required.";
+    } else if (description.trim().length < 20) {
+      errors.description = "Description should be at least 20 characters.";
+    }
+
+    if (!originId.trim()) {
+      errors.originId = "Origin airport ID is required.";
+    }
+
+    if (!destinationId.trim()) {
+      errors.destinationId = "Destination airport ID is required.";
+    }
+
+    if (!parsedDepartureDate) {
+      errors.departureDate = "Enter a valid departure date (e.g. 2025-12-30).";
+    }
+
+    if (!typeOfListing) {
+      errors.type = "Select a listing type.";
+    }
+
+    if (pricePerUnit) {
+      const price = Number(pricePerUnit);
+      if (Number.isNaN(price) || price <= 0) {
+        errors.price = "Price must be a positive number.";
+      }
+    }
+
+    if (maxWeight) {
+      const weight = Number(maxWeight);
+      if (Number.isNaN(weight) || weight <= 0) {
+        errors.maxWeight = "Max weight must be a positive number.";
+      }
+    }
+
+    if (!currencyCode) {
+      errors.currency = "Currency is required.";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  async function handleSubmit() {
+    setStatusMessage(null);
+
+    const isValid = validate();
+    if (!isValid) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload: TablesInsert<'listings'> = {
+        owner_id: ownerId as string,
+        title: title.trim(),
+        description: description.trim(),
+        origin_id: originId.trim(),
+        destination_id: destinationId.trim(),
+        departure_date: parsedDepartureDate as string,
+        type_of_listing: typeOfListing,
+        shipment_code: typeOfListing === "shipment" ? shipmentCode : null,
+        status_code: "0",
+        max_weight_kg: maxWeight ? Number(maxWeight) : null,
+        max_weight_lb: null,
+        price_per_unit: pricePerUnit ? Number(pricePerUnit) : null,
+        currency_code: currencyCode,
+        photos: [],
+        is_verified: false,
+      };
+
+      const { data, error } = await supabase
+        .from("listings")
+        .insert(payload)
+        .select("id")
+        .single();
+
+      if (error) {
+        setStatusMessage({ variant: "error", text: error.message });
+        return;
+      }
+
+      setStatusMessage({
+        variant: "success",
+        text: "Listing created. Redirecting to details...",
+      });
+      if (data?.id) {
+        router.replace(`/listings/${data.id}`);
+      } else {
+        router.replace("/(drawer)/(home)/(tabs)");
+      }
+    } catch (error) {
+      console.error("Failed to create listing:", error);
+      setStatusMessage({
+        variant: "error",
+        text: "Something went wrong while creating your listing.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <ThemedView style={styles.checklistItem}>
-      <ThemedView style={[styles.checklistBullet, { backgroundColor: `${tintColor}15` }]}>
-        <IconSymbol name="checkmark.seal.fill" color={tintColor} size={16} />
-      </ThemedView>
-      <ThemedView style={styles.checklistText}>
-        <ThemedText style={styles.checklistTitle}>{item.title}</ThemedText>
-        <ThemedText style={styles.checklistDescription}>{item.description}</ThemedText>
-      </ThemedView>
+    <ThemedView safeArea style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ThemedView style={styles.header}>
+          <ThemedText type="title" accessibilityRole="header">
+            Create a listing
+          </ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Share your route or shipment. Use the autocomplete to set the origin
+            airport, and paste the destination ID from your admin dashboard.
+          </ThemedText>
+        </ThemedView>
+
+        {statusMessage && (
+          <Alert
+            action={statusMessage.variant === "error" ? "error" : "success"}
+            variant="outline"
+            className="w-full"
+            accessibilityRole="alert"
+            accessibilityLiveRegion="assertive"
+          >
+            <AlertIcon
+              as={statusMessage.variant === "error" ? AlertCircleIcon : CheckCircleIcon}
+            />
+            <AlertText>{statusMessage.text}</AlertText>
+          </Alert>
+        )}
+
+        <VStack space="lg" className="w-full">
+          <FormControl isInvalid={Boolean(validationErrors.title)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Listing title</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={title}
+                onChangeText={setTitle}
+                placeholder="e.g. JFK → ACC with 18kg space"
+                autoCapitalize="sentences"
+                accessibilityLabel="Listing title"
+                accessibilityHint="Enter a short, clear title"
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText>Make it specific so travellers can trust it.</FormControlHelperText>
+            </FormControlHelper>
+            {validationErrors.title && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.title}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.description)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Description</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={description}
+                onChangeText={setDescription}
+                placeholder="What are you offering or shipping? Include timing and restrictions."
+                autoCapitalize="sentences"
+                accessibilityLabel="Listing description"
+                accessibilityHint="Describe the route, cargo, and expectations"
+                multiline
+                numberOfLines={4}
+                style={styles.multiline}
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText>
+                At least 20 characters. Mention verification, timing, and any limits.
+              </FormControlHelperText>
+            </FormControlHelper>
+            {validationErrors.description && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.description}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <ThemedView style={styles.segmentSection}>
+            <ThemedText style={styles.segmentLabel}>Listing type</ThemedText>
+            <HStack style={styles.segmentButtons}>
+              {listingTypeOptions.map((option) => {
+                const isActive = typeOfListing === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    onPress={() => setTypeOfListing(option.value)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isActive }}
+                    style={[
+                      styles.segmentButton,
+                      isActive && styles.segmentButtonActive,
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.segmentButtonText,
+                        isActive && styles.segmentButtonTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </ThemedText>
+                    <ThemedText style={styles.segmentHelper}>{option.helper}</ThemedText>
+                  </Pressable>
+                );
+              })}
+            </HStack>
+            {validationErrors.type && (
+              <ThemedText style={styles.inlineError}>{validationErrors.type}</ThemedText>
+            )}
+          </ThemedView>
+
+          <FormControl isInvalid={Boolean(validationErrors.originId)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Origin airport</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <AutocompleteDropdownControl
+              onSelectId={()=>{setOriginId}}
+              placeholder="Search for an origin airport"
+            />
+            <FormControlHelper>
+              <FormControlHelperText>
+                Pick an airport to set the origin ID automatically.
+              </FormControlHelperText>
+            </FormControlHelper>
+            {validationErrors.originId && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.originId}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.destinationId)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Destination airport</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <AutocompleteDropdownControl
+              onSelectId={()=>{setDestinationId}}
+              placeholder="Search for a destination airport"
+            />
+            {validationErrors.destinationId && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.destinationId}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.departureDate)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Departure date</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={departureDate}
+                onChangeText={setDepartureDate}
+                placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
+                autoCapitalize="none"
+                autoCorrect={false}
+                accessibilityLabel="Departure date"
+                accessibilityHint="Enter an ISO date; we will convert for Supabase"
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText>
+                Uses ISO dates. Timezone defaults to UTC if not provided.
+              </FormControlHelperText>
+            </FormControlHelper>
+            {validationErrors.departureDate && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.departureDate}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.price)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Price per unit</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={pricePerUnit}
+                onChangeText={setPricePerUnit}
+                placeholder="e.g. 15 (per kg)"
+                keyboardType="decimal-pad"
+                accessibilityLabel="Price per unit"
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText>Optional, but helps travellers match quickly.</FormControlHelperText>
+            </FormControlHelper>
+            {validationErrors.price && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.price}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.maxWeight)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Max weight (kg)</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={maxWeight}
+                onChangeText={setMaxWeight}
+                placeholder="e.g. 18"
+                keyboardType="decimal-pad"
+                accessibilityLabel="Max weight in kilograms"
+              />
+            </Input>
+            {validationErrors.maxWeight && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.maxWeight}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={Boolean(validationErrors.currency)} size="sm">
+            <FormControlLabel>
+              <FormControlLabelText>
+                <ThemedText>Currency</ThemedText>
+              </FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                value={currencyCode}
+                onChangeText={(value) =>
+                  setCurrencyCode(value.toUpperCase() === "GHS" ? "GHS" : "USD")
+                }
+                placeholder="USD or GHS"
+                autoCapitalize="characters"
+                autoCorrect={false}
+                accessibilityLabel="Currency code"
+              />
+            </Input>
+            {validationErrors.currency && (
+              <FormControlError>
+                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorText className="text-red-500">
+                  {validationErrors.currency}
+                </FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+
+          {typeOfListing === "shipment" && (
+            <ThemedView style={styles.segmentSection}>
+              <ThemedText style={styles.segmentLabel}>Shipment priority</ThemedText>
+              <HStack style={styles.segmentButtons}>
+                {(["matching", "urgent"] as ShipmentCode[]).map((code) => {
+                  const isActive = shipmentCode === code;
+                  return (
+                    <Pressable
+                      key={code}
+                      onPress={() => setShipmentCode(code)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isActive }}
+                      style={[
+                        styles.segmentButton,
+                        isActive && styles.segmentButtonActive,
+                      ]}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.segmentButtonText,
+                          isActive && styles.segmentButtonTextActive,
+                        ]}
+                      >
+                        {code === "urgent" ? "Urgent" : "Matching"}
+                      </ThemedText>
+                      <ThemedText style={styles.segmentHelper}>
+                        {code === "urgent"
+                          ? "Surface this request at the top for travellers."
+                          : "Standard visibility in search."}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </HStack>
+            </ThemedView>
+          )}
+        </VStack>
+
+        <ThemedView style={styles.footer}>
+          <AuthButton
+            className="w-full self-end"
+            size="md"
+            variant="solid"
+            isDisabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
+            accessibilityHint="Submit your listing to SpaceShare"
+            buttonText={isSubmitting ? "Submitting..." : "Create listing"}
+            onPress={() => {
+              void handleSubmit();
+            }}
+          />
+          {isSubmitting && (
+            <View style={styles.submittingRow}>
+              <ActivityIndicator size="small" />
+              <ThemedText style={styles.submittingText}>Saving listing...</ThemedText>
+            </View>
+          )}
+        </ThemedView>
+      </ScrollView>
     </ThemedView>
   );
-}
-
-type RoadmapItemProps = {
-  icon: Parameters<typeof IconSymbol>[0]['name'];
-  title: string;
-  description: string;
-  tintColor: string;
-};
-
-function RoadmapItem({ icon, title, description, tintColor }: RoadmapItemProps) {
-  return (
-    <ThemedView style={styles.roadmapItem}>
-      <ThemedView style={[styles.roadmapIcon, { backgroundColor: `${tintColor}18` }]}>
-        <IconSymbol name={icon} color={tintColor} size={18} />
-      </ThemedView>
-      <ThemedView style={styles.roadmapText}>
-        <ThemedText style={styles.roadmapTitle}>{title}</ThemedText>
-        <ThemedText style={styles.roadmapDescription}>{description}</ThemedText>
-      </ThemedView>
-    </ThemedView>
-  );
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function formatRelative(value: string) {
-  const target = new Date(value).getTime();
-  const diff = target - Date.now();
-  const days = Math.round(diff / (1000 * 60 * 60 * 24));
-
-  if (days < -1) {
-    return `${Math.abs(days)} days ago`;
-  }
-  if (days === -1) {
-    return 'Yesterday';
-  }
-  if (days === 0) {
-    return 'Today';
-  }
-  if (days === 1) {
-    return 'In 1 day';
-  }
-  return `In ${days} days`;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 28,
-    paddingBottom: 56,
+  safeArea: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
-  headerIcon: {
-    bottom: -60,
-    left: -40,
-    position: 'absolute',
+  scrollContent: {
+    paddingBottom: 120,
+    gap: 22,
   },
-  heroCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 24,
-    gap: 20,
+  header: {
+    gap: 8,
   },
-  heroHeader: {
-    gap: 12,
-  },
-  heroSubtitle: {
+  subtitle: {
     fontSize: 15,
     lineHeight: 22,
-  },
-  heroActions: {
-    flexDirection: 'row',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  heroFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  heroFooterText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  actionButton: {
-    flex: 1,
-    minWidth: 150,
-    borderRadius: 18,
-    padding: 18,
-    gap: 10,
-  },
-  actionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  actionDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  section: {
-    gap: 16,
-  },
-  sectionDescription: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  templateList: {
-    gap: 16,
-  },
-  templateCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 20,
-    gap: 18,
-  },
-  templateIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  templateText: {
-    gap: 6,
-  },
-  templateTitle: {
-    fontSize: 18,
-  },
-  templateSubtitle: {
-    fontSize: 14,
-    opacity: 0.75,
-  },
-  templateDetail: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  templateAction: {
-    alignSelf: 'flex-start',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  templateActionLabel: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  sectionCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    padding: 22,
-    gap: 16,
-  },
-  checklist: {
-    gap: 14,
-  },
-  checklistItem: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  checklistBullet: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checklistText: {
-    flex: 1,
-    gap: 4,
-  },
-  checklistTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  checklistDescription: {
-    fontSize: 13,
-    lineHeight: 18,
     opacity: 0.8,
   },
-  roadmapList: {
-    gap: 14,
+  multiline: {
+    minHeight: 120,
+    textAlignVertical: "top",
   },
-  roadmapItem: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
+  segmentSection: {
+    gap: 10,
   },
-  roadmapIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roadmapText: {
-    flex: 1,
-    gap: 4,
-  },
-  roadmapTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  roadmapDescription: {
+  segmentLabel: {
+    fontWeight: "700",
     fontSize: 14,
-    lineHeight: 20,
+  },
+  segmentButtons: {
+    gap: 10,
+  },
+  segmentButton: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 4,
+    borderColor: "#E5E7EB",
+  },
+  segmentButtonActive: {
+    borderColor: "#0a7ea4",
+    backgroundColor: "rgba(10, 126, 164, 0.08)",
+  },
+  segmentButtonText: {
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  segmentButtonTextActive: {
+    color: "#0a7ea4",
+  },
+  segmentHelper: {
+    fontSize: 13,
+    opacity: 0.8,
+  },
+  inlineError: {
+    color: "#dc2626",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  footer: {
+    gap: 10,
+  },
+  submittingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  submittingText: {
+    fontSize: 14,
   },
 });

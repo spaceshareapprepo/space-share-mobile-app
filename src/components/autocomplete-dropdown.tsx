@@ -1,6 +1,6 @@
 import { LocationsResponse } from '@/constants/types'
 import React, { memo, useCallback, useRef, useState } from 'react'
-import { Button, Dimensions, Platform, Text } from 'react-native'
+import { Dimensions, Platform } from 'react-native'
 import {
   AutocompleteDropdown,
   type AutocompleteDropdownItem,
@@ -11,7 +11,13 @@ import { ThemedView } from './themed-view'
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from './ui/icon-symbol'
 
-export const AutocompleteDropdownControl = memo(() => {
+type AutocompleteDropdownControlProps = {
+  onSelectId?: (id: string | null) => void;
+  placeholder?: string;
+};
+
+export const AutocompleteDropdownControl = memo(
+  ({ onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
   const tintColor = useThemeColor({}, 'tint');
   const borderColor = useThemeColor(
     { light: '#D9E2F9', dark: '#252B3E' },
@@ -61,11 +67,12 @@ export const AutocompleteDropdownControl = memo(() => {
 
   const onClearPress = useCallback(() => {
     setSuggestionsList(null)
-  }, [])
+    setSelectedItem(null)
+    onSelectId?.(null)
+  }, [onSelectId])
 
   return (
-    <>
-      <ThemedView
+    <ThemedView
         style={[
           { flex: 1, flexDirection: 'row', alignItems: 'center' },
           Platform.select({ ios: { zIndex: 1 } }),
@@ -78,7 +85,9 @@ export const AutocompleteDropdownControl = memo(() => {
           dataSet={suggestionsList}
           onChangeText={getSuggestions}
           onSelectItem={(item) => {
-            item && setSelectedItem(item.id)
+            const id = item?.id ?? null
+            setSelectedItem(id)
+            onSelectId?.(id)
           }}
           debounce={600}
           suggestionsListMaxHeight={Dimensions.get('window').height * 0.4}
@@ -86,7 +95,7 @@ export const AutocompleteDropdownControl = memo(() => {
           loading={loading}
           useFilter={false}
           textInputProps={{
-            placeholder: 'Search for a location',
+            placeholder,
             autoCorrect: true,
             autoCapitalize: 'none',
             style: {
@@ -123,6 +132,5 @@ export const AutocompleteDropdownControl = memo(() => {
         {/* <ThemedView style={{ width: 10 }} /> */}
         {/* <Button title="Toggle" onPress={() => dropdownController.current?.toggle()} /> */}
       </ThemedView>
-    </>
   )
 })
