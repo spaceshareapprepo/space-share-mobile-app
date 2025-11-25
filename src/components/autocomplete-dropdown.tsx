@@ -16,10 +16,11 @@ type AutocompleteDropdownControlProps = {
   value?: string;
   onSelectId?: (id: string | null, label?: string) => void;
   placeholder?: string;
+  label?: string;
 };
 
 export const AutocompleteDropdownControl = memo(
-  ({ value, onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
+  ({ value, label, onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
   const tintColor = useThemeColor(
     {}, 
     'tint'
@@ -86,7 +87,7 @@ export const AutocompleteDropdownControl = memo(
           }}
           direction={Platform.select({ ios: 'down', android: 'up', web: 'down' })}
           dataSet={suggestionsList}
-          initialValue={value ? { id: value, title: value } : undefined}
+          initialValue={value ? { id: value, title: label || value } : undefined}
           onChangeText={getSuggestions}
           onSelectItem={(item) => {
             const id = item?.id ?? null

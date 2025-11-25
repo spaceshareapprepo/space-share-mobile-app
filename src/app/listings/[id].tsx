@@ -1,35 +1,27 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ListingDetailsSkeleton } from "@/components/skeleton/listings-skeleton";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
+import { Button, ButtonText } from "@/components/ui/button";
 import type {
+  ListingMatch,
+  ListingRow,
   SegmentKey,
-  ShipmentRequest,
-  TravellerListing,
 } from "@/constants/types";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { formatDate, formatRelative } from "@/lib/utils";
-import { Link } from 'expo-router';
+import { fetchListing } from "@/lib/database/db";
+import { formatDate, formatRelative, getInitials } from "@/lib/utils";
 
-type ListingMatch =
-  | { type: "traveller"; data: TravellerListing }
-  | { type: "shipment"; data: ShipmentRequest };
-
-function isShipmentListing(
-  listing: TravellerListing | ShipmentRequest
-): listing is ShipmentRequest {
-  return (
-    listing !== null &&
-    typeof listing === "object" &&
-    "shipmentCode" in listing &&
-    "handlingNotes" in listing
-  );
+function isShipment(listing: ListingRow): listing is ListingRow {
+  return "shipmentCode" in listing;
 }
 
 type SectionIcon =
@@ -56,28 +48,255 @@ function SectionHeader({
   );
 }
 
+function TravellerSection({
+  id,
+  isOwner,
+  listing,
+  tintColor,
+  borderColor,
+  cardBackground,
+}: {
+  id: string;
+  isOwner: boolean;
+  listing: ListingMatch;
+  tintColor: string;
+  borderColor: string;
+  cardBackground: string;
+}) {
+  return (
+    <>
+      <ThemedView
+        style={[
+          styles.sectionCard,
+          { borderColor, backgroundColor: cardBackground },
+        ]}
+      >
+        <SectionHeader
+          icon="airplane.circle.fill"
+          tintColor={tintColor}
+          title="Trip overview"
+        />
+        <View style={styles.metricGrid}>
+          <MetricCard
+            label="Departure"
+            value={formatDate(listing.data.departure_date)}
+            hint={formatRelative(listing.data.departure_date)}
+            hintColor={tintColor}
+            borderColor={borderColor}
+          />
+          <MetricCard
+            label="Space available"
+            value={`${listing.data.max_weight_kg}kg`}
+            hint={`of ${listing.data.max_weight_kg}kg total`}
+            borderColor={borderColor}
+          />
+          <MetricCard
+            label="Rate"
+            value={`$${listing.data.price_per_unit}/kg`}
+            hint="Fixed rate provided by traveller"
+            borderColor={borderColor}
+          />
+        </View>
+        <ThemedText style={styles.bodyText}>
+          {listing.data.description}
+        </ThemedText>
+        {isOwner && (
+          <ThemedView>
+            <Button
+              onPress={() =>
+                router.push({
+                  pathname: "/listings/(manage)/edit/[id]",
+                  params: { id },
+                })
+              }
+            >
+              <ButtonText>Edit</ButtonText>
+            </Button>
+          </ThemedView>
+        )}
+      </ThemedView>
+
+      {/* <ThemedView
+        style={[
+          styles.sectionCard,
+          { borderColor, backgroundColor: cardBackground },
+        ]}
+      >
+        <SectionHeader
+          icon="checkmark.seal.fill"
+          tintColor={tintColor}
+          title="Trust signals"
+        />
+        <ThemedText style={styles.bodyText}>
+          {listing.data.description}
+        </ThemedText>
+      </ThemedView> */}
+    </>
+  );
+}
+
+function ShipmentSection({
+  id,
+  isOwner,
+  listing,
+  tintColor,
+  borderColor,
+  cardBackground,
+}: {
+  id: string;
+  isOwner: boolean;
+  listing: ListingMatch;
+  tintColor: string;
+  borderColor: string;
+  cardBackground: string;
+}) {
+  return (
+    <>
+      <ThemedView
+        style={[
+          styles.sectionCard,
+          { borderColor, backgroundColor: cardBackground },
+        ]}
+      >
+        <SectionHeader
+          icon="cube.box.fill"
+          tintColor={tintColor}
+          title="Item details"
+        />
+        <View style={styles.metricGrid}>
+          <MetricCard
+            label="Ready by"
+            value={formatDate(listing.data.departure_date)}
+            hint={formatRelative(listing.data.departure_date)}
+            hintColor={tintColor}
+            borderColor={borderColor}
+          />
+          <MetricCard
+            label="Weight"
+            value={`${listing.data.max_weight_kg}kg`}
+            hint="Estimated package size"
+            borderColor={borderColor}
+          />
+          <MetricCard
+            label="Budget"
+            value={`$${listing.data.price_per_unit}`}
+            hint="Negotiable with sender"
+            borderColor={borderColor}
+          />
+        </View>
+        <ThemedText style={styles.bodyText}>
+          {listing.data.description}
+        </ThemedText>
+      </ThemedView>
+      {isOwner && (
+          <ThemedView>
+            <Button
+              onPress={() =>
+                router.push({
+                  pathname: "/listings/(manage)/edit/[id]",
+                  params: { id },
+                })
+              }
+            >
+              <ButtonText>Edit</ButtonText>
+            </Button>
+          </ThemedView>
+        )}
+
+      {/* <ThemedView
+        style={[
+          styles.sectionCard,
+          { borderColor, backgroundColor: cardBackground },
+        ]}
+      >
+        <SectionHeader
+          icon="clock.fill"
+          tintColor={tintColor}
+          title="Handling notes"
+        />
+        <ThemedText style={styles.bodyText}>
+          {listing.data.description}
+        </ThemedText>
+      </ThemedView> */}
+    </>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  hint,
+  hintColor,
+  borderColor,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  hintColor?: string;
+  borderColor: string;
+}) {
+  return (
+    <View style={[styles.metricCard, { borderColor }]}>
+      <ThemedText style={styles.metricLabel}>{label}</ThemedText>
+      <ThemedText style={styles.metricValue}>{value}</ThemedText>
+      <ThemedText
+        style={[styles.metricHint, hintColor && { color: hintColor }]}
+      >
+        {hint}
+      </ThemedText>
+    </View>
+  );
+}
+
 export default function ListingDetailsScreen() {
+  const { session } = useAuthContext();
+  const [loading, setLoading] = useState(true);
+
+  const userId = session?.user?.id ?? null;
+
   const params = useLocalSearchParams<{
     id?: string | string[];
     segment?: SegmentKey | SegmentKey[];
   }>();
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-
-  const [cachedListing, setCachedListing] = useState<TravellerListing | ShipmentRequest | null>(null);
+  const [cachedListing, setCachedListing] = useState<ListingRow | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     async function fetchCached() {
-      if (!id) return;
-      try {
-        const raw = await AsyncStorage.getItem(`listing:${id}`);
-        if (!raw || !isMounted) return;
+      if (!id) {
+        if (isMounted) setLoading(false);
+        return;
+      }
 
-        setCachedListing(JSON.parse(raw));
+      try {
+        if (isMounted) setLoading(true);
+        const cached = await AsyncStorage.getItem(`listing:${id}`);
+
+        if (cached) {
+          if (isMounted) {
+            setCachedListing(JSON.parse(cached));
+            setLoading(false);
+          }
+          return;
+        }
+
+        const { data } = await fetchListing(id);
+        const remoteListing = Array.isArray(data) ? data[0] : data;
+
+        if (remoteListing && isMounted) {
+          setCachedListing(remoteListing as unknown as ListingRow);
+          await AsyncStorage.setItem(
+            `listing:${id}`,
+            JSON.stringify(remoteListing)
+          );
+        }
       } catch (err) {
         console.warn("Failed to load cached listing", err);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     }
 
@@ -87,21 +306,11 @@ export default function ListingDetailsScreen() {
     };
   }, [id]);
 
-  const segmentParam = Array.isArray(params.segment)
-    ? params.segment[0]
-    : params.segment;
+  const listing: ListingMatch | null = cachedListing
+  ? { type: isShipment(cachedListing) ? "shipment" : "traveller", data: cachedListing }
+  : null;
 
-  const segment: SegmentKey | null =
-    segmentParam === "routes" || segmentParam === "items" ? segmentParam : null;
-
-  const listing: ListingMatch | null =
-    id && cachedListing
-      ? isShipmentListing(cachedListing)
-        ? { type: "shipment", data: cachedListing }
-        : { type: "traveller", data: cachedListing }
-      : null;
-
-  console.log(`Listing: ${JSON.stringify(listing)}`)
+  const ownerId = listing?.data.owner?.id
 
   const tintColor = useThemeColor({}, "tint");
   const borderColor = useThemeColor(
@@ -113,43 +322,31 @@ export default function ListingDetailsScreen() {
     "background"
   );
 
-  const headerTitle =
-    listing?.type === "traveller"
-      ? listing.data.ownerName
-      : listing?.type === "shipment"
-        ? listing.data.ownerName
-        : "Listing";
-
-  const heroInitials =
-    listing?.type === "traveller"
-      ? listing.data.initials
-      : listing?.type === "shipment"
-        ? listing.data.initials
-        : "--";
-
+  const headerTitle = listing?.data.owner?.full_name;
+  const heroInitials = getInitials(String(listing?.data.owner?.full_name));
   const heroRoute =
     listing?.type === "traveller" || listing?.type === "shipment"
-      ? `${listing.data.origin} -> ${listing.data.destination}`
+      ? `${listing?.data.origin?.name} -> ${listing?.data.destination?.name}`
       : "";
 
   const heroMeta =
     listing?.type === "traveller"
-      ? `Departs ${formatDate(listing.data.departureDate)} · ${formatRelative(
-        listing.data.departureDate
-      )}`
-      : listing?.type === "shipment"
-        ? `Ready ${formatDate(listing.data.departureDate)} · ${formatRelative(
-          listing.data.departureDate
+      ? `Departs ${formatDate(listing.data.departure_date)} · ${formatRelative(
+          listing.data.departure_date
         )}`
+      : listing?.type === "shipment"
+        ? `Ready ${formatDate(listing.data.departure_date)} · ${formatRelative(
+            listing.data.departure_date
+          )}`
         : "";
 
   const statusLabel =
     listing?.type === "traveller"
-      ? listing.data.isVerified === true
+      ? listing.data.is_verified === true
         ? "Closing soon"
         : "Open for offers"
       : listing?.type === "shipment"
-        ? listing.data.isVerified === true
+        ? listing.data.is_verified === true
           ? "Urgent match"
           : "Matching"
         : "";
@@ -157,9 +354,19 @@ export default function ListingDetailsScreen() {
   const headerIcon =
     listing?.type === "shipment" ? "cube.box.fill" : "airplane.circle.fill";
 
+  if (loading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: headerTitle || "Listing" }} />
+        <ListingDetailsSkeleton />
+      </>
+    );
+  }
+
   return (
+    
     <>
-      <Stack.Screen options={{ title: headerTitle }} />
+      <Stack.Screen options={{ title: `${headerTitle}` }} />
       <ParallaxScrollView
         headerBackgroundColor={{ light: "#041834", dark: "#050E1E" }}
         headerImage={
@@ -198,7 +405,7 @@ export default function ListingDetailsScreen() {
                 ) : null}
                 {listing?.type === "shipment" ? (
                   <ThemedText style={styles.heroCaption}>
-                    Requested by {listing.data.ownerName || "Unknown Sender"}
+                    Requested by {listing?.data.owner?.full_name || "Unknown Sender"}
                   </ThemedText>
                 ) : null}
               </View>
@@ -236,204 +443,30 @@ export default function ListingDetailsScreen() {
                 return to results and try again.
               </ThemedText>
             </ThemedView>
-          ) : null}
+          ) : null }
 
           {listing?.type === "traveller" ? (
-            <>
-              <ThemedView
-                style={[
-                  styles.sectionCard,
-                  { borderColor, backgroundColor: cardBackground },
-                ]}
-              >
-                <SectionHeader
-                  icon="airplane.circle.fill"
-                  tintColor={tintColor}
-                  title="Trip overview"
-                />
-                <View style={styles.metricGrid}>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>
-                      Departure
-                    </ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      {formatDate(listing.data.departureDate)}
-                    </ThemedText>
-                    <ThemedText
-                      style={[styles.metricHint, { color: tintColor }]}
-                    >
-                      {formatRelative(listing.data.departureDate)}
-                    </ThemedText>
-                  </View>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>
-                      Space available
-                    </ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      {listing.data.maxWeightKg}kg
-                    </ThemedText>
-                    <ThemedText style={styles.metricHint}>
-                      of {listing.data.maxWeightKg}kg total
-                    </ThemedText>
-                  </View>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>Rate</ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      ${listing.data.pricePerUnit}/kg
-                    </ThemedText>
-                    <ThemedText style={styles.metricHint}>
-                      Fixed rate provided by traveller
-                    </ThemedText>
-                  </View>
-                </View>
-                <ThemedText style={styles.bodyText}>
-                  {listing.data.description}
-                </ThemedText>
-              </ThemedView>
-
-              <ThemedView
-                style={[
-                  styles.sectionCard,
-                  { borderColor, backgroundColor: cardBackground },
-                ]}
-              >
-                <SectionHeader
-                  icon="checkmark.seal.fill"
-                  tintColor={tintColor}
-                  title="Trust signals"
-                />
-                {/* {listing.data.verification.length > 0 ? (
-                  <View style={styles.badgeRow}>
-                    {listing.data.verification.map((badge) => (
-                      <View
-                        key={badge}
-                        style={[
-                          styles.badge,
-                          { backgroundColor: `${tintColor}12` },
-                        ]}
-                      >
-                        <IconSymbol
-                          name="checkmark.seal.fill"
-                          size={14}
-                          color={tintColor}
-                        />
-                        <ThemedText
-                          style={[styles.badgeText, { color: tintColor }]}
-                        >
-                          {badge}
-                        </ThemedText>
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <ThemedText style={styles.helperText}>
-                    This traveller has not shared verification badges yet. Start
-                    a chat to learn more.
-                  </ThemedText>
-                )} */}
-                <ThemedText style={styles.bodyText}>
-                  {listing.data.experience}
-                </ThemedText>
-              </ThemedView>
-            </>
+            <TravellerSection
+              id={listing.data.id}
+              isOwner={ownerId == userId}
+              listing={listing}
+              tintColor={tintColor}
+              borderColor={borderColor}
+              cardBackground={cardBackground}
+            />
           ) : null}
 
           {listing?.type === "shipment" ? (
-            <>
-              <ThemedView
-                style={[
-                  styles.sectionCard,
-                  { borderColor, backgroundColor: cardBackground },
-                ]}
-              >
-                <SectionHeader
-                  icon="cube.box.fill"
-                  tintColor={tintColor}
-                  title="Item details"
-                />
-                <View style={styles.metricGrid}>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>Ready by</ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      {formatDate(listing.data.departureDate)}
-                    </ThemedText>
-                    <ThemedText
-                      style={[styles.metricHint, { color: tintColor }]}
-                    >
-                      {formatRelative(listing.data.departureDate)}
-                    </ThemedText>
-                  </View>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>Weight</ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      {listing.data.maxWeightKg}kg
-                    </ThemedText>
-                    <ThemedText style={styles.metricHint}>
-                      Estimated package size
-                    </ThemedText>
-                  </View>
-                  <View style={[styles.metricCard, { borderColor }]}>
-                    <ThemedText style={styles.metricLabel}>Budget</ThemedText>
-                    <ThemedText style={styles.metricValue}>
-                      ${listing.data.pricePerUnit}
-                    </ThemedText>
-                    <ThemedText style={styles.metricHint}>
-                      Negotiable with sender
-                    </ThemedText>
-                  </View>
-                </View>
-                <ThemedText style={styles.bodyText}>
-                  {listing.data.description}
-                </ThemedText>
-              </ThemedView>
-
-              <ThemedView
-                style={[
-                  styles.sectionCard,
-                  { borderColor, backgroundColor: cardBackground },
-                ]}
-              >
-                <SectionHeader
-                  icon="clock.fill"
-                  tintColor={tintColor}
-                  title="Handling notes"
-                />
-                <ThemedText style={styles.bodyText}>
-                  {listing.data.handlingNotes}
-                </ThemedText>
-              </ThemedView>
-            </>
+            <ShipmentSection
+              id={listing.data.id}
+              isOwner={ownerId == userId}
+              listing={listing}
+              tintColor={tintColor}
+              borderColor={borderColor}
+              cardBackground={cardBackground}
+            />
           ) : null}
         </ThemedView>
-
-        {/* <ThemedView style={styles.stepContainer}>
-          <Link href="/modal">
-            <Link.Trigger>
-              <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-            </Link.Trigger>
-            <Link.Preview />
-            <Link.Menu>
-              <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-              <Link.MenuAction
-                title="Share"
-                icon="square.and.arrow.up"
-                onPress={() => alert('Share pressed')}
-              />
-              <Link.Menu title="More" icon="ellipsis">
-                <Link.MenuAction
-                  title="Delete"
-                  icon="trash"
-                  destructive
-                  onPress={() => alert('Delete pressed')}
-                />
-              </Link.Menu>
-            </Link.Menu>
-          </Link>
-          <ThemedText>
-            {`Tap the Explore tab to learn more about what's included in this starter app.`}
-          </ThemedText>
-        </ThemedView> */}
-
       </ParallaxScrollView>
     </>
   );
@@ -443,10 +476,6 @@ const styles = StyleSheet.create({
   container: {
     gap: 20,
     paddingBottom: 48,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
   },
   headerIcon: {
     bottom: -40,
@@ -548,27 +577,5 @@ const styles = StyleSheet.create({
   bodyText: {
     fontSize: 15,
     lineHeight: 22,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  helperText: {
-    fontSize: 13,
-    lineHeight: 18,
-    opacity: 0.7,
   },
 });

@@ -63,7 +63,7 @@ function RootNavigator() {
             options={{ headerShown: true, title: "" }}
           />
           <Stack.Screen
-            name="listings/(manage)/[edit]"
+            name="listings/(manage)/edit/[id]"
             options={{ headerShown: true, title: "" }}
           />
           <Stack.Screen name="google-auth" options={{ headerShown: false }} />

@@ -24,6 +24,25 @@ export async function fetchListings() {
   }
 }
 
+export async function fetchListing(id: string) {
+  try {
+    const { data, error } = await supabase
+      .from('listings')
+      .select(SELECT_COLUMNS_LISTINGS)
+      .eq('id', id)
+      .limit(1);
+
+    if (error) {
+      throw error;
+    }
+
+    return { data: data ?? [], error: null };
+  } catch (err) {
+    console.error('Failed to fetch listings:', err);
+    return { data: [], error: err as Error };
+  }
+}
+
 export async function fetchListingsAPI({ 
   query, 
   typeFilter 
@@ -41,7 +60,7 @@ export async function fetchListingsAPI({
     if (query) {
       const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
       supabaseQuery = supabaseQuery.or(
-        `title.ilike.${searchPattern},description.ilike.${searchPattern}`
+        `title.ilike.${searchPattern},description.ilike.${searchPattern},origin_name.ilike.${searchPattern},destination_name.ilike.${searchPattern}`
       );
     }
 
@@ -90,35 +109,35 @@ export async function fetchListingsAPI({
 }
 
 
-export async function fetchLocationsAPI({ 
-  query
-}: {
-  query: string | null;
-}) {
-  try {
-    let supabaseQuery = supabase
-      .from('airports')
-      .select(SELECT_COLUMNS_AIRPORTS)
-      .order('city', { ascending: true })
-      .limit(5);
-    if (query) {
-      const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
-      supabaseQuery = supabaseQuery.or(
-        `city.ilike.${searchPattern},name.ilike.${searchPattern},iata_code.ilike.${searchPattern}`
-      );
-    }
-    const { data, error } = await supabaseQuery.overrideTypes<
-      LocationsArray[],
-      { merge: false }
-    >();
+// export async function fetchLocationsAPI({ 
+//   query
+// }: {
+//   query: string | null;
+// }) {
+//   try {
+//     let supabaseQuery = supabase
+//       .from('airports')
+//       .select(SELECT_COLUMNS_AIRPORTS)
+//       .order('city', { ascending: true })
+//       .limit(5);
+//     if (query) {
+//       const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
+//       supabaseQuery = supabaseQuery.or(
+//         `city.ilike.${searchPattern},name.ilike.${searchPattern},iata_code.ilike.${searchPattern}`
+//       );
+//     }
+//     const { data, error } = await supabaseQuery.overrideTypes<
+//       LocationsArray[],
+//       { merge: false }
+//     >();
 
-    if (error) {
-      throw error;
-    }
+//     if (error) {
+//       throw error;
+//     }
 
-    return { data: data ?? [], error: null };
-  } catch (err) {
-    console.error('Failed to fetch locations:', err);
-    return { data: [], error: err as Error };
-  }
-}
+//     return { data: data ?? [], error: null };
+//   } catch (err) {
+//     console.error('Failed to fetch locations:', err);
+//     return { data: [], error: err as Error };
+//   }
+// }

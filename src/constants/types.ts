@@ -64,6 +64,10 @@ export type ShipmentRequest = {
   type: string;
 };
 
+export type ListingMatch =
+  | { type: "traveller"; data: ListingRow }
+  | { type: "shipment"; data: ListingRow };
+
 export type RelatedAirport = {
   id: string;
   city: string | null;

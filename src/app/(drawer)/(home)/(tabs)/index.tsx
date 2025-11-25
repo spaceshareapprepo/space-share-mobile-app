@@ -14,7 +14,6 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type {
   ListingsResponse,
@@ -22,7 +21,7 @@ import type {
   SearchSegment,
   SegmentKey,
   ShipmentRequest,
-  TravellerListing,
+  TravellerListing
 } from "@/constants/types";
 
 import { fetch } from "expo/fetch";
@@ -39,10 +38,6 @@ const quickFilters: QuickFilter[] = [
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
 
-async function cacheListing(listing: TravellerListing | ShipmentRequest) {
-  await AsyncStorage.setItem(`listing:${listing.id}`, JSON.stringify(listing));
-}
-
 async function fetchListingsData(searchTerm: string, segment: SearchSegment = "all"): Promise<ListingsResponse> {
   
   const params = new URLSearchParams();
@@ -55,16 +50,7 @@ async function fetchListingsData(searchTerm: string, segment: SearchSegment = "a
 
   const response = await fetch(`/api/search?${params.toString()}`, { method: "GET" });
   const rawJson = await response.json();
-  if (rawJson.travellers) {
-    for (const listing of rawJson.travellers) {
-      void cacheListing(listing);
-    }
-  }
-  if (rawJson.shipments) {
-    for (const listing of rawJson.shipments) {
-      void cacheListing(listing);
-    }
-  }
+  
   if (!response.ok) {
     throw new Error(rawJson || "Failed to load listings");
   }
@@ -235,17 +221,15 @@ export default function SearchScreen() {
               returnKeyType="search"
               placeholder="Search airport, city, traveller, or item"
               placeholderTextColor= {tintColor}
-              style={ [styles.searchInput, {color:tintColor}] }
+              style={ [styles.searchInput, {color: tintColor, fontSize:18}] }
               accessibilityLabel="Search routes and shipments"
               submitBehavior="blurAndSubmit"
             />
-            {query.length > 3 ? (
-              <Pressable onPress={() => void performSearch()}>
+            <Pressable onPress={() => void performSearch()}>
                 <ThemedText style={ [styles.clearText, { color: tintColor }] }>
                   Search
                 </ThemedText>
               </Pressable>
-            ) : null}
           </ThemedView>
           <ThemedView style={[styles.quickFilters]}>
             {quickFilters.map((filter) => (
