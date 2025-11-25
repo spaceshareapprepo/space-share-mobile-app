@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
-  View,
+  StyleSheet
 } from "react-native";
 
 import AuthButton from "@/components/auth/auth-button";
@@ -27,10 +27,15 @@ import { VStack } from "@/components/ui/vstack";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useRouter } from "expo-router";
 
+import { AutocompleteDropdownControl } from '@/components/autocomplete-dropdown';
+import { HStack } from "@/components/ui/hstack";
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import { useThemeColor } from "@/hooks/use-theme-color";
 import type { Tables, TablesInsert } from "@/lib/database/supabase.types";
 import { supabase } from "@/lib/supabase";
-import { HStack } from "@/components/ui/hstack";
-import { AutocompleteDropdownControl } from '@/components/autocomplete-dropdown';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 
 type ListingType = Tables<'listings'>["type_of_listing"];
 type ShipmentCode = Tables<'listings'>["shipment_code"];
@@ -62,6 +67,19 @@ const listingTypeOptions: { label: string; value: ListingType; helper: string }[
 ];
 
 export default function CreateListing() {
+  const tintColor = useThemeColor({}, 'tint');
+  const borderColor = useThemeColor(
+    { light: '#D9E2F9', dark: '#252B3E' },
+    'background'
+  );
+  const backgroundColor = useThemeColor(
+    { light: '#F2F6FF', dark: '#151B2A' },
+    'background'
+  );
+  const inputTextColor = useThemeColor({}, 'text');
+  const placeholderColor = useThemeColor({}, 'textSecondary');
+  const isWeb = Platform.OS === "web";
+
   const router = useRouter();
   const { session } = useAuthContext();
   const [title, setTitle] = useState("");
@@ -69,6 +87,7 @@ export default function CreateListing() {
   const [originId, setOriginId] = useState("");
   const [destinationId, setDestinationId] = useState("");
   const [departureDate, setDepartureDate] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [typeOfListing, setTypeOfListing] = useState<ListingType>("travel");
   const [shipmentCode, setShipmentCode] = useState<ShipmentCode>("matching");
   const [pricePerUnit, setPricePerUnit] = useState("");
@@ -84,6 +103,40 @@ export default function CreateListing() {
     const date = new Date(departureDate);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }, [departureDate]);
+
+  const displayDepartureDate = useMemo(() => {
+    if (!parsedDepartureDate) return "";
+    const date = new Date(parsedDepartureDate);
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, [parsedDepartureDate]);
+
+  const pickerValue = useMemo(() => {
+    if (!parsedDepartureDate) return new Date();
+    const date = new Date(parsedDepartureDate);
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+  }, [parsedDepartureDate]);
+
+  function handleDepartureDateChange(
+    event: DateTimePickerEvent,
+    selectedDate?: Date
+  ) {
+    if (event.type === "dismissed") {
+      setShowDatePicker(false);
+      return;
+    }
+
+    const nextDate = selectedDate ?? pickerValue;
+    setDepartureDate(nextDate.toISOString());
+    setShowDatePicker(false);
+  }
+
+  function openDatePicker() {
+    setShowDatePicker(true);
+  }
 
   function validate(): boolean {
     const errors: ValidationErrors = {};
@@ -105,11 +158,11 @@ export default function CreateListing() {
     }
 
     if (!originId.trim()) {
-      errors.originId = "Origin airport ID is required.";
+      errors.originId = "Origin airport is required.";
     }
 
     if (!destinationId.trim()) {
-      errors.destinationId = "Destination airport ID is required.";
+      errors.destinationId = "Destination airport is required.";
     }
 
     if (!parsedDepartureDate) {
@@ -187,7 +240,7 @@ export default function CreateListing() {
         text: "Listing created. Redirecting to details...",
       });
       if (data?.id) {
-        router.replace(`/listings/${data.id}`);
+        router.replace(`/listings/${data.id}?segment=${typeOfListing}`);
       } else {
         router.replace("/(drawer)/(home)/(tabs)");
       }
@@ -210,8 +263,8 @@ export default function CreateListing() {
             Create a listing
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Share your route or shipment. Use the autocomplete to set the origin
-            airport, and paste the destination ID from your admin dashboard.
+            Share your route or shipment. Use the autocomplete fields to set the
+            origin and destination airports.
           </ThemedText>
         </ThemedView>
 
@@ -224,7 +277,11 @@ export default function CreateListing() {
             accessibilityLiveRegion="assertive"
           >
             <AlertIcon
-              as={statusMessage.variant === "error" ? AlertCircleIcon : CheckCircleIcon}
+              as={
+                statusMessage.variant === "error"
+                  ? AlertCircleIcon
+                  : CheckCircleIcon
+              }
             />
             <AlertText>{statusMessage.text}</AlertText>
           </Alert>
@@ -245,14 +302,28 @@ export default function CreateListing() {
                 autoCapitalize="sentences"
                 accessibilityLabel="Listing title"
                 accessibilityHint="Enter a short, clear title"
+                placeholderTextColor={placeholderColor}
+                style={[
+                  styles.inputField,
+                  {
+                    color: tintColor,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
               />
             </Input>
             <FormControlHelper>
-              <FormControlHelperText>Make it specific so travellers can trust it.</FormControlHelperText>
+              <FormControlHelperText>
+                Make it specific so travellers can trust it.
+              </FormControlHelperText>
             </FormControlHelper>
             {validationErrors.title && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.title}
                 </FormControlErrorText>
@@ -260,33 +331,48 @@ export default function CreateListing() {
             )}
           </FormControl>
 
-          <FormControl isInvalid={Boolean(validationErrors.description)} size="sm">
+          <FormControl
+            isInvalid={Boolean(validationErrors.description)}
+            size="sm"
+          >
             <FormControlLabel>
               <FormControlLabelText>
                 <ThemedText>Description</ThemedText>
               </FormControlLabelText>
             </FormControlLabel>
-            <Input>
-              <InputField
+            <Textarea>
+              <TextareaInput
                 value={description}
                 onChangeText={setDescription}
                 placeholder="What are you offering or shipping? Include timing and restrictions."
                 autoCapitalize="sentences"
                 accessibilityLabel="Listing description"
                 accessibilityHint="Describe the route, cargo, and expectations"
+                placeholderTextColor={placeholderColor}
+                style={[
+                  styles.inputField,
+                  {
+                    color: tintColor,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
                 multiline
                 numberOfLines={4}
-                style={styles.multiline}
               />
-            </Input>
+            </Textarea>
             <FormControlHelper>
               <FormControlHelperText>
-                At least 20 characters. Mention verification, timing, and any limits.
+                At least 20 characters. Mention verification, timing, and any
+                limits.
               </FormControlHelperText>
             </FormControlHelper>
             {validationErrors.description && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.description}
                 </FormControlErrorText>
@@ -318,13 +404,17 @@ export default function CreateListing() {
                     >
                       {option.label}
                     </ThemedText>
-                    <ThemedText style={styles.segmentHelper}>{option.helper}</ThemedText>
+                    <ThemedText style={styles.segmentHelper}>
+                      {option.helper}
+                    </ThemedText>
                   </Pressable>
                 );
               })}
             </HStack>
             {validationErrors.type && (
-              <ThemedText style={styles.inlineError}>{validationErrors.type}</ThemedText>
+              <ThemedText style={styles.inlineError}>
+                {validationErrors.type}
+              </ThemedText>
             )}
           </ThemedView>
 
@@ -335,7 +425,8 @@ export default function CreateListing() {
               </FormControlLabelText>
             </FormControlLabel>
             <AutocompleteDropdownControl
-              onSelectId={()=>{setOriginId}}
+              value={originId}
+              onSelectId={(id) => setOriginId(id ?? "")}
               placeholder="Search for an origin airport"
             />
             <FormControlHelper>
@@ -345,7 +436,10 @@ export default function CreateListing() {
             </FormControlHelper>
             {validationErrors.originId && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.originId}
                 </FormControlErrorText>
@@ -353,19 +447,31 @@ export default function CreateListing() {
             )}
           </FormControl>
 
-          <FormControl isInvalid={Boolean(validationErrors.destinationId)} size="sm">
+          <FormControl
+            isInvalid={Boolean(validationErrors.destinationId)}
+            size="sm"
+          >
             <FormControlLabel>
               <FormControlLabelText>
                 <ThemedText>Destination airport</ThemedText>
               </FormControlLabelText>
             </FormControlLabel>
             <AutocompleteDropdownControl
-              onSelectId={()=>{setDestinationId}}
+              value={destinationId}
+              onSelectId={(id) => setDestinationId(id ?? "")}
               placeholder="Search for a destination airport"
             />
+            <FormControlHelper>
+              <FormControlHelperText>
+                Pick an airport to set the destination ID automatically.
+              </FormControlHelperText>
+            </FormControlHelper>
             {validationErrors.destinationId && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.destinationId}
                 </FormControlErrorText>
@@ -373,31 +479,88 @@ export default function CreateListing() {
             )}
           </FormControl>
 
-          <FormControl isInvalid={Boolean(validationErrors.departureDate)} size="sm">
+          <FormControl
+            isInvalid={Boolean(validationErrors.departureDate)}
+            size="sm"
+          >
             <FormControlLabel>
               <FormControlLabelText>
                 <ThemedText>Departure date</ThemedText>
               </FormControlLabelText>
             </FormControlLabel>
-            <Input>
-              <InputField
-                value={departureDate}
-                onChangeText={setDepartureDate}
-                placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
-                autoCapitalize="none"
-                autoCorrect={false}
-                accessibilityLabel="Departure date"
-                accessibilityHint="Enter an ISO date; we will convert for Supabase"
-              />
-            </Input>
+            {isWeb ? (
+              <Input>
+                <InputField
+                  value={departureDate}
+                  onChangeText={setDepartureDate}
+                  placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
+                  placeholderTextColor={placeholderColor}
+                  style={[
+                    styles.inputField,
+                    {
+                      color: tintColor,
+                      borderColor: borderColor,
+                      backgroundColor: backgroundColor,
+                    },
+                  ]}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel="Departure date"
+                />
+              </Input>
+            ) : (
+              <>
+                <Pressable
+                  onPress={openDatePicker}
+                  accessibilityRole="button"
+                  accessibilityHint="Choose a departure date from the picker"
+                  style={styles.datePressable}
+                >
+                  <Input pointerEvents="none">
+                    <InputField
+                      value={displayDepartureDate}
+                      placeholder="Pick a departure date"
+                      placeholderTextColor={placeholderColor}
+                      style={[
+                        styles.inputField,
+                        {
+                          color: tintColor,
+                          borderColor: borderColor,
+                          backgroundColor: backgroundColor,
+                        },
+                      ]}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      accessibilityLabel="Departure date"
+                      editable={false}
+                      showSoftInputOnFocus={false}
+                    />
+                  </Input>
+                </Pressable>
+                {showDatePicker && (
+                  <DateTimePicker
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                    value={pickerValue}
+                    onChange={handleDepartureDateChange}
+                  />
+                )}
+              </>
+            )}
             <FormControlHelper>
               <FormControlHelperText>
-                Uses ISO dates. Timezone defaults to UTC if not provided.
+                {isWeb
+                  ? "Enter an ISO date on web; on mobile you can pick a date and we store it as ISO for Supabase."
+                  : "Tap to pick a date; we store it as an ISO value for Supabase."
+                }
               </FormControlHelperText>
             </FormControlHelper>
             {validationErrors.departureDate && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.departureDate}
                 </FormControlErrorText>
@@ -416,16 +579,30 @@ export default function CreateListing() {
                 value={pricePerUnit}
                 onChangeText={setPricePerUnit}
                 placeholder="e.g. 15 (per kg)"
+                placeholderTextColor={placeholderColor}
+                style={[
+                  styles.inputField,
+                  {
+                    color: tintColor,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
                 keyboardType="decimal-pad"
                 accessibilityLabel="Price per unit"
               />
             </Input>
             <FormControlHelper>
-              <FormControlHelperText>Optional, but helps travellers match quickly.</FormControlHelperText>
+              <FormControlHelperText>
+                Optional, but helps travellers match quickly.
+              </FormControlHelperText>
             </FormControlHelper>
             {validationErrors.price && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.price}
                 </FormControlErrorText>
@@ -433,7 +610,10 @@ export default function CreateListing() {
             )}
           </FormControl>
 
-          <FormControl isInvalid={Boolean(validationErrors.maxWeight)} size="sm">
+          <FormControl
+            isInvalid={Boolean(validationErrors.maxWeight)}
+            size="sm"
+          >
             <FormControlLabel>
               <FormControlLabelText>
                 <ThemedText>Max weight (kg)</ThemedText>
@@ -444,13 +624,25 @@ export default function CreateListing() {
                 value={maxWeight}
                 onChangeText={setMaxWeight}
                 placeholder="e.g. 18"
+                placeholderTextColor={placeholderColor}
+                style={[
+                  styles.inputField,
+                  {
+                    color: tintColor,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
                 keyboardType="decimal-pad"
                 accessibilityLabel="Max weight in kilograms"
               />
             </Input>
             {validationErrors.maxWeight && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.maxWeight}
                 </FormControlErrorText>
@@ -471,6 +663,15 @@ export default function CreateListing() {
                   setCurrencyCode(value.toUpperCase() === "GHS" ? "GHS" : "USD")
                 }
                 placeholder="USD or GHS"
+                placeholderTextColor={placeholderColor}
+                style={[
+                  styles.inputField,
+                  {
+                    color: tintColor,
+                    borderColor: borderColor,
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 accessibilityLabel="Currency code"
@@ -478,7 +679,10 @@ export default function CreateListing() {
             </Input>
             {validationErrors.currency && (
               <FormControlError>
-                <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
+                <FormControlErrorIcon
+                  as={AlertCircleIcon}
+                  className="text-red-500"
+                />
                 <FormControlErrorText className="text-red-500">
                   {validationErrors.currency}
                 </FormControlErrorText>
@@ -488,7 +692,9 @@ export default function CreateListing() {
 
           {typeOfListing === "shipment" && (
             <ThemedView style={styles.segmentSection}>
-              <ThemedText style={styles.segmentLabel}>Shipment priority</ThemedText>
+              <ThemedText style={styles.segmentLabel}>
+                Shipment priority
+              </ThemedText>
               <HStack style={styles.segmentButtons}>
                 {(["matching", "urgent"] as ShipmentCode[]).map((code) => {
                   const isActive = shipmentCode === code;
@@ -539,10 +745,12 @@ export default function CreateListing() {
             }}
           />
           {isSubmitting && (
-            <View style={styles.submittingRow}>
+            <ThemedView style={styles.submittingRow}>
               <ActivityIndicator size="small" />
-              <ThemedText style={styles.submittingText}>Saving listing...</ThemedText>
-            </View>
+              <ThemedText style={styles.submittingText}>
+                Saving listing...
+              </ThemedText>
+            </ThemedView>
           )}
         </ThemedView>
       </ScrollView>
@@ -568,6 +776,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     opacity: 0.8,
   },
+  inputField: {},
   multiline: {
     minHeight: 120,
     textAlignVertical: "top",
@@ -591,7 +800,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   segmentButtonActive: {
-    borderColor: "#0a7ea4",
+    borderColor: "#0A7EA4",
     backgroundColor: "rgba(10, 126, 164, 0.08)",
   },
   segmentButtonText: {
@@ -599,14 +808,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   segmentButtonTextActive: {
-    color: "#0a7ea4",
+    color: "#0A7EA4",
   },
   segmentHelper: {
     fontSize: 13,
     opacity: 0.8,
   },
+  datePressable: {
+    width: "100%",
+  },
   inlineError: {
-    color: "#dc2626",
+    color: "#DC2626",
     fontSize: 13,
     marginTop: 4,
   },

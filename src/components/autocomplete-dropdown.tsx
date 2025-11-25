@@ -10,15 +10,20 @@ import { ThemedText } from './themed-text'
 import { ThemedView } from './themed-view'
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from './ui/icon-symbol'
+import { Button, ButtonText } from './ui/button'
 
 type AutocompleteDropdownControlProps = {
-  onSelectId?: (id: string | null) => void;
+  value?: string;
+  onSelectId?: (id: string | null, label?: string) => void;
   placeholder?: string;
 };
 
 export const AutocompleteDropdownControl = memo(
-  ({ onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
-  const tintColor = useThemeColor({}, 'tint');
+  ({ value, onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
+  const tintColor = useThemeColor(
+    {}, 
+    'tint'
+  );
   const borderColor = useThemeColor(
     { light: '#D9E2F9', dark: '#252B3E' },
     'background'
@@ -29,7 +34,6 @@ export const AutocompleteDropdownControl = memo(
   );
   const [loading, setLoading] = useState(false)
   const [suggestionsList, setSuggestionsList] = useState<AutocompleteDropdownItem[] | null>(null)
-  const [selectedItem, setSelectedItem] = useState<string | null>(null)
   const dropdownController = useRef<IAutocompleteDropdownRef | null>(null)
 
   const getSuggestions = useCallback(async (q: string) => {
@@ -54,7 +58,7 @@ export const AutocompleteDropdownControl = memo(
         .filter((item) => item.label?.toLowerCase().includes(filterToken))
         .map((item) => ({
           id: String(item.id),
-          title: item.label ?? '',
+          title: String(item.label) ?? '',
         }))
       setSuggestionsList(suggestions)
     } catch (error) {
@@ -67,7 +71,6 @@ export const AutocompleteDropdownControl = memo(
 
   const onClearPress = useCallback(() => {
     setSuggestionsList(null)
-    setSelectedItem(null)
     onSelectId?.(null)
   }, [onSelectId])
 
@@ -81,13 +84,13 @@ export const AutocompleteDropdownControl = memo(
           controller={controller => {
             dropdownController.current = controller
           }}
-          direction={Platform.select({ ios: 'down', android: 'up' })}
+          direction={Platform.select({ ios: 'down', android: 'up', web: 'down' })}
           dataSet={suggestionsList}
+          initialValue={value ? { id: value, title: value } : undefined}
           onChangeText={getSuggestions}
           onSelectItem={(item) => {
             const id = item?.id ?? null
-            setSelectedItem(id)
-            onSelectId?.(id)
+            onSelectId?.(id, item?.title ?? '')
           }}
           debounce={600}
           suggestionsListMaxHeight={Dimensions.get('window').height * 0.4}
@@ -99,11 +102,11 @@ export const AutocompleteDropdownControl = memo(
             autoCorrect: true,
             autoCapitalize: 'none',
             style: {
-              borderRadius: 10,
-              borderColor: `${backgroundColor}`,
-              backgroundColor: `${backgroundColor}`,
+              borderRadius: 5,
+              paddingLeft: 18,
               color: `${tintColor}`,
-              paddingLeft: 18
+              borderColor: `${borderColor}`,
+              backgroundColor: `${backgroundColor}`
             },
           }}
           rightButtonsContainerStyle={{
@@ -112,25 +115,28 @@ export const AutocompleteDropdownControl = memo(
             alignSelf: 'center',
           }}
           inputContainerStyle={{
-            backgroundColor: `${backgroundColor}`,
-            borderRadius: 10,
-            borderColor: `${backgroundColor}`
+            borderRadius: 5,
+            borderColor: `${borderColor}`,
+            backgroundColor: `${backgroundColor}`
           }}
           suggestionsListContainerStyle={{
-            backgroundColor: `${backgroundColor}`,
+            backgroundColor: `${backgroundColor}`
           }}
-          containerStyle={{ flexGrow: 1, flexShrink: 1, borderColor: `${backgroundColor}` }}
+          containerStyle={{ flexGrow: 1, flexShrink: 1, borderColor: `${borderColor}` }}
           renderItem={(item: AutocompleteDropdownItem) => (
             <ThemedText style={{ color: `${tintColor}`, padding: 5 }}>{item.title}</ThemedText>
           )}
           ClearIconComponent={<IconSymbol name="clear" size={18} color={tintColor} />}
-          inputHeight={40}
+          inputHeight={45}
           showChevron={false}
           closeOnBlur={false}
           showClear={true}
         />
         {/* <ThemedView style={{ width: 10 }} /> */}
-        {/* <Button title="Toggle" onPress={() => dropdownController.current?.toggle()} /> */}
+        {/* <Button>
+          <ButtonText onPress={() => dropdownController.current?.toggle()} > Toggle</ButtonText>
+        </Button> */}
+        {/* <ThemedText style={{ color: '#668', fontSize: 13 }}>Selected item id: {JSON.stringify(selectedItem)}</ThemedText> */}
       </ThemedView>
   )
 })

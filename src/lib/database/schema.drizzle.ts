@@ -89,9 +89,11 @@ export const listings = pgTable("listings", {
   originId: uuid("origin_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
+  originName: text("origin_name"),
   destinationId: uuid("destination_id")
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
+  destinationName: text("destination_name"),
   departureDate: timestamp("departure_date", { withTimezone: true }).notNull(),
   maxWeightKg: numeric("max_weight_kg", { precision: 10, scale: 2 }),
   maxWeightLb: numeric ("max_weight_lb", { precision: 10, scale: 2 }),
