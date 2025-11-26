@@ -1,8 +1,8 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import type { ShipmentRequest } from '@/constants/types';
-import { formatRelative } from '@/lib/utils';
+import type { ListingRow } from '@/constants/types';
+import * as fn from '@/lib/utils';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 
@@ -11,7 +11,7 @@ export function ShipmentResultCard({
   tintColor,
   borderColor,
 }: Readonly<{
-  shipment: ShipmentRequest;
+  shipment: ListingRow;
   tintColor: string;
   borderColor: string;
 }>) {
@@ -41,15 +41,15 @@ export function ShipmentResultCard({
           <ThemedView style={styles.resultHeaderText}>
             <ThemedText type="subtitle">{shipment.title}</ThemedText>
             <ThemedText style={styles.resultMetaText}>
-              {shipment.origin} to {shipment.destination} | {" "}
-              {formatRelative(shipment.departureDate)}
+              {`${shipment.origin?.city} (${shipment.origin?.iata_code})`} → {`${shipment.destination?.city} (${shipment.destination?.iata_code})`} | {" "}
+              {fn.formatRelative(shipment.departure_date)}
             </ThemedText>
           </ThemedView>
           <ThemedView
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-              Budget ${shipment.pricePerUnit}
+              Budget ${shipment.price_per_unit}
             </ThemedText>
           </ThemedView>
         </ThemedView>
@@ -58,15 +58,12 @@ export function ShipmentResultCard({
           <ThemedView style={styles.resultInfoRow}>
             <IconSymbol name="clock.fill" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
-              {shipment.maxWeightKg}kg {" "}
-              {shipment.shipmentCode === "urgent"
+              {shipment.max_weight_kg}kg {" "}
+              {shipment.shipment_code === "urgent"
                 ? "Needs fast match"
                 : "Matching"}
             </ThemedText>
           </ThemedView>
-          <ThemedText style={styles.resultInfoText}>
-            {shipment.handlingNotes}
-          </ThemedText>
         </ThemedView>
       </ThemedView>
     </Pressable>

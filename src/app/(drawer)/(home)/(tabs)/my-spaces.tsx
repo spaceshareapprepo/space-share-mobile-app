@@ -1,49 +1,82 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { shipmentRequests, travellerListings } from '@/constants/mock-data';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ListingRow } from "@/constants/types";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { fetchListings } from "@/lib/database/db";
+import { router } from 'expo-router';
+import * as fn from "@/lib/utils";
 
-type SegmentKey = 'shipped' | 'offeredSpace';
+const segments = [
+  { key: "shipped", label: "Shipped Items" },
+  { key: "offeredSpace", label: "Offered Spaces" },
+] as const;
+type SegmentKey = (typeof segments)[number]["key"];
 
 export default function MyShipmentsScreen() {
-  const tintColor = useThemeColor({}, 'tint');
+  const tintColor = useThemeColor({}, "tint");
   const borderColor = useThemeColor(
-    { light: '#D8E2FA', dark: '#242A3D' },
-    'background'
+    { light: "#D8E2FA", dark: "#242A3D" },
+    "background"
   );
 
-  const [segment, setSegment] = useState<SegmentKey>('shipped');
+  const { session } = useAuthContext();
+  const [segment, setSegment] = useState<SegmentKey>("shipped");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [listings, setListings] = useState<ListingRow[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadListings() {
+      if (!session?.user?.id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: dbError } = await fetchListings();
+
+        if (dbError) throw dbError;
+        if (isMounted) setListings((data as unknown as ListingRow[]) ?? []);
+      } catch (err) {
+        if (isMounted) setError("Could not load your listings. Pull to refresh or try again.");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    void loadListings();
+    return () => {
+      isMounted = false;
+    };
+  }, [session?.user?.id]);
 
   const shippedItems = useMemo(
-    () =>
-      shipmentRequests.map((shipment) => ({
-        ...shipment,
-        fulfillment:
-          shipment.status === 'urgent' ? 'Awaiting traveller acceptance' : 'Matching in progress',
-      })),
-    []
+    () => listings.filter((item) => item.type_of_listing === "shipment"),
+    [listings]
   );
 
   const offeredSpaces = useMemo(
-    () =>
-      travellerListings.map((listing) => ({
-        ...listing,
-        commitments:
-          listing.status === 'closingSoon'
-            ? 'Finalising matches'
-            : 'Accepting new requests',
-      })),
-    []
+    () => listings.filter((item) => item.type_of_listing === "travel"),
+    [listings]
   );
+
+  const handlePress = (id:string, segment: string) =>
+    router.navigate({
+      pathname: "/listings/[id]",
+      params: {
+        id,
+        segment,
+      },
+    });
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#03162F', dark: '#040B18' }}
+      headerBackgroundColor={{ light: "#03162F", dark: "#040B18" }}
       headerImage={
         <IconSymbol
           name="cube.box.fill"
@@ -51,11 +84,12 @@ export default function MyShipmentsScreen() {
           color="rgba(255,255,255,0.25)"
           style={styles.headerIcon}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.container}>
         <ThemedView style={[styles.heroCard, { borderColor }]}>
           <View style={styles.heroHeader}>
-            <ThemedText type="title">My Shipments</ThemedText>
+            <ThemedText type="title">My Shared Spaces</ThemedText>
             <ThemedText style={styles.heroSubtitle}>
               Track posted items, monitor traveller commitments, and prepare safe hand-offs across
               the {'USA <-> Ghana'} corridor.
@@ -65,7 +99,7 @@ export default function MyShipmentsScreen() {
             <StatBlock
               icon="cube.box.fill"
               value={shippedItems.length}
-              label="Active shipment posts"
+              label="My shipment posts"
               tintColor={tintColor}
             />
             <StatBlock
@@ -84,15 +118,11 @@ export default function MyShipmentsScreen() {
               <Pressable
                 key={option.key}
                 onPress={() => setSegment(option.key)}
-                style={[
-                  styles.segmentButton,
-                  isActive && { backgroundColor: tintColor },
-                ]}>
+                style={[styles.segmentButton, isActive && { backgroundColor: tintColor }]}
+              >
                 <ThemedText
-                  style={[
-                    styles.segmentLabel,
-                    isActive ? styles.segmentLabelActive : undefined,
-                  ]}>
+                  style={[styles.segmentLabel, isActive ? styles.segmentLabelActive : undefined]}
+                >
                   {option.label}
                 </ThemedText>
               </Pressable>
@@ -100,65 +130,99 @@ export default function MyShipmentsScreen() {
           })}
         </View>
 
-        {segment === 'shipped' ? (
+        {loading ? (
+          <ThemedView style={{ padding: 16, gap: 8, alignItems: "center" }}>
+            <ActivityIndicator />
+            <ThemedText>Loading your listings...</ThemedText>
+          </ThemedView>
+        ) : error ? (
+          <ThemedView style={{ padding: 16, gap: 8 }}>
+            <ThemedText>{error}</ThemedText>
+          </ThemedView>
+        ) : segment === "shipped" ? (
           <View style={styles.list}>
-            {shippedItems.map((shipment) => (
-              <ThemedView key={shipment.id} style={[styles.card, { borderColor }]}>
-                <View style={[styles.avatar, { backgroundColor: `${tintColor}15` }]}>
-                  <IconSymbol name="cube.box.fill" color={tintColor} size={18} />
-                </View>
-                <View style={styles.cardBody}>
-                  <ThemedText type="subtitle" style={styles.cardTitle}>
-                    {shipment.itemName}
-                  </ThemedText>
-                  <ThemedText style={styles.cardRoute}>
-                    {shipment.origin} → {shipment.destination}
-                  </ThemedText>
-                  <ThemedText style={styles.cardDetail}>
-                    {shipment.weightKg}kg · budget ${shipment.budgetUsd}
-                  </ThemedText>
-                  <ThemedText style={styles.cardMetaText}>
-                    Ready {formatRelative(shipment.readyBy)}
-                  </ThemedText>
-                </View>
-                <View style={styles.cardTagColumn}>
-                  <StatusTag
-                    label={shipment.status === 'urgent' ? 'High priority' : 'Matching'}
-                    tone={shipment.status === 'urgent' ? 'warning' : 'info'}
-                  />
-                  <StatusTag label={shipment.fulfillment} tone="neutral" />
-                </View>
-              </ThemedView>
-            ))}
+            {shippedItems.length === 0 ? (
+              <ThemedText>No shipment posts yet.</ThemedText>
+            ) : (
+              shippedItems.map((shipment) => (
+                <Pressable 
+                  key={shipment.id}
+                  onPress={() => handlePress(shipment.id, "shipment")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View shipment ${shipment.title}`}
+                >
+                  <ThemedView key={shipment.id} style={[styles.card, { borderColor }]}>
+                    <View style={[styles.avatar, { backgroundColor: `${tintColor}15` }]}>
+                      <IconSymbol name="cube.box.fill" color={tintColor} size={18} />
+                    </View>
+                    <View style={styles.cardBody}>
+                      <ThemedText type="subtitle" style={styles.cardTitle}>
+                        {shipment.title || "Untitled shipment"}
+                      </ThemedText>
+                      <ThemedText style={styles.cardRoute}>
+                        {`${shipment.origin?.city ?? ""} (${shipment.origin?.iata_code ?? ""})`} to {`${shipment.destination?.city ?? ""} (${shipment.destination?.iata_code ?? ""})`}
+                      </ThemedText>
+                      <ThemedText style={styles.cardDetail}>
+                        {shipment.max_weight_kg ?? ""}kg - budget ${shipment.price_per_unit ?? ""}{" "}
+                        {shipment.currency_code ?? ""}
+                      </ThemedText>
+                      <ThemedText style={styles.cardMetaText}>
+                        Ready {fn.formatRelative(shipment.departure_date || "")}
+                      </ThemedText>
+                    </View>
+                    <View style={styles.cardTagColumn}>
+                      <StatusTag
+                        label={shipment.shipment_code === "urgent" ? "High priority" : "Matching"}
+                        tone={shipment.shipment_code === "urgent" ? "warning" : "info"}
+                      />
+                      <StatusTag label="Awaiting matches" tone="neutral" />
+                    </View>
+                  </ThemedView>
+                </Pressable>
+              ))
+            )}
           </View>
         ) : (
           <View style={styles.list}>
-            {offeredSpaces.map((listing) => (
-              <ThemedView key={listing.id} style={[styles.card, { borderColor }]}>
-                <View style={[styles.avatar, { backgroundColor: `${tintColor}15` }]}>
-                  <IconSymbol name="airplane.circle.fill" color={tintColor} size={18} />
-                </View>
-                <View style={styles.cardBody}>
-                  <ThemedText type="subtitle" style={styles.cardTitle}>
-                    {listing.origin} → {listing.destination}
-                  </ThemedText>
-                  <ThemedText style={styles.cardDetail}>
-                    {listing.availableKg}kg free of {listing.totalCapacityKg}kg
-                  </ThemedText>
-                  <ThemedText style={styles.cardMetaText}>
-                    Departs {formatDate(listing.departureDate)}
-                  </ThemedText>
-                  <ThemedText style={styles.cardMetaText}>{listing.focus}</ThemedText>
-                </View>
-                <View style={styles.cardTagColumn}>
-                  <StatusTag
-                    label={listing.status === 'closingSoon' ? 'Closing soon' : 'Taking requests'}
-                    tone={listing.status === 'closingSoon' ? 'warning' : 'success'}
-                  />
-                  <StatusTag label={listing.commitments} tone="neutral" />
-                </View>
-              </ThemedView>
-            ))}
+            {offeredSpaces.length === 0 ? (
+              <ThemedText>No travel listings yet.</ThemedText>
+            ) : (
+              offeredSpaces.map((listing) => (
+                <Pressable
+                  key={listing.id}
+                  onPress={() => handlePress(listing.id, "traveller")}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View offered spaces ${listing.title}`}
+                >
+                  <ThemedView key={listing.id} style={[styles.card, { borderColor }]}>
+                    <View style={[styles.avatar, { backgroundColor: `${tintColor}15` }]}>
+                      <IconSymbol name="airplane.circle.fill" color={tintColor} size={18} />
+                    </View>
+                    <View style={styles.cardBody}>
+                      <ThemedText type="subtitle" style={styles.cardTitle}>
+                        {listing.title}
+                      </ThemedText>
+                      <ThemedText style={styles.cardDetail}>
+                        {listing.max_weight_kg ?? ""}kg free
+                      </ThemedText>
+                      <ThemedText style={styles.cardMetaText}>
+                        Departs {fn.formatDate(listing.departure_date || "")}
+                      </ThemedText>
+                      <ThemedText style={styles.cardMetaText}>
+                        Price ${listing.price_per_unit ?? ""} {listing.currency_code ?? ""}
+                      </ThemedText>
+                    </View>
+                    <View style={styles.cardTagColumn}>
+                      <StatusTag
+                        label={listing.shipment_code === "matching" ? "Closing soon" : "Taking requests"}
+                        tone={listing.shipment_code === "matching" ? "warning" : "success"}
+                      />
+                      <StatusTag label="Accepting new requests" tone="neutral" />
+                    </View>
+                  </ThemedView>
+                </Pressable>
+              ))
+            )}
           </View>
         )}
       </ThemedView>
@@ -166,19 +230,14 @@ export default function MyShipmentsScreen() {
   );
 }
 
-const segments: { key: SegmentKey; label: string }[] = [
-  { key: 'shipped', label: 'Shipped Items' },
-  { key: 'offeredSpace', label: 'Offered Spaces' },
-];
-
-type StatusTone = 'warning' | 'success' | 'info' | 'neutral';
+type StatusTone = "warning" | "success" | "info" | "neutral";
 
 function StatusTag({ label, tone }: Readonly<{ label: string; tone: StatusTone }>) {
   const palette = {
-    warning: { backgroundColor: 'rgba(249, 115, 22, 0.15)', color: '#F97316' },
-    success: { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#0F766E' },
-    info: { backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#2563EB' },
-    neutral: { backgroundColor: 'rgba(148, 163, 184, 0.15)', color: '#475569' },
+    warning: { backgroundColor: "rgba(249, 115, 22, 0.15)", color: "#F97316" },
+    success: { backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#0F766E" },
+    info: { backgroundColor: "rgba(59, 130, 246, 0.15)", color: "#2563EB" },
+    neutral: { backgroundColor: "rgba(148, 163, 184, 0.15)", color: "#475569" },
   }[tone];
 
   return (
@@ -194,7 +253,7 @@ function StatBlock({
   label,
   tintColor,
 }: Readonly<{
-  icon: Parameters<typeof IconSymbol>[0]['name'];
+  icon: Parameters<typeof IconSymbol>[0]["name"];
   value: number;
   label: string;
   tintColor: string;
@@ -210,33 +269,6 @@ function StatBlock({
   );
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function formatRelative(value: string) {
-  const target = new Date(value).getTime();
-  const diff = target - Date.now();
-  const days = Math.round(diff / (1000 * 60 * 60 * 24));
-
-  if (days < -1) {
-    return `${Math.abs(days)} days ago`;
-  }
-  if (days === -1) {
-    return 'Yesterday';
-  }
-  if (days === 0) {
-    return 'Today';
-  }
-  if (days === 1) {
-    return 'In 1 day';
-  }
-  return `In ${days} days`;
-}
-
 const styles = StyleSheet.create({
   container: {
     gap: 24,
@@ -245,7 +277,7 @@ const styles = StyleSheet.create({
   headerIcon: {
     bottom: -60,
     left: -35,
-    position: 'absolute',
+    position: "absolute",
   },
   heroCard: {
     borderRadius: 24,
@@ -261,14 +293,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   heroStats: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   segmentedControl: {
     borderWidth: 1,
     borderRadius: 999,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
     padding: 4,
   },
@@ -276,15 +308,15 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 999,
     paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   segmentLabel: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 14,
   },
   segmentLabelActive: {
-    color: '#fff',
+    color: "#fff",
   },
   list: {
     gap: 16,
@@ -293,16 +325,16 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderWidth: 1,
     padding: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 14,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   avatar: {
     width: 46,
     height: 46,
     borderRadius: 23,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardBody: {
     flex: 1,
@@ -334,7 +366,7 @@ const styles = StyleSheet.create({
   },
   statusTagText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statBlock: {
     borderRadius: 18,

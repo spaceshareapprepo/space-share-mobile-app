@@ -17,11 +17,15 @@ import type {
 } from "@/constants/types";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { fetchListing } from "@/lib/database/db";
-import { formatDate, formatRelative, getInitials } from "@/lib/utils";
+import { fetchListing, fetchThread, createThread } from "@/lib/database/db";
+import * as fn from "@/lib/utils";
+import { supabase } from "@/lib/supabase"
+import { HStack } from "@/components/ui/hstack";
+import { FormControl } from "@/components/ui/form-control"
 
-function isShipment(listing: ListingRow): listing is ListingRow {
-  return "shipmentCode" in listing;
+
+function isShipment(listing: ListingRow): boolean {
+  return listing.type_of_listing === "shipment";
 }
 
 type SectionIcon =
@@ -48,21 +52,85 @@ function SectionHeader({
   );
 }
 
+async function startConversation({
+  listingId,
+  buyerId,
+  sellerId,
+}: {
+  listingId: string;
+  buyerId: string | null;
+  sellerId: string | null;
+}): Promise<void> {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    console.log(`User: ${JSON.stringify(data?.user?.id)}`)
+    if (error || !data?.user) {
+      router.navigate("/(auth)/sign-in");
+      return;
+    }
+
+    if (!buyerId || !sellerId) {
+      throw new Error("Invalid buyer or seller ID");
+    }
+
+    // Reuse existing thread between these parties for this listing
+    const existing = await fetchThread({
+      listingId,
+      buyerId,
+      sellerId,
+    });
+
+    // fetchThread returns a shape like { data: { id: ... }, error: null } or { data: [], error: Error }
+    // Ensure data is not an array before accessing .id to satisfy TypeScript
+    const existingThreadId =
+      existing &&
+      typeof existing === "object" &&
+      "data" in existing &&
+      existing.data &&
+      !Array.isArray(existing.data)
+        ? (existing.data as { id?: string }).id
+        : undefined;
+
+    const threadId =
+      existingThreadId ??
+      (await createThread({
+        listingId,
+        buyerId,
+        sellerId,
+      }));
+
+    if (!threadId) {
+      throw new Error("Unable to create or fetch thread");
+    }
+
+    router.navigate({
+      pathname: "/(inbox)/chat/[id]",
+      params: { id: threadId },
+    });
+  } catch (err) {
+    console.error(`Failed to start conversation: ${err}`);
+    // Handle error appropriately - show toast/alert or navigate to error page
+  }
+}
+
 function TravellerSection({
   id,
-  isOwner,
+  userId,
+  ownerId,
   listing,
   tintColor,
   borderColor,
   cardBackground,
 }: {
   id: string;
-  isOwner: boolean;
+  userId: string | null;
+  ownerId: string | undefined;
   listing: ListingMatch;
   tintColor: string;
   borderColor: string;
   cardBackground: string;
 }) {
+  const isOwner = userId === ownerId;
   return (
     <>
       <ThemedView
@@ -79,8 +147,8 @@ function TravellerSection({
         <View style={styles.metricGrid}>
           <MetricCard
             label="Departure"
-            value={formatDate(listing.data.departure_date)}
-            hint={formatRelative(listing.data.departure_date)}
+            value={fn.formatDate(listing.data.departure_date)}
+            hint={fn.formatRelative(listing.data.departure_date)}
             hintColor={tintColor}
             borderColor={borderColor}
           />
@@ -100,7 +168,7 @@ function TravellerSection({
         <ThemedText style={styles.bodyText}>
           {listing.data.description}
         </ThemedText>
-        {isOwner && (
+        {isOwner ? (
           <ThemedView>
             <Button
               onPress={() =>
@@ -113,43 +181,49 @@ function TravellerSection({
               <ButtonText>Edit</ButtonText>
             </Button>
           </ThemedView>
+        ) : (
+          <ThemedView>
+            <HStack className="flex justify-end">
+              <FormControl>
+                <Button
+                  onPress={() => {
+                    if (!id) return;
+                    startConversation({
+                      listingId: id,
+                      buyerId: userId,
+                      sellerId: ownerId ?? null,
+                    });
+                  }}
+                >
+                  <ButtonText>Send a message</ButtonText>
+                </Button>
+              </FormControl>
+            </HStack>
+          </ThemedView>
         )}
       </ThemedView>
-
-      {/* <ThemedView
-        style={[
-          styles.sectionCard,
-          { borderColor, backgroundColor: cardBackground },
-        ]}
-      >
-        <SectionHeader
-          icon="checkmark.seal.fill"
-          tintColor={tintColor}
-          title="Trust signals"
-        />
-        <ThemedText style={styles.bodyText}>
-          {listing.data.description}
-        </ThemedText>
-      </ThemedView> */}
     </>
   );
 }
 
 function ShipmentSection({
   id,
-  isOwner,
+  userId,
+  ownerId,
   listing,
   tintColor,
   borderColor,
   cardBackground,
 }: {
   id: string;
-  isOwner: boolean;
+  userId: string | null;
+  ownerId: string | undefined;
   listing: ListingMatch;
   tintColor: string;
   borderColor: string;
   cardBackground: string;
 }) {
+  const isOwner = userId === ownerId;
   return (
     <>
       <ThemedView
@@ -166,8 +240,8 @@ function ShipmentSection({
         <View style={styles.metricGrid}>
           <MetricCard
             label="Ready by"
-            value={formatDate(listing.data.departure_date)}
-            hint={formatRelative(listing.data.departure_date)}
+            value={fn.formatDate(listing.data.departure_date)}
+            hint={fn.formatRelative(listing.data.departure_date)}
             hintColor={tintColor}
             borderColor={borderColor}
           />
@@ -188,7 +262,7 @@ function ShipmentSection({
           {listing.data.description}
         </ThemedText>
       </ThemedView>
-      {isOwner && (
+      {isOwner ? (
           <ThemedView>
             <Button
               onPress={() =>
@@ -201,23 +275,26 @@ function ShipmentSection({
               <ButtonText>Edit</ButtonText>
             </Button>
           </ThemedView>
+        ) : (
+          <ThemedView>
+            <HStack className="flex justify-end">
+              <FormControl>
+                <Button
+                  onPress={() => {
+                    if (!id) return;
+                    startConversation({
+                      listingId: id,
+                      buyerId: userId,
+                      sellerId: ownerId ?? null,
+                    });
+                  }}
+                >
+                  <ButtonText>Send a message</ButtonText>
+                </Button>
+              </FormControl>
+            </HStack>
+          </ThemedView>
         )}
-
-      {/* <ThemedView
-        style={[
-          styles.sectionCard,
-          { borderColor, backgroundColor: cardBackground },
-        ]}
-      >
-        <SectionHeader
-          icon="clock.fill"
-          tintColor={tintColor}
-          title="Handling notes"
-        />
-        <ThemedText style={styles.bodyText}>
-          {listing.data.description}
-        </ThemedText>
-      </ThemedView> */}
     </>
   );
 }
@@ -323,7 +400,7 @@ export default function ListingDetailsScreen() {
   );
 
   const headerTitle = listing?.data.owner?.full_name;
-  const heroInitials = getInitials(String(listing?.data.owner?.full_name));
+  const heroInitials = fn.getInitials(String(listing?.data.owner?.full_name));
   const heroRoute =
     listing?.type === "traveller" || listing?.type === "shipment"
       ? `${listing?.data.origin?.name} -> ${listing?.data.destination?.name}`
@@ -331,11 +408,11 @@ export default function ListingDetailsScreen() {
 
   const heroMeta =
     listing?.type === "traveller"
-      ? `Departs ${formatDate(listing.data.departure_date)} · ${formatRelative(
+      ? `Departs ${fn.formatDate(listing.data.departure_date)} · ${fn.formatRelative(
           listing.data.departure_date
         )}`
       : listing?.type === "shipment"
-        ? `Ready ${formatDate(listing.data.departure_date)} · ${formatRelative(
+        ? `Ready ${fn.formatDate(listing.data.departure_date)} · ${fn.formatRelative(
             listing.data.departure_date
           )}`
         : "";
@@ -364,7 +441,6 @@ export default function ListingDetailsScreen() {
   }
 
   return (
-    
     <>
       <Stack.Screen options={{ title: `${headerTitle}` }} />
       <ParallaxScrollView
@@ -448,7 +524,8 @@ export default function ListingDetailsScreen() {
           {listing?.type === "traveller" ? (
             <TravellerSection
               id={listing.data.id}
-              isOwner={ownerId == userId}
+              userId={userId}
+              ownerId={ownerId}
               listing={listing}
               tintColor={tintColor}
               borderColor={borderColor}
@@ -459,7 +536,8 @@ export default function ListingDetailsScreen() {
           {listing?.type === "shipment" ? (
             <ShipmentSection
               id={listing.data.id}
-              isOwner={ownerId == userId}
+              userId={userId}
+              ownerId={ownerId}
               listing={listing}
               tintColor={tintColor}
               borderColor={borderColor}

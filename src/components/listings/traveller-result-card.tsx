@@ -1,17 +1,18 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import type { TravellerListing } from "@/constants/types";
-import { formatDate, formatRelative } from "@/lib/utils";
+import type { ListingRow } from "@/constants/types";
+import * as fn from "@/lib/utils";
 import { router } from "expo-router";
 import { Pressable, StyleSheet } from "react-native";
+import { Avatar, AvatarFallbackText, AvatarImage, AvatarBadge } from "../ui/avatar";
 
 export function RouteResultCard({
   listing,
   tintColor,
   borderColor,
 }: Readonly<{
-  listing: TravellerListing;
+  listing: ListingRow;
   tintColor: string;
   borderColor: string;
 }>) {
@@ -23,7 +24,7 @@ export function RouteResultCard({
         segment: "items",
       },
     });
-
+  console.log(`Avatar Url: ${listing.owner?.avatar_url}`)
   return (
     <Pressable
       key={listing.id}
@@ -44,19 +45,30 @@ export function RouteResultCard({
           </ThemedView>
           <ThemedView style={styles.resultHeaderText}>
             <ThemedText type="subtitle">
-              {listing.origin} → {listing.destination}
+              {`${listing.origin?.city} (${listing.origin?.iata_code})`} → {`${listing.destination?.city} (${listing.destination?.iata_code})`}
             </ThemedText>
             <ThemedText style={styles.resultMetaText}>
-              Departs {formatDate(listing.departureDate)} ·{" "}
-              {formatRelative(listing.departureDate)}
+              Departs {fn.formatDate(listing.departure_date)} ·{" "}
+              {fn.formatRelative(listing.departure_date)}
             </ThemedText>
           </ThemedView>
           <ThemedView
             style={[styles.pricePill, { backgroundColor: `${tintColor}12` }]}
           >
             <ThemedText style={[styles.pricePillText, { color: tintColor }]}>
-              ${listing.pricePerUnit}/kg
+              ${listing.price_per_unit}/kg
             </ThemedText>
+          </ThemedView>
+          <ThemedView>
+            <Avatar>
+              <AvatarFallbackText>{listing.owner?.full_name}</AvatarFallbackText>
+              <AvatarImage
+                source={{
+                  uri: listing.owner?.avatar_url!,
+                }}
+              />
+              <AvatarBadge />
+            </Avatar>
           </ThemedView>
         </ThemedView>
         <ThemedText style={styles.resultBody}>{listing.description}</ThemedText>
@@ -64,11 +76,11 @@ export function RouteResultCard({
           <ThemedView style={styles.resultInfoRow}>
             <IconSymbol name="cube.box" size={18} color={tintColor} />
             <ThemedText style={styles.resultInfoText}>
-              Available weight: {listing.pricePerUnit}kg
+              Available weight: {listing.price_per_unit}kg
             </ThemedText>
           </ThemedView>
           <ThemedView style={styles.badgeRow}>
-            {listing.isVerified && (
+            {listing.is_verified && (
               <ThemedView
                 key="badge"
                 style={[styles.badge, { backgroundColor: `${tintColor}12` }]}

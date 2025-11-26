@@ -112,8 +112,8 @@ export type SupabaseListingRow = {
 };
 
 export type ListingsResponse = {
-  travellers: TravellerListing[];
-  shipments: ShipmentRequest[];
+  travellers: ListingRow[];
+  shipments: ListingRow[];
   total: number;
   tookMs: number;
   params: {
@@ -140,7 +140,8 @@ export type ListingRow = Omit<Tables<'listings'>, 'owner_id,origin_id,destinatio
   owner: {
     id: string;
     full_name: string | null;
-    bucket_avatar_url: string | null;
+    email_verified: boolean | null;
+    avatar_url: string | null;
   } | null;
   origin: {
     id: string;
@@ -153,5 +154,14 @@ export type ListingRow = Omit<Tables<'listings'>, 'owner_id,origin_id,destinatio
     city: string | null;
     name: string | null;
     iata_code: string | null;
+  } | null;
+}
+
+export type MessageRow = Pick<Tables<"messages">, "id" | "content" | "created_at"> & {
+  owner: {
+    id: string;
+    full_name: string | null;
+    email_verified: boolean | null;
+    avatar_url: string | null;
   } | null;
 }

@@ -59,10 +59,6 @@ function RootNavigator() {
         <Stack.Protected guard={isLoggedIn}>
           <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
           <Stack.Screen
-            name="listings/(manage)/create"
-            options={{ headerShown: true, title: "" }}
-          />
-          <Stack.Screen
             name="listings/(manage)/edit/[id]"
             options={{ headerShown: true, title: "" }}
           />
@@ -79,6 +75,18 @@ function RootNavigator() {
               headerTransparent: true,
             }}
           />
+          <Stack.Screen 
+            name="(inbox)/chat/[id]" 
+            options={{
+                title: "Listing Detail",
+                headerTintColor: "#000",
+                headerTitleStyle: {
+                  fontWeight: "bold",
+                },
+                headerTitle: "Chat",
+                headerTransparent: true,
+              }}
+            />
         </Stack.Protected>
         <Stack.Protected guard={!isLoggedIn}>
           <Stack.Screen

@@ -1,8 +1,6 @@
 import type { ListingsResponse } from "@/constants/types";
-import { fetchListingsAPI } from "@/lib/database/db";
+import { searchListings } from "@/lib/database/db";
 import {
-  mapToShipmentRequest,
-  mapToTravellerListing,
   normaliseSearchTerm,
   normaliseSegment,
   segmentToListingType,
@@ -17,15 +15,13 @@ export async function GET(request: Request) {
   const typeFilter = segmentToListingType(segment);
 
   try {
-    const rows = await fetchListingsAPI({ query, typeFilter });
+    const rows = await searchListings({ query, typeFilter });
 
     const travellers = rows.data
-      .filter((row: any) => row.type_of_listing === "travel")
-      .map(mapToTravellerListing);
+      .filter((row: any) => row.type_of_listing === "travel");
 
     const shipments = rows.data
-      .filter((row: any) => row.type_of_listing === "shipment")
-      .map(mapToShipmentRequest);
+      .filter((row: any) => row.type_of_listing === "shipment");
       
     const duration = Date.now() - start;
 

@@ -1,55 +1,50 @@
-# Welcome to your Expo app 👋
+# SpaceShare Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+SpaceShare is a cross-platform Expo app that connects travellers with shippers along the USA to Ghana corridor. Search for travellers or shipment requests, publish your own space, track posts in My Spaces, and coordinate hand-offs from the inbox.
 
-## Get started
+## Features
+- Traveller and shipment search with quick filters and route or item focus
+- Publish flow for offering travel space or posting shipment requests with pricing and weight details
+- My Spaces dashboard to track shipped items and offered space listings
+- Inbox and profile screens to manage conversations and verification signals
+- Supabase-backed auth, data, and storage with Expo Router UI
 
-1. Install dependencies
+## Tech stack
+- React Native 0.81 with Expo, Expo Router, NativeWind, and Gluestack UI
+- Supabase client for auth and data; Drizzle ORM for database schema and migrations
+- Expo server adapter for API routes (Vercel)
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Getting started
+1) Install dependencies
 ```bash
-npm run reset-project
+npm install
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+2) Configure environment (create `.env.local`)
+```bash
+EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
+EXPO_PUBLIC_SUPABASE_KEY=your-supabase-anon-key
+EXPO_PUBLIC_API_URL=https://your-api.example.com      # optional for hosted search/API calls
+EXPO_PUBLIC_GOOGLE_AUTH_WEB_CLIENT_ID=your-web-client # optional: Google sign-in on web
+DATABASE_URL=postgres://...                           # required for Drizzle CLI and DB scripts
+```
+3) Start the app
+```bash
+npm start            # launches Expo CLI (use Expo Go, simulator, or emulator)
+```
+4) Platform targets
+- `npm run android` to build/run on Android
+- `npm run ios` to build/run on iOS (macOS with Xcode)
+- `npm run web` to run the web build
+5) Database and Supabase helpers (optional)
+- `npm run reset-supabase` to reset, push Drizzle migrations, and apply policies
+- `npm run db:seed` to seed sample data
+- `npm run lint` to check code quality
 
 ## Daily Log
+
+### 2025-11-25
+- Rewrote README with project overview, quickstart steps, and environment notes.
+- Fixed chat flows: converted inbox page to sync component with guarded auth, ensured threads use correct IDs, pulled messages by `thread_id`, and stabilized chat layout/input scrolling.
 
 ### 2025-11-16
 * Added Supabase Types using cmd

@@ -20,8 +20,7 @@ import type {
   QuickFilter,
   SearchSegment,
   SegmentKey,
-  ShipmentRequest,
-  TravellerListing
+  ListingRow,
 } from "@/constants/types";
 
 import { fetch } from "expo/fetch";
@@ -74,8 +73,8 @@ function getDefaultEmptyMessage(
 }
 
 export default function SearchScreen() {
-  const [travelListings, setTravelListings] = useState<TravellerListing[]>([]);
-  const [shipmentListings, setShipmentListings] = useState<ShipmentRequest[]>([]);
+  const [travelListings, setTravelListings] = useState<ListingRow[]>([]);
+  const [shipmentListings, setShipmentListings] = useState<ListingRow[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
@@ -121,8 +120,8 @@ export default function SearchScreen() {
     () =>
       [...travelListings].sort(
         (a, b) =>
-          new Date(a.departureDate).getTime() -
-          new Date(b.departureDate).getTime()
+          new Date(a.departure_date).getTime() -
+          new Date(b.departure_date).getTime()
       ),
     [travelListings]
   );
@@ -130,8 +129,8 @@ export default function SearchScreen() {
     () =>
       [...shipmentListings].sort(
         (a, b) =>
-          new Date(a.departureDate).getTime() -
-          new Date(b.departureDate).getTime()
+          new Date(a.departure_date).getTime() -
+          new Date(b.departure_date).getTime()
       ),
     [shipmentListings]
   );
@@ -299,19 +298,19 @@ export default function SearchScreen() {
   );
 }
 
-function filterTravellers(list: TravellerListing[], query: string) {
+function filterTravellers(list: ListingRow[], query: string) {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
     return list;
   }
   return list.filter((traveller) => {
     const haystack =
-      `${traveller.origin} ${traveller.destination} ${traveller.ownerName} ${traveller.description}`.toLowerCase();
+      `${traveller.origin} ${traveller.destination} ${traveller.owner?.full_name} ${traveller.description}`.toLowerCase();
     return haystack.includes(trimmed);
   });
 }
 
-function filterShipments(list: ShipmentRequest[], query: string) {
+function filterShipments(list: ListingRow[], query: string) {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
     return list;
