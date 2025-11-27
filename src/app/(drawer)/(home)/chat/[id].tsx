@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { RealtimeChat } from "@/components/inbox/realtime-chat";
-import { ThemedView } from "@/components/themed-view";
 import type { ChatMessage } from "@/constants/types";
+import { useMessagesQuery } from "@/hooks/use-messages-query";
 import * as db from "@/lib/database/db";
 import { supabase } from "@/lib/supabase";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMessagesQuery } from "@/hooks/use-messages-query";
 
 type User = { id: string; name: string };
 
 export default function ChatPage() {
-
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const threadId = useMemo(() => {
@@ -46,8 +44,8 @@ export default function ChatPage() {
 
         if (!threadId) return;
 
-        const rows = await useMessagesQuery({threadId: threadId});
-        
+        const rows = await useMessagesQuery({ threadId: threadId });
+
         if (!isMounted) return;
 
         const mapped =
@@ -104,15 +102,11 @@ export default function ChatPage() {
   }
 
   return (
-    <ThemedView className="flex-1 flex flex-col h-screen">
-      <ThemedView className="border-t px-8 py-4 bg-white dark:bg-gray-900">
-        <RealtimeChat
-          roomName={threadId}
-          username={user.name}
-          onMessage={handleMessage}
-          messages={initialMessages}
-        />
-      </ThemedView>
-    </ThemedView>
+    <RealtimeChat
+      roomName={threadId}
+      username={user.name}
+      onMessage={handleMessage}
+      messages={initialMessages}
+    />
   );
 }
