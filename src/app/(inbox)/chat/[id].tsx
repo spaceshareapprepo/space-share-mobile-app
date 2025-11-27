@@ -2,14 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { RealtimeChat } from "@/components/inbox/realtime-chat";
 import { ThemedView } from "@/components/themed-view";
-import type { ChatMessage } from "@/hooks/use-realtime-chat";
+import type { ChatMessage } from "@/constants/types";
 import * as db from "@/lib/database/db";
 import { supabase } from "@/lib/supabase";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMessagesQuery } from "@/hooks/use-messages-query";
 
 type User = { id: string; name: string };
 
 export default function ChatPage() {
+
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const threadId = useMemo(() => {
@@ -44,7 +46,8 @@ export default function ChatPage() {
 
         if (!threadId) return;
 
-        const rows = await db.fetchMessages({authorId: currentUser.id, threadId: threadId});
+        const rows = await useMessagesQuery({threadId: threadId});
+        
         if (!isMounted) return;
 
         const mapped =

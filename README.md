@@ -42,6 +42,10 @@ npm start            # launches Expo CLI (use Expo Go, simulator, or emulator)
 
 ## Daily Log
 
+### 2025-11-26
+- Stabilized inbox: threads now load once per user session, filter for buyer/seller, render avatars safely, and fixed hook ordering that caused render errors.
+- Hardened message fetching: `useMessageQuery` now returns typed `{ data, error }` with optional filters and ordering, and `useThreadsQuery` filters correctly by user.
+
 ### 2025-11-25
 - Rewrote README with project overview, quickstart steps, and environment notes.
 - Fixed chat flows: converted inbox page to sync component with guarded auth, ensured threads use correct IDs, pulled messages by `thread_id`, and stabilized chat layout/input scrolling.

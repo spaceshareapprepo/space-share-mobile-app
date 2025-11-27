@@ -1,18 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { useCallback, useEffect, useState } from 'react'
-
+import { ChatMessage } from '@/constants/types'
 interface UseRealtimeChatProps {
   roomName: string
   username: string
-}
-
-export interface ChatMessage {
-  id: string
-  content: string
-  user: {
-    name: string
-  }
-  createdAt: string
 }
 
 const EVENT_MESSAGE_TYPE = 'message'

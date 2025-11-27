@@ -1,6 +1,6 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import type { ChatMessage } from '@/hooks/use-realtime-chat';
+import type { ChatMessage } from '@/constants/types';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageItemProps {

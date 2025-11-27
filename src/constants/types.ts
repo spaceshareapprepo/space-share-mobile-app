@@ -165,3 +165,29 @@ export type MessageRow = Pick<Tables<"messages">, "id" | "content" | "created_at
     avatar_url: string | null;
   } | null;
 }
+
+export type ThreadRow = Pick<Tables<"threads">, "id" | "listing_id" | "updated_at" > & {
+  listing: {
+    title:string | null;
+  } | null;
+  buyer: {
+    id: string;
+    full_name: string | null;
+    email_verified: boolean | null;
+    avatar_url: string | null;
+  } | null;
+  seller: {
+    id: string;
+    full_name: string | null;
+    email_verified: boolean | null;
+    avatar_url: string | null;
+  } | null;
+}
+export interface ChatMessage {
+  id: string
+  content: string
+  user: {
+    name: string
+  }
+  createdAt: string
+}
