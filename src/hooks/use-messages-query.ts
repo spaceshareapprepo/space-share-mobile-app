@@ -10,7 +10,6 @@ type MessageQueryParams = {
 export async function useMessagesQuery({
   threadId,
   authorId,
-  limit = 10,
 }: MessageQueryParams = {}) {
 
   try {
@@ -28,8 +27,7 @@ export async function useMessagesQuery({
         )
       `
       )
-      .order("created_at", { ascending: true })
-      .limit(limit);
+      .order("created_at", { ascending: true });
 
     if (threadId) {
       supabaseQuery = supabaseQuery.eq("thread_id", threadId);

@@ -1,16 +1,10 @@
-import { ChatMessageItem } from "@/components/inbox/chat-message";
-import { ThemedView } from "@/components/themed-view";
-import { Button, ButtonText } from "@/components/ui/button";
-import { FormControl } from "@/components/ui/form-control";
-import { Input, InputField } from "@/components/ui/input";
 import type { ChatMessage } from "@/constants/types";
-import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useRealtimeChat } from "@/hooks/use-realtime-chat";
-import { cn } from "@/lib/utils";
-import { Send } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useEffect, useMemo } from "react";
+import { Platform } from "react-native";
+
+import { GiftedChat, type IMessage } from "react-native-gifted-chat";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface RealtimeChatProps {
   roomName: string;
@@ -32,8 +26,6 @@ export const RealtimeChat = ({
   onMessage,
   messages: initialMessages = [],
 }: RealtimeChatProps) => {
-  const { containerRef, scrollToBottom } = useChatScroll();
-
   const {
     messages: realtimeMessages,
     sendMessage,
@@ -42,7 +34,12 @@ export const RealtimeChat = ({
     roomName,
     username,
   });
-  const [newMessage, setNewMessage] = useState("");
+  const insets = useSafeAreaInsets();
+
+  const tabbarHeight = 50;
+  const keyboardTopToolbarHeight = Platform.select({ ios: 44, default: 0 });
+  const keyboardVerticalOffset =
+    insets.bottom + tabbarHeight + keyboardTopToolbarHeight;
 
   // Merge realtime messages with initial messages
   const allMessages = useMemo(() => {
@@ -66,93 +63,41 @@ export const RealtimeChat = ({
     }
   }, [allMessages, onMessage]);
 
-  useEffect(() => {
-    // Scroll to bottom whenever messages change
-    scrollToBottom();
-  }, [allMessages, scrollToBottom]);
+  const giftedMessages = useMemo<IMessage[]>(() => {
+    return allMessages
+      .map((message) => ({
+        _id: message.id,
+        text: message.content,
+        createdAt: new Date(message.createdAt),
+        user: {
+          _id: message.user.name,
+          name: message.user.name,
+        },
+      }))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }, [allMessages]);
 
-  const handleSendMessage = useCallback(() => {
-    const trimmedMessage = newMessage.trim();
-    if (!trimmedMessage || !isConnected) {
-      return;
-    }
+  const handleSend = useCallback(
+    (outgoing: IMessage[] = []) => {
+      if (!isConnected || !outgoing.length) return;
 
-    sendMessage(trimmedMessage);
-    setNewMessage("");
-  }, [newMessage, isConnected, sendMessage]);
+      outgoing.forEach((msg) => {
+        sendMessage(msg.text);
+      });
+    },
+    [isConnected, sendMessage]
+  );
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
-    >
-      <ThemedView className="flex flex-col h-full w-full bg-background text-foreground antialiased gap-4">
-        <ScrollView
-          ref={containerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4 border rounded-lg bg-pink-200"
-        >
-          {allMessages.length === 0 ? (
-            <ThemedView className="items-center text-sm text-muted-foreground">
-              No messages yet. Start the conversation!
-            </ThemedView>
-          ) : null}
-          <ThemedView className="space-y-1">
-            {allMessages.map((message, index) => {
-              const prevMessage = index > 0 ? allMessages[index - 1] : null;
-              const showHeader =
-                !prevMessage || prevMessage.user.name !== message.user.name;
-              return (
-                <ThemedView
-                  key={message.id}
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-300"
-                >
-                  <ChatMessageItem
-                    message={message}
-                    isOwnMessage={message.user.name === username}
-                    showHeader={showHeader}
-                  />
-                </ThemedView>
-              );
-            })}
-          </ThemedView>
-        </ScrollView>
-
-        <FormControl
-          isDisabled={!isConnected}
-          className="flex flex-row items-center w-full gap-2 border-t border-border p-4"
-        >
-          <Input
-            className={cn(
-              "rounded-full bg-background text-sm transition-all duration-300",
-              isConnected && newMessage.trim()
-                ? "w-[calc(100%-36px)]"
-                : "w-full"
-            )}
-            variant="rounded"
-          >
-            <InputField
-              className="text-sm"
-              value={newMessage}
-              onChangeText={setNewMessage}
-              placeholder="Type a message..."
-              returnKeyType="send"
-              onSubmitEditing={handleSendMessage}
-              editable={isConnected}
-              submitBehavior="blurAndSubmit"
-            />
-          </Input>
-          <Button
-            className="aspect-square rounded-full animate-in fade-in slide-in-from-right-4 duration-300"
-            disabled={!isConnected || !newMessage.trim()}
-            onPress={handleSendMessage}
-          >
-            <ButtonText>
-              <Send className="size-4" />
-            </ButtonText>
-          </Button>
-        </FormControl>
-      </ThemedView>
-    </KeyboardAvoidingView>
+    <GiftedChat
+      messages={giftedMessages}
+      onSend={handleSend}
+      user={{
+        _id: username,
+        name: username,
+      }}
+      keyboardAvoidingViewProps={{ keyboardVerticalOffset }}
+      isTyping={!isConnected}
+    />
   );
 };
