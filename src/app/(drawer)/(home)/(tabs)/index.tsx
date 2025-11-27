@@ -14,6 +14,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { generateAPIUrl } from "@/lib/utils";
 
 import type {
   ListingsResponse,
@@ -47,7 +48,8 @@ async function fetchListingsData(searchTerm: string, segment: SearchSegment = "a
   }
   params.set("segment", segment);
 
-  const response = await fetch(`/api/search?${params.toString()}`, { method: "GET" });
+  const url = generateAPIUrl(`/api/search?${params.toString()}`);
+  const response = await fetch(url, { method: "GET" });
   const rawJson = await response.json();
   
   if (!response.ok) {

@@ -82,7 +82,6 @@ export const RealtimeChat = ({
   }, [newMessage, isConnected, sendMessage]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -155,6 +154,5 @@ export const RealtimeChat = ({
         </FormControl>
       </ThemedView>
     </KeyboardAvoidingView>
-    </SafeAreaView>
   );
 };

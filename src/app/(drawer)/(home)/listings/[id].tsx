@@ -104,7 +104,7 @@ async function startConversation({
     }
 
     router.navigate({
-      pathname: "/(inbox)/chat/[id]",
+      pathname: "/chat/[id]",
       params: { id: threadId },
     });
   } catch (err) {
@@ -173,7 +173,7 @@ function TravellerSection({
             <Button
               onPress={() =>
                 router.push({
-                  pathname: "/listings/(manage)/edit/[id]",
+                  pathname: "/listings/edit/[id]",
                   params: { id },
                 })
               }
@@ -267,7 +267,7 @@ function ShipmentSection({
             <Button
               onPress={() =>
                 router.push({
-                  pathname: "/listings/(manage)/edit/[id]",
+                  pathname: "/listings/edit/[id]",
                   params: { id },
                 })
               }

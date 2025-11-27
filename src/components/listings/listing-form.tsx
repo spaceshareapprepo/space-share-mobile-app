@@ -2,14 +2,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
 } from "react-native";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import { Stack, useRouter } from "expo-router";
 
 import AuthButton from "@/components/auth/auth-button";
@@ -135,7 +131,6 @@ export function ListingForm({
     "background"
   );
   const placeholderColor = useThemeColor({}, "textSecondary");
-  const isWeb = Platform.OS === "web";
 
   const [title, setTitle] = useState(defaultValues.title);
   const [description, setDescription] = useState(defaultValues.description);
@@ -153,12 +148,9 @@ export function ListingForm({
   const [currencyCode, setCurrencyCode] =
     useState<"USD" | "GHS">(defaultValues.currencyCode);
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(null);
-
-console.log(`originId: ${originId}`)
 
   const ownerId = session?.user?.id ?? null;
 
@@ -192,22 +184,6 @@ console.log(`originId: ${originId}`)
     const date = new Date(departureDate);
     return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }, [departureDate]);
-
-  const displayDepartureDate = useMemo(() => {
-    if (!parsedDepartureDate) return "";
-    const date = new Date(parsedDepartureDate);
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }, [parsedDepartureDate]);
-
-  const pickerValue = useMemo(() => {
-    if (!parsedDepartureDate) return new Date();
-    const date = new Date(parsedDepartureDate);
-    return Number.isNaN(date.getTime()) ? new Date() : date;
-  }, [parsedDepartureDate]);
 
   function validate(): boolean {
     const errors: ValidationErrors = {};
@@ -267,24 +243,6 @@ console.log(`originId: ${originId}`)
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  }
-
-  function handleDepartureDateChange(
-    event: DateTimePickerEvent,
-    selectedDate?: Date
-  ) {
-    if (event.type === "dismissed") {
-      setShowDatePicker(false);
-      return;
-    }
-
-    const nextDate = selectedDate ?? pickerValue;
-    setDepartureDate(nextDate.toISOString());
-    setShowDatePicker(false);
-  }
-
-  function openDatePicker() {
-    setShowDatePicker(true);
   }
 
   async function handleSubmit() {
@@ -644,70 +602,28 @@ console.log(`originId: ${originId}`)
                   <ThemedText>Departure date</ThemedText>
                 </FormControlLabelText>
               </FormControlLabel>
-              {isWeb ? (
-                <Input>
-                  <InputField
-                    value={departureDate}
-                    onChangeText={setDepartureDate}
-                    placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
-                    placeholderTextColor={placeholderColor}
-                    style={[
-                      styles.inputField,
-                      {
-                        color: tintColor,
-                        borderColor: borderColor,
-                        backgroundColor: backgroundColor,
-                      },
-                    ]}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    accessibilityLabel="Departure date"
-                  />
-                </Input>
-              ) : (
-                <>
-                  <Pressable
-                    onPress={openDatePicker}
-                    accessibilityRole="button"
-                    accessibilityHint="Choose a departure date from the picker"
-                    style={styles.datePressable}
-                  >
-                    <Input pointerEvents="none">
-                      <InputField
-                        value={displayDepartureDate}
-                        placeholder="Pick a departure date"
-                        placeholderTextColor={placeholderColor}
-                        style={[
-                          styles.inputField,
-                          {
-                            color: tintColor,
-                            borderColor: borderColor,
-                            backgroundColor: backgroundColor,
-                          },
-                        ]}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        accessibilityLabel="Departure date"
-                        editable={false}
-                        showSoftInputOnFocus={false}
-                      />
-                    </Input>
-                  </Pressable>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      mode="date"
-                      display={Platform.OS === "ios" ? "spinner" : "calendar"}
-                      value={pickerValue}
-                      onChange={handleDepartureDateChange}
-                    />
-                  )}
-                </>
-              )}
+              <Input>
+                <InputField
+                  value={departureDate}
+                  onChangeText={setDepartureDate}
+                  placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
+                  placeholderTextColor={placeholderColor}
+                  style={[
+                    styles.inputField,
+                    {
+                      color: tintColor,
+                      borderColor: borderColor,
+                      backgroundColor: backgroundColor,
+                    },
+                  ]}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel="Departure date"
+                />
+              </Input>
               <FormControlHelper>
                 <FormControlHelperText>
-                  {isWeb
-                    ? "Enter an ISO date on web; on mobile you can pick a date and we store it as ISO for Supabase."
-                    : "Tap to pick a date; we store it as an ISO value for Supabase."}
+                  Enter an ISO date; we store it as an ISO value for Supabase.
                 </FormControlHelperText>
               </FormControlHelper>
               {validationErrors.departureDate && (
@@ -984,9 +900,6 @@ const styles = StyleSheet.create({
     color: "#DC2626",
     fontSize: 13,
     marginTop: 4,
-  },
-  datePressable: {
-    width: "100%",
   },
   footer: {
     gap: 10,

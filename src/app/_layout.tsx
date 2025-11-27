@@ -54,59 +54,19 @@ function RootNavigator() {
   }
 
   return (
-    <AutocompleteDropdownContextProvider>
-      <Stack>
-        <Stack.Protected guard={isLoggedIn}>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="listings/(manage)/edit/[id]"
-            options={{ headerShown: true, title: "" }}
-          />
-          <Stack.Screen name="google-auth" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="listings/[id]"
-            options={{
-              title: "Listing Detail",
-              headerTintColor: "#fff",
-              headerTitleStyle: {
-                fontWeight: "bold",
-              },
-              headerTitle: "",
-              headerTransparent: true,
-            }}
-          />
-          <Stack.Screen 
-            name="(inbox)/chat/[id]" 
-            options={{
-                title: "Listing Detail",
-                headerTintColor: "#000",
-                headerTitleStyle: {
-                  fontWeight: "bold",
-                },
-                headerTitle: "Chat",
-                headerTransparent: true,
-              }}
-            />
+    <Stack>
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="google-auth" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="(auth)/sign-in" options={{ headerShown: true, title: "" }} />
+        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "" }} />
         </Stack.Protected>
-        <Stack.Protected guard={!isLoggedIn}>
-          <Stack.Screen
-            name="(auth)/sign-in"
-            options={{ headerShown: true, title: "" }}
-          />
-          <Stack.Screen
-            name="(auth)/sign-up"
-            options={{ headerShown: true, title: "" }}
-          />
-          </Stack.Protected>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          />
-          <Stack.Screen name="+not-found" />
-        
-      </Stack>
-    </AutocompleteDropdownContextProvider>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
+        <Stack.Screen name="+not-found" />
+    </Stack>
   );
 }
 
@@ -122,18 +82,18 @@ export default function RootLayout() {
   }
 
   return (
-      <SafeAreaProvider>
-        <SafeAreaView className="flex flex-1 justify-center" edges={["top", "bottom"]}>
-          <GluestackUIProvider>
-            <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-              <AuthProvider>
-                <SplashScreenController />
+    <SafeAreaProvider>
+        <GluestackUIProvider>
+          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+            <AuthProvider>
+              <SplashScreenController />
+              <AutocompleteDropdownContextProvider>
                 <RootNavigator />
-                <StatusBar style="auto" />
-              </AuthProvider>
-            </ThemeProvider>
-          </GluestackUIProvider>
-        </SafeAreaView>
-      </SafeAreaProvider>
+              </AutocompleteDropdownContextProvider>
+              <StatusBar style="auto" />
+            </AuthProvider>
+          </ThemeProvider>
+        </GluestackUIProvider>
+    </SafeAreaProvider>
   );
 }
