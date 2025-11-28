@@ -104,7 +104,7 @@ async function startConversation({
     }
 
     router.navigate({
-      pathname: "/(drawer)/(home)/chat/[id]",
+      pathname: "/chat/[id]",
       params: { id: threadId },
     });
   } catch (err) {

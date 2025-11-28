@@ -25,24 +25,29 @@ export default function MyShipmentsScreen() {
     "background"
   );
 
-  const { session, profile } = useAuthContext();
-  const [user, setUser] = useState<string | null | undefined>(null);
+  const { session, isLoading, profile } = useAuthContext();
+  // const [user, setUser] = useState<string | null | undefined>(null);
   const [segment, setSegment] = useState<SegmentKey>("shipped");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [listings, setListings] = useState<ListingRow[]>([]);
 
+  const ownerId = useMemo(
+    () => session?.user?.id ?? profile?.id ?? null,
+    [session?.user?.id, profile?.id]
+  );
+
   useEffect(() => {
     let isMounted = true;
+    if (!ownerId || isLoading) return; // wait for auth to hydrate
+
     async function loadListings() {
-      if (!session?.user?.id) return;
-      setUser(profile.id as string);
       setLoading(true);
       setError(null);
 
-      console.log(`SessionUser: ${user}`)
+      
       try {
-        const { data, error: dbError } = await useMyListingsQuery({ ownerId: user });
+        const { data, error: dbError } = await useMyListingsQuery({ ownerId: ownerId });
 
         if (dbError) throw dbError;
         if (isMounted) setListings((data as unknown as ListingRow[]) ?? []);
@@ -57,7 +62,7 @@ export default function MyShipmentsScreen() {
     return () => {
       isMounted = false;
     };
-  }, [session?.user?.id]);
+  }, [ownerId, isLoading]);
 
   const shippedItems = useMemo(
     () => listings.filter((item) => item.type_of_listing === "shipment"),
