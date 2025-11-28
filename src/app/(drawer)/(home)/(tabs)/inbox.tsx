@@ -186,7 +186,7 @@ export default function InboxScreen() {
                   accessibilityLabel="Go to chat"
                   onPress={
                     () => router.navigate(
-                      {pathname: "/chat/[id]",
+                      {pathname: "/(drawer)/(home)/chat/[id]",
                       params: { id: thread.id }})
                   }
                 >
