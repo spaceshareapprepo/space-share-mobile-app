@@ -8,10 +8,9 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ListingRow } from "@/constants/types";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { fetchListings } from "@/lib/database/db";
-import { router } from 'expo-router';
-import * as fn from "@/lib/utils";
 import { useMyListingsQuery } from "@/hooks/user-my-listings-query";
+import * as fn from "@/lib/utils";
+import { router } from 'expo-router';
 
 const segments = [
   { key: "shipped", label: "Shipped Items" },
@@ -26,7 +25,7 @@ export default function MyShipmentsScreen() {
     "background"
   );
 
-  const { session } = useAuthContext();
+  const { session, profile } = useAuthContext();
   const [user, setUser] = useState<string | null | undefined>(null);
   const [segment, setSegment] = useState<SegmentKey>("shipped");
   const [loading, setLoading] = useState(false);
@@ -37,7 +36,7 @@ export default function MyShipmentsScreen() {
     let isMounted = true;
     async function loadListings() {
       if (!session?.user?.id) return;
-      setUser(session?.user?.id as string);
+      setUser(profile.id as string);
       setLoading(true);
       setError(null);
 
