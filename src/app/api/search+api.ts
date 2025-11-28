@@ -6,6 +6,18 @@ import {
   segmentToListingType,
 } from "@/lib/utils";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin":
+    process.env.EXPO_PUBLIC_API_CORS_ORIGIN ??
+    "https://space-share-mobile-app.expo.app",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
 export async function GET(request: Request) {
   const start = Date.now();
   const url = new URL(request.url);
@@ -33,7 +45,7 @@ export async function GET(request: Request) {
       params: { q: query, segment },
     };
 
-    return Response.json(body);
+    return Response.json(body, { headers: corsHeaders });
   } catch (error) {
     console.error("Failed to search listings:", error);
     return new Response(
@@ -42,7 +54,7 @@ export async function GET(request: Request) {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }

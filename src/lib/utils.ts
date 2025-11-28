@@ -1,13 +1,11 @@
-import type {
-  ListingType,
-  SearchSegment,
-  ShipmentRequest,
-  ListingRow,
-  TravellerListing
-} from "../constants/types";
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import Constants from "expo-constants";
+import { twMerge } from "tailwind-merge";
+import type {
+  ListingRow,
+  ListingType,
+  SearchSegment
+} from "../constants/types";
 
 export const cn = (...inputs: ClassValue[]):string => {
   return twMerge(clsx(inputs))
