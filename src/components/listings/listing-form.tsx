@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
 } from "react-native";
@@ -24,14 +23,32 @@ import {
   FormControlLabelText,
 } from "@/components/ui/form-control";
 import { HStack } from "@/components/ui/hstack";
-import { AlertCircleIcon, CheckCircleIcon } from "@/components/ui/icon";
+import {
+  AlertCircleIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+} from "@/components/ui/icon";
 import { Input, InputField } from "@/components/ui/input";
+import {
+  Select,
+  SelectBackdrop,
+  SelectContent,
+  SelectDragIndicator,
+  SelectDragIndicatorWrapper,
+  SelectIcon,
+  SelectInput,
+  SelectItem,
+  SelectPortal,
+  SelectScrollView,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import type { Tables, TablesInsert, TablesUpdate } from "@/lib/database/supabase.types";
 import { supabase } from "@/lib/supabase";
+import { Switch } from "../ui/switch";
 
 export type ListingFormValues = {
   title: string;
@@ -138,7 +155,9 @@ export function ListingForm({
   const [originLabel, setOriginLabel] = useState(defaultValues.originLabel);
   const [destinationId, setDestinationId] = useState(defaultValues.destinationId);
   const [destinationLabel, setDestinationLabel] = useState(defaultValues.destinationLabel);
-  const [departureDate, setDepartureDate] = useState(defaultValues.departureDate);
+  const [departureMonth, setDepartureMonth] = useState("");
+  const [departureDay, setDepartureDay] = useState("");
+  const [departureYear, setDepartureYear] = useState("");
   const [typeOfListing, setTypeOfListing] =
     useState<Tables<"listings">["type_of_listing"]>(defaultValues.typeOfListing);
   const [shipmentCode, setShipmentCode] =
@@ -153,6 +172,123 @@ export function ListingForm({
   const [statusMessage, setStatusMessage] = useState<StatusMessage>(null);
 
   const ownerId = session?.user?.id ?? null;
+  const currentYear = useMemo(() => new Date().getUTCFullYear(), []);
+  const currentMonth = useMemo(() => new Date().getUTCMonth() + 1, []);
+  const currentDay = useMemo(() => new Date().getUTCDate(), []);
+
+  const monthOptions = useMemo(
+    () =>
+      [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ].map((label, index) => ({
+        label,
+        value: String(index + 1).padStart(2, "0"),
+      })),
+    []
+  );
+
+  const dayOptions = useMemo(
+    () =>
+      Array.from({ length: 31 }, (_, index) => {
+        const value = String(index + 1).padStart(2, "0");
+        return { label: value, value };
+      }),
+    []
+  );
+
+  const yearOptions = useMemo(
+    () =>
+      Array.from({ length: 31 }, (_, index) =>
+        String(currentYear + index)
+      ),
+    [currentYear]
+  );
+
+  function setDeparturePartsFromValue(value?: string | null) {
+    if (!value) {
+      setDepartureMonth("");
+      setDepartureDay("");
+      setDepartureYear("");
+      return;
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      setDepartureMonth("");
+      setDepartureDay("");
+      setDepartureYear("");
+      return;
+    }
+
+    setDepartureMonth(String(parsed.getUTCMonth() + 1).padStart(2, "0"));
+    setDepartureDay(String(parsed.getUTCDate()).padStart(2, "0"));
+    setDepartureYear(String(parsed.getUTCFullYear()));
+  }
+
+  function normalizeToFutureDate(parts: {
+    year: string;
+    month: string;
+    day: string;
+  }) {
+    const yearNum = Number(parts.year);
+    const monthNum = Number(parts.month);
+    const dayNum = Number(parts.day);
+
+    if (Number.isNaN(yearNum)) {
+      return parts;
+    }
+
+    if (!Number.isNaN(monthNum) && yearNum === currentYear) {
+      if (monthNum < currentMonth) {
+        return { year: parts.year, month: "", day: "" };
+      }
+      if (monthNum === currentMonth && !Number.isNaN(dayNum) && dayNum < currentDay) {
+        return { year: parts.year, month: parts.month, day: "" };
+      }
+    }
+
+    return parts;
+  }
+
+  function handleDeparturePartChange(
+    part: "month" | "day" | "year",
+    value: string
+  ) {
+    let nextYear = departureYear;
+    let nextMonth = departureMonth;
+    let nextDay = departureDay;
+
+    if (part === "year") {
+      nextYear = value;
+    } else if (part === "month") {
+      nextMonth = value;
+      nextDay = "";
+    } else {
+      nextDay = value;
+    }
+
+    const normalized = normalizeToFutureDate({
+      year: nextYear,
+      month: nextMonth,
+      day: nextDay,
+    });
+
+    setDepartureYear(normalized.year);
+    setDepartureMonth(normalized.month);
+    setDepartureDay(normalized.day);
+    setValidationErrors((prev) => ({ ...prev, departureDate: undefined }));
+  }
 
   useEffect(() => {
     if (!initialValues) return;
@@ -164,7 +300,9 @@ export function ListingForm({
     setDestinationLabel(
       initialValues.destinationLabel ?? initialValues.destinationId ?? ""
     );
-    setDepartureDate(initialValues.departureDate ?? defaultValues.departureDate);
+    setDeparturePartsFromValue(
+      initialValues.departureDate ?? defaultValues.departureDate
+    );
     setTypeOfListing(
       (initialValues.typeOfListing as Tables<"listings">["type_of_listing"]) ??
         defaultValues.typeOfListing
@@ -181,9 +319,26 @@ export function ListingForm({
   }, [initialValues]);
 
   const parsedDepartureDate = useMemo(() => {
-    const date = new Date(departureDate);
-    return Number.isNaN(date.getTime()) ? null : date.toISOString();
-  }, [departureDate]);
+    if (!departureYear || !departureMonth || !departureDay) return null;
+
+    const yearNum = Number(departureYear);
+    const monthNum = Number(departureMonth);
+    const dayNum = Number(departureDay);
+
+    if ([yearNum, monthNum, dayNum].some(Number.isNaN)) return null;
+
+    const date = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+
+    if (
+      date.getUTCFullYear() !== yearNum ||
+      date.getUTCMonth() + 1 !== monthNum ||
+      date.getUTCDate() !== dayNum
+    ) {
+      return null;
+    }
+
+    return date.toISOString();
+  }, [departureDay, departureMonth, departureYear]);
 
   function validate(): boolean {
     const errors: ValidationErrors = {};
@@ -216,7 +371,19 @@ export function ListingForm({
     }
 
     if (!parsedDepartureDate) {
-      errors.departureDate = "Enter a valid departure date (e.g. 2025-12-30).";
+      errors.departureDate = "Select a valid departure date (today or later).";
+    } else {
+      const now = new Date();
+      const todayUtc = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate()
+      );
+      const selectedUtc = Date.parse(parsedDepartureDate);
+
+      if (Number.isNaN(selectedUtc) || selectedUtc < todayUtc) {
+        errors.departureDate = "Departure date must be today or later.";
+      }
     }
 
     if (!typeOfListing) {
@@ -488,35 +655,37 @@ export function ListingForm({
 
             <ThemedView style={styles.segmentSection}>
               <ThemedText style={styles.segmentLabel}>Listing type</ThemedText>
-              <HStack style={styles.segmentButtons}>
-                {listingTypeOptions.map((option) => {
-                  const isActive = typeOfListing === option.value;
-                  return (
-                    <Pressable
-                      key={option.value}
-                      onPress={() => setTypeOfListing(option.value)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isActive }}
-                      style={[
-                        styles.segmentButton,
-                        isActive && styles.segmentButtonActive,
-                      ]}
-                    >
-                      <ThemedText
-                        style={[
-                          styles.segmentButtonText,
-                          isActive && styles.segmentButtonTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </ThemedText>
-                      <ThemedText style={styles.segmentHelper}>
-                        {option.helper}
-                      </ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </HStack>
+              <VStack space="xs">
+                <HStack style={styles.segmentSwitchRow}>
+                  <ThemedText style={styles.segmentSwitchLabel}>
+                    Space to sell
+                  </ThemedText>
+                  <Switch
+                    value={typeOfListing === "shipment"}
+                    size="lg"
+                    trackColor={{ false: "#d4d4d4", true: "#525252" }}
+                    thumbColor="#fafafa"
+                    ios_backgroundColor="#d4d4d4"
+                    onValueChange={(isShipment) =>
+                      setTypeOfListing(isShipment ? "shipment" : "travel")
+                    }
+                    accessibilityLabel="Toggle listing type"
+                    accessibilityState={{
+                      checked: typeOfListing === "shipment",
+                    }}
+                  />
+                  <ThemedText style={styles.segmentSwitchLabel}>
+                    Item to send
+                  </ThemedText>
+                </HStack>
+                <ThemedText style={styles.segmentHelper}>
+                  {
+                    listingTypeOptions.find(
+                      (option) => option.value === typeOfListing
+                    )?.helper
+                  }
+                </ThemedText>
+              </VStack>
               {validationErrors.type && (
                 <ThemedText style={styles.inlineError}>
                   {validationErrors.type}
@@ -595,35 +764,141 @@ export function ListingForm({
 
             <FormControl
               isInvalid={Boolean(validationErrors.departureDate)}
-              size="sm"
+              size="md"
             >
               <FormControlLabel>
                 <FormControlLabelText>
                   <ThemedText>Departure date</ThemedText>
                 </FormControlLabelText>
               </FormControlLabel>
-              <Input>
-                <InputField
-                  value={departureDate}
-                  onChangeText={setDepartureDate}
-                  placeholder="2025-12-30 or 2025-12-30T18:30:00Z"
-                  placeholderTextColor={placeholderColor}
-                  style={[
+              <HStack style={styles.dateRow}>
+                <Select
+                  selectedValue={departureMonth}
+                  onValueChange={(value) =>
+                    handleDeparturePartChange("month", value)
+                  }
+                  style={styles.dateSelect}
+                >
+                  <SelectTrigger size="lg">
+                    <SelectInput placeholder="Month" 
+                    style={[
                     styles.inputField,
                     {
                       color: tintColor,
                       borderColor: borderColor,
                       backgroundColor: backgroundColor,
                     },
-                  ]}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  accessibilityLabel="Departure date"
-                />
-              </Input>
+                  ]}/>
+                    <SelectIcon as={ChevronDownIcon} />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      <SelectScrollView>
+                        {monthOptions.map((option) => {
+                          const isDisabled =
+                            departureYear === String(currentYear) &&
+                            Number(option.value) < currentMonth;
+                          return (
+                            <SelectItem
+                              key={option.value}
+                              label={option.label}
+                              value={option.value}
+                              isDisabled={isDisabled}
+                            />
+                          );
+                        })}
+                      </SelectScrollView>
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+
+                <Select
+                  selectedValue={departureDay}
+                  onValueChange={(value) =>
+                    handleDeparturePartChange("day", value)
+                  }
+                  style={styles.dateSelect}
+                >
+                  <SelectTrigger size="lg">
+                    <SelectInput placeholder="Day" 
+                    style={[
+                    styles.inputField,
+                    {
+                      color: tintColor,
+                      borderColor: borderColor,
+                      backgroundColor: backgroundColor,
+                    },
+                  ]}/>
+                    <SelectIcon as={ChevronDownIcon} />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      <SelectScrollView >
+                        {dayOptions.map((option) => {
+                          const isDisabled =
+                            departureYear === String(currentYear) &&
+                            departureMonth ===
+                              String(currentMonth).padStart(2, "0") &&
+                            Number(option.value) < currentDay;
+                          return (
+                            <SelectItem
+                              key={option.value}
+                              label={option.label}
+                              value={option.value}
+                              isDisabled={!departureMonth || isDisabled}
+                            />
+                          );
+                        })}
+                      </SelectScrollView>
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+
+                <Select
+                  selectedValue={departureYear}
+                  onValueChange={(value) =>
+                    handleDeparturePartChange("year", value)
+                  }
+                  style={styles.dateSelect}
+                >
+                  <SelectTrigger size="lg">
+                    <SelectInput placeholder="Year"
+                    style={[
+                    styles.inputField,
+                    {
+                      color: tintColor,
+                      borderColor: borderColor,
+                      backgroundColor: backgroundColor,
+                    },
+                  ]} />
+                    <SelectIcon as={ChevronDownIcon} />
+                  </SelectTrigger>
+                  <SelectPortal>
+                    <SelectBackdrop />
+                    <SelectContent>
+                      <SelectDragIndicatorWrapper>
+                        <SelectDragIndicator />
+                      </SelectDragIndicatorWrapper>
+                      <SelectScrollView>
+                        {yearOptions.map((year) => (
+                          <SelectItem key={year} label={year} value={year} />
+                        ))}
+                      </SelectScrollView>
+                    </SelectContent>
+                  </SelectPortal>
+                </Select>
+              </HStack>
               <FormControlHelper>
                 <FormControlHelperText>
-                  Enter an ISO date; we store it as an ISO value for Supabase.
+                  Pick month, day, and year. Past dates are not allowed.
                 </FormControlHelperText>
               </FormControlHelper>
               {validationErrors.departureDate && (
@@ -766,39 +1041,35 @@ export function ListingForm({
                 <ThemedText style={styles.segmentLabel}>
                   Shipment priority
                 </ThemedText>
-                <HStack style={styles.segmentButtons}>
-                  {(["matching", "urgent"] as Tables<"listings">["shipment_code"][]).map(
-                    (code) => {
-                      const isActive = shipmentCode === code;
-                      return (
-                        <Pressable
-                          key={code}
-                          onPress={() => setShipmentCode(code)}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: isActive }}
-                          style={[
-                            styles.segmentButton,
-                            isActive && styles.segmentButtonActive,
-                          ]}
-                        >
-                          <ThemedText
-                            style={[
-                              styles.segmentButtonText,
-                              isActive && styles.segmentButtonTextActive,
-                            ]}
-                          >
-                            {code === "urgent" ? "Urgent" : "Matching"}
-                          </ThemedText>
-                          <ThemedText style={styles.segmentHelper}>
-                            {code === "urgent"
-                              ? "Surface this request at the top for travellers."
-                              : "Standard visibility in search."}
-                          </ThemedText>
-                        </Pressable>
-                      );
-                    }
-                  )}
-                </HStack>
+                <VStack space="xs">
+                  <HStack style={styles.segmentSwitchRow}>
+                    <ThemedText style={styles.segmentSwitchLabel}>
+                      Matching
+                    </ThemedText>
+                    <Switch
+                      value={shipmentCode === "urgent"}
+                      size="lg"
+                      trackColor={{ false: "#d4d4d4", true: "#525252" }}
+                      thumbColor="#fafafa"
+                      ios_backgroundColor="#d4d4d4"
+                      onValueChange={(isUrgent) =>
+                        setShipmentCode(isUrgent ? "urgent" : "matching")
+                      }
+                      accessibilityLabel="Toggle shipment priority"
+                      accessibilityState={{
+                        checked: shipmentCode === "urgent",
+                      }}
+                    />
+                    <ThemedText style={styles.segmentSwitchLabel}>
+                      Urgent
+                    </ThemedText>
+                  </HStack>
+                  <ThemedText style={styles.segmentHelper}>
+                    {shipmentCode === "urgent"
+                      ? "Surface this request at the top for travellers."
+                      : "Standard visibility in search."}
+                  </ThemedText>
+                </VStack>
               </ThemedView>
             )}
           </VStack>
@@ -862,6 +1133,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     opacity: 0.8,
   },
+  dateRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  dateSelect: {
+    flex: 1,
+  },
   inputField: {},
   segmentSection: {
     gap: 10,
@@ -870,27 +1148,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 14,
   },
-  segmentButtons: {
-    gap: 10,
+  segmentSwitchRow: {
+    alignItems: "center",
+    justifyContent: "flex-start",
+    gap: 12,
   },
-  segmentButton: {
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    gap: 4,
-    borderColor: "#E5E7EB",
-  },
-  segmentButtonActive: {
-    borderColor: "#0A7EA4",
-    backgroundColor: "rgba(10, 126, 164, 0.08)",
-  },
-  segmentButtonText: {
+  segmentSwitchLabel: {
     fontWeight: "700",
-    fontSize: 15,
-  },
-  segmentButtonTextActive: {
-    color: "#0A7EA4",
+    fontSize: 14,
   },
   segmentHelper: {
     fontSize: 13,

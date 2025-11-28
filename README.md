@@ -42,6 +42,11 @@ npm start            # launches Expo CLI (use Expo Go, simulator, or emulator)
 
 ## Daily Log
 
+### 2025-11-27
+- My Spaces now pulls the signed-in user's listings via `useMyListingsQuery`, with segmented shipped/offered views, stats, and navigation into listing details, plus loading and error states.
+- Listing form uses switches for listing type and shipment priority, and splits departure date into month/day/year selects with future-date validation.
+- Updated home stack routes to present chat and listing detail/edit screens as modal stack entries.
+
 ### 2025-11-26
 - Stabilized inbox: threads now load once per user session, filter for buyer/seller, render avatars safely, and fixed hook ordering that caused render errors.
 - Hardened message fetching: `useMessageQuery` now returns typed `{ data, error }` with optional filters and ordering, and `useThreadsQuery` filters correctly by user.

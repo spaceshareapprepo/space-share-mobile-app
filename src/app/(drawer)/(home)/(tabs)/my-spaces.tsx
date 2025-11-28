@@ -11,6 +11,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { fetchListings } from "@/lib/database/db";
 import { router } from 'expo-router';
 import * as fn from "@/lib/utils";
+import { useMyListingsQuery } from "@/hooks/user-my-listings-query";
 
 const segments = [
   { key: "shipped", label: "Shipped Items" },
@@ -26,6 +27,7 @@ export default function MyShipmentsScreen() {
   );
 
   const { session } = useAuthContext();
+  const [user, setUser] = useState<string | null | undefined>(null);
   const [segment, setSegment] = useState<SegmentKey>("shipped");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +37,13 @@ export default function MyShipmentsScreen() {
     let isMounted = true;
     async function loadListings() {
       if (!session?.user?.id) return;
+      setUser(session?.user?.id as string);
       setLoading(true);
       setError(null);
+
+      console.log(`SessionUser: ${user}`)
       try {
-        const { data, error: dbError } = await fetchListings();
+        const { data, error: dbError } = await useMyListingsQuery({ ownerId: user });
 
         if (dbError) throw dbError;
         if (isMounted) setListings((data as unknown as ListingRow[]) ?? []);
