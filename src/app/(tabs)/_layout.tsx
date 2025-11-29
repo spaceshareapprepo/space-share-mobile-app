@@ -1,13 +1,14 @@
 import { Tabs, useRouter } from "expo-router";
 import React from "react";
 import { Pressable } from "react-native";
-
 import { HapticTab } from "@/components/haptic-tab";
+import { HStack } from "@/components/ui/hstack";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { ThemedView } from "@/components/themed-view";
-import { HStack } from "@/components/ui/hstack";
+import { DrawerButton } from "@/hooks/use-drawer";
+
+
 
 export default function TabsLayout() {
   const colorScheme = useColorScheme();
@@ -15,10 +16,12 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      backBehavior="order"
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: true,
         tabBarButton: HapticTab,
+        headerShown: true,
+        headerTitle: "",
         headerRight: () => (
           <HStack
           style={{ marginRight: 15, gap: 12 }}>
@@ -36,7 +39,7 @@ export default function TabsLayout() {
             <Pressable
               onPress={() => router.push("/profile")}
               hitSlop={12}
-              accessibilityLabel="Open inbox"
+              accessibilityLabel="Open profile"
             >
               <IconSymbol
                 size={22}
@@ -46,7 +49,11 @@ export default function TabsLayout() {
             </Pressable>
           </HStack>
         ),
-        
+        headerLeft: () => (
+          <HStack style={{ marginLeft: 15, gap: 12 }}>
+            <DrawerButton />
+          </HStack>
+        ),
       }}
     >
       <Tabs.Screen

@@ -16,6 +16,7 @@ import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import AuthProvider from "@/providers/auth-provider";
+import { DrawerProvider } from "@/providers/gluestack-drawer-provider";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
@@ -37,14 +38,15 @@ function RootNavigator() {
     const inAuthGroup = first === "(auth)";
     const isOnGoogleAuth = first === "google-auth";
     const isLanding = first === undefined;
+    const isOnTabs = first === "(tabs)";
 
     if (!isLoggedIn && !inAuthGroup && !isLanding) {
       router.replace("/(auth)/sign-in");
       return;
     }
 
-    if (isLoggedIn && (inAuthGroup || isOnGoogleAuth || isLanding)) {
-      router.replace("/");
+    if (isLoggedIn && !isOnTabs && (inAuthGroup || isOnGoogleAuth || isLanding)) {
+      router.navigate("/(tabs)");
     }
   }, [isLoggedIn, session, segments, router]);
 
@@ -56,7 +58,7 @@ function RootNavigator() {
   return (
     <Stack>
       <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false}} />
         <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
@@ -64,7 +66,7 @@ function RootNavigator() {
         <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "" }} />
         </Stack.Protected>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Demo" }} />
+        {/* <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Demo" }} /> */}
         <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
         <Stack.Screen name="+not-found" />
     </Stack>
@@ -89,7 +91,9 @@ export default function RootLayout() {
             <AuthProvider>
               <SplashScreenController />
               <AutocompleteDropdownContextProvider>
-                <RootNavigator />
+                <DrawerProvider>
+                  <RootNavigator />
+                </DrawerProvider>
               </AutocompleteDropdownContextProvider>
               <StatusBar style="auto" />
             </AuthProvider>

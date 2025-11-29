@@ -18,6 +18,8 @@ import {
   AvatarFallbackText,
   AvatarImage,
 } from '@/components/ui/avatar';
+import { Button, ButtonText } from '@/components/ui/button';
+import { router } from 'expo-router';
 
 const verifiedBadges = [
   'Government ID uploaded',
@@ -145,6 +147,14 @@ export default function ProfileScreen() {
           </ThemedText>
         </ThemedView>
       </ThemedView>
+      <Button
+        variant="link"
+        onPress={() => supabase.auth.signOut({ scope: "local", }).then(() => {
+          router.replace("/");
+        })}
+        >
+        <ButtonText>Sign out</ButtonText>
+      </Button>
     </ParallaxScrollView>
   );
 }
