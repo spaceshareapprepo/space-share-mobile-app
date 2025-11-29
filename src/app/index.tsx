@@ -95,16 +95,6 @@ export default function LandingScreen() {
             </ThemedText>
           </Pressable>
         </View>
-        <View style={styles.metaRow}>
-          <ThemedText style={[styles.metaText, { color: text }]}>
-            Trusted lanes: JFK → ACC, LAX → ACC, BOS → ACC
-          </ThemedText>
-          <View style={[styles.badge, { borderColor: tint }]}>
-            <ThemedText style={[styles.badgeText, { color: tint }]}>
-              New routes weekly
-            </ThemedText>
-          </View>
-        </View>
       </View>
     </ThemedView>
   );
@@ -189,25 +179,5 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: "#0B1021",
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  metaText: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  badge: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "700",
   },
 });

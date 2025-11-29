@@ -1,20 +1,52 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import React from "react";
+import { Pressable } from "react-native";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { ThemedView } from "@/components/themed-view";
+import { HStack } from "@/components/ui/hstack";
 
-export default function TabLayout() {
+export default function TabsLayout() {
   const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
+        headerShown: true,
         tabBarButton: HapticTab,
+        headerRight: () => (
+          <HStack
+          style={{ marginRight: 15, gap: 12 }}>
+            <Pressable
+              onPress={() => router.push("/inbox")}
+              hitSlop={12}
+              accessibilityLabel="Open inbox"
+            >
+              <IconSymbol
+                size={22}
+                name="bell.fill"
+                color={Colors[colorScheme ?? "light"].tint}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/profile")}
+              hitSlop={12}
+              accessibilityLabel="Open inbox"
+            >
+              <IconSymbol
+                size={22}
+                name="user.circle.fontawesome6"
+                color={Colors[colorScheme ?? "light"].tint}
+              />
+            </Pressable>
+          </HStack>
+        ),
+        
       }}
     >
       <Tabs.Screen
@@ -27,7 +59,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="publish"
+        name="listings"
         options={{
           title: "Publish",
           tabBarIcon: ({ color }) => (
@@ -50,15 +82,6 @@ export default function TabLayout() {
           title: "Inbox",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="chatbubbles.outline" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="user.circle.fontawesome6" color={color} />
           ),
         }}
       />

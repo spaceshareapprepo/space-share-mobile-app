@@ -21,7 +21,7 @@ import { ActivityIndicator } from "react-native";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 
 export const unstable_settings = {
-  anchor: "(drawer)",
+  anchor: "(tabs)",
 };
 
 // Separate RootNavigator so we can access the AuthContext
@@ -39,12 +39,12 @@ function RootNavigator() {
     const isLanding = first === undefined;
 
     if (!isLoggedIn && !inAuthGroup && !isLanding) {
-      router.replace("/");
+      router.replace("/(auth)/sign-in");
       return;
     }
 
     if (isLoggedIn && (inAuthGroup || isOnGoogleAuth || isLanding)) {
-      router.replace("/(drawer)/(home)/(tabs)");
+      router.replace("/");
     }
   }, [isLoggedIn, session, segments, router]);
 
@@ -56,7 +56,7 @@ function RootNavigator() {
   return (
     <Stack>
       <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="google-auth" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
@@ -64,6 +64,7 @@ function RootNavigator() {
         <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "" }} />
         </Stack.Protected>
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Demo" }} />
         <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
         <Stack.Screen name="+not-found" />
     </Stack>

@@ -5,14 +5,13 @@ import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { SegmentedControl } from "@/components/segmented-control";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Avatar, AvatarBadge, AvatarFallbackText, AvatarImage } from "@/components/ui/avatar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useThreads } from "@/hooks/use-threads-query";
-import type { ThreadRow } from "@/constants/types";
-import { useRequireAuth } from "@/hooks/use-require-auth";
-import { useRouter } from "expo-router";
-import { Avatar, AvatarFallbackText, AvatarImage, AvatarBadge } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
+import { useRouter } from "expo-router";
 
 type SegmentKey = "messages" | "notifications";
 
@@ -132,7 +131,7 @@ export default function InboxScreen() {
                   accessibilityLabel="Go to chat"
                   onPress={
                     () => router.navigate(
-                      {pathname: "/chat/[id]",
+                      {pathname: "/inbox/[id]",
                       params: { id: thread.id }})
                   }
                 >
