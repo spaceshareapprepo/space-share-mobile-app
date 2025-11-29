@@ -94,6 +94,7 @@ export const listings = pgTable("listings", {
     .notNull()
     .references(() => airports.id, { onDelete: "cascade" }),
   destinationName: text("destination_name"),
+  carrierSign: varchar("carrier_sign", { length: 10 }),
   departureDate: timestamp("departure_date", { withTimezone: true }).notNull(),
   maxWeightKg: numeric("max_weight_kg", { precision: 10, scale: 2 }),
   maxWeightLb: numeric ("max_weight_lb", { precision: 10, scale: 2 }),

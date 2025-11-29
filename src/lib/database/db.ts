@@ -43,70 +43,38 @@ export async function fetchListing(id: string) {
   }
 }
 
-export async function searchListings({ 
-  query, 
-  typeFilter 
-}: {
-  query: string | null;
-  typeFilter: ListingType | null;
-}) {
+export async function searchListings({ query, typeFilter }: { query: string | null; typeFilter: ListingType | null; }) {
   try {
-    let supabaseQuery = supabase
-      .from('listings')
+    if (query && query.trim()) {
+      const { data, error } = await supabase
+        .rpc("search_listings_websearch", { query: query.trim() });
+      if (error) throw error;
+      const rows = (data as ListingRow[] | null) ?? [];
+      const filtered = typeFilter
+        ? rows.filter((row) => row.type_of_listing === typeFilter)
+        : rows;
+      return { data: filtered, error: null };
+    }
+
+    let q = supabase
+      .from("listings")
       .select(SELECT_COLUMNS_LISTINGS)
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(50);
 
-    if (query) {
-      const searchPattern = `%${query.replaceAll(/\s+/g, '%')}%`;
-      supabaseQuery = supabaseQuery.or(
-        `title.ilike.${searchPattern},description.ilike.${searchPattern},origin_name.ilike.${searchPattern},destination_name.ilike.${searchPattern}`
-      );
-    }
-
     if (typeFilter) {
-      supabaseQuery = supabaseQuery.eq('type_of_listing', typeFilter);
+      q = q.eq("type_of_listing", typeFilter);
     }
 
-    const { data, error } = await supabaseQuery.overrideTypes<
-      ListingRow[],
-      { merge: false }
-    >();
-
-    if (error) {
-      throw error;
-    }
-
-    const listingData = data ?? [];
-
-    if (!query) {
-      return { data: listingData, error: null };
-    }
-
-    const lowerQuery = query.toLowerCase();
-    const filteredData = listingData.filter((listing) => {
-      const matchesListing =
-        listing?.title?.toLowerCase().includes(lowerQuery) ||
-        listing?.description?.toLowerCase().includes(lowerQuery);
-
-      const matchesOrigin =
-        listing?.origin?.city?.toLowerCase().includes(lowerQuery) ||
-        listing?.origin?.name?.toLowerCase().includes(lowerQuery);
-
-      const matchesDestination =
-        listing.destination?.city?.toLowerCase().includes(lowerQuery) ||
-        listing.destination?.name?.toLowerCase().includes(lowerQuery);
-
-      return matchesListing || matchesOrigin || matchesDestination;
-    });
-    
-    return { data: filteredData, error: null };
-    
+    const { data, error } = await q;
+    if (error) throw error;
+    return { data: data ?? [], error: null };
   } catch (err) {
-    console.error('Failed to connect to supabase public.listings:', err);
+    console.error("Search error:", err);
     return { data: [], error: err as Error };
   }
 }
+
 
 
 export async function fetchMessages({authorId, threadId}:{authorId: string | undefined, threadId: string}) {

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,21 +10,14 @@ import {
 import { ShipmentResultCard } from "@/components/listings/shipment-result-card";
 import { RouteResultCard } from "@/components/listings/traveller-result-card";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { SegmentedControl } from "@/components/segmented-control";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useListingsSearch } from "@/hooks/use-listings-search";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { generateAPIUrl } from "@/lib/utils";
 
-import type {
-  ListingsResponse,
-  QuickFilter,
-  SearchSegment,
-  SegmentKey,
-  ListingRow,
-} from "@/constants/types";
-
-import { fetch } from "expo/fetch";
+import type { QuickFilter, SearchSegment, SegmentKey } from "@/constants/types";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -32,31 +25,11 @@ const segments: { key: SegmentKey; label: string }[] = [
 ];
 
 const quickFilters: QuickFilter[] = [
-  { label: "JFK → ACC departures", value: "JFK", segment: "routes" },
+  { label: "JFK to ACC departures", value: "JFK", segment: "routes" },
   { label: "Urgent medical", value: "medication", segment: "items" },
-  { label: "LAX → ACC departures", value: "LAX", segment: "routes" },
+  { label: "LAX to ACC departures", value: "LAX", segment: "routes" },
   { label: "Fashion samples", value: "fashion", segment: "items" },
 ];
-
-async function fetchListingsData(searchTerm: string, segment: SearchSegment = "all"): Promise<ListingsResponse> {
-  
-  const params = new URLSearchParams();
-  
-  const trimmed = searchTerm.trim();
-  if (trimmed.length > 0) {
-    params.set("q", trimmed);
-  }
-  params.set("segment", segment);
-
-  const url = generateAPIUrl(`/api/search?${params.toString()}`);
-  const response = await fetch(url, { method: "GET" });
-  const rawJson = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(rawJson || "Failed to load listings");
-  }
-  return rawJson as ListingsResponse;
-}
 
 function getDefaultEmptyMessage(
   segment: SegmentKey,
@@ -75,12 +48,6 @@ function getDefaultEmptyMessage(
 }
 
 export default function SearchScreen() {
-  const [travelListings, setTravelListings] = useState<ListingRow[]>([]);
-  const [shipmentListings, setShipmentListings] = useState<ListingRow[]>([]);
-  const [isFetching, setIsFetching] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [appliedQuery, setAppliedQuery] = useState("");
   const tintColor = useThemeColor({}, "tint");
   const borderColor = useThemeColor(
     { light: "#D6E1FB", dark: "#2A3045" },
@@ -90,65 +57,31 @@ export default function SearchScreen() {
     { light: "#FFFFFF", dark: "#1B1F2E" },
     "background"
   );
-  const [segment, setSegment] = useState<SegmentKey>("routes");
   const [query, setQuery] = useState("");
-  const performSearch = useCallback(
-    async (searchTerm?: string, segmentOverride: SearchSegment = "all") => {
-      const term = (searchTerm ?? query).trim();
-      setIsFetching(true);
-      setFetchError(null);
-      setAppliedQuery(term);
-      try {
-        const response = await fetchListingsData(term, segmentOverride);
-        setTravelListings(response.travellers ?? []);
-        setShipmentListings(response.shipments ?? []);
-        setHasSearched(true);
-      } catch (error) {
-        console.error("Failed to search listings:", error);
-        setHasSearched(false);
-        setTravelListings([]);
-        setShipmentListings([]);
-        setFetchError(
-          "Unable to load listings right now. Please try again soon."
-        );
-        setHasSearched(true);
-      } finally {
-        setIsFetching(false);
-      }
+  const {
+    segment,
+    setSegment,
+    isFetching,
+    fetchError,
+    hasSearched,
+    appliedQuery,
+    travelListings,
+    shipmentListings,
+    results,
+    performSearch,
+  } = useListingsSearch();
+
+  const triggerSearch = useCallback(
+    (term?: string, segmentOverride: SearchSegment = "all") => {
+      void performSearch(term ?? query, segmentOverride);
     },
-    [query]
-  );
-  const sortedTravellers = useMemo(
-    () =>
-      [...travelListings].sort(
-        (a, b) =>
-          new Date(a.departure_date).getTime() -
-          new Date(b.departure_date).getTime()
-      ),
-    [travelListings]
-  );
-  const sortedShipments = useMemo(
-    () =>
-      [...shipmentListings].sort(
-        (a, b) =>
-          new Date(a.departure_date).getTime() -
-          new Date(b.departure_date).getTime()
-      ),
-    [shipmentListings]
+    [performSearch, query]
   );
 
-  const filteredTravellers = useMemo(
-    () => filterTravellers(sortedTravellers, appliedQuery),
-    [query, sortedTravellers]
-  );
-  const filteredShipments = useMemo(
-    () => filterShipments(sortedShipments, appliedQuery),
-    [query, sortedShipments]
-  );
   const isRoutesSegment = segment === "routes";
-  const results = isRoutesSegment ? filteredTravellers : filteredShipments;
   const defaultEmptyMessage = getDefaultEmptyMessage(segment, appliedQuery);
   const emptyMessage = fetchError ?? defaultEmptyMessage;
+
   const renderResults = () => {
     if (isFetching) {
       return (
@@ -170,7 +103,7 @@ export default function SearchScreen() {
       );
     }
     if (isRoutesSegment) {
-      return filteredTravellers.map((listing) => (
+      return travelListings.map((listing) => (
         <RouteResultCard
           key={listing.id}
           listing={listing}
@@ -179,7 +112,7 @@ export default function SearchScreen() {
         />
       ));
     }
-    return filteredShipments.map((shipment) => (
+    return shipmentListings.map((shipment) => (
       <ShipmentResultCard
         key={shipment.id}
         shipment={shipment}
@@ -188,6 +121,7 @@ export default function SearchScreen() {
       />
     ));
   };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#041834", dark: "#050E1E" }}
@@ -200,8 +134,8 @@ export default function SearchScreen() {
         />
       }
     >
-      <ThemedView style={ styles.container }>
-        <ThemedView style={ [styles.heroCard, { borderColor }] }>
+      <ThemedView style={styles.container}>
+        <ThemedView style={[styles.heroCard, { borderColor }]}>
           <ThemedText type="title">Find your perfect match</ThemedText>
           <ThemedText style={styles.heroSubtitle}>
             Search real travellers and shipment requests across the USA to Ghana
@@ -218,19 +152,19 @@ export default function SearchScreen() {
             <TextInput
               value={query}
               onChangeText={setQuery}
-              onSubmitEditing={() => void performSearch()}
+              onSubmitEditing={() => triggerSearch()}
               returnKeyType="search"
-              placeholder="Search airport, city, traveller, or item"
-              placeholderTextColor= {tintColor}
-              style={ [styles.searchInput, {color: tintColor, fontSize:18}] }
+              placeholder="Search ..."
+              placeholderTextColor={tintColor}
+              style={[styles.searchInput, { color: tintColor, fontSize: 18, outline: "none" }]}
               accessibilityLabel="Search routes and shipments"
               submitBehavior="blurAndSubmit"
             />
-            <Pressable onPress={() => void performSearch()}>
-                <ThemedText style={ [styles.clearText, { color: tintColor }] }>
-                  Search
-                </ThemedText>
-              </Pressable>
+            <Pressable onPress={() => triggerSearch()}>
+              <ThemedText style={[styles.clearText, { color: tintColor }]}>
+                Search
+              </ThemedText>
+            </Pressable>
           </ThemedView>
           <ThemedView style={[styles.quickFilters]}>
             {quickFilters.map((filter) => (
@@ -239,7 +173,7 @@ export default function SearchScreen() {
                 onPress={() => {
                   setSegment(filter.segment);
                   setQuery(filter.value);
-                  void performSearch(filter.value, filter.segment);
+                  triggerSearch(filter.value, filter.segment);
                 }}
                 style={[
                   styles.filterChip,
@@ -249,7 +183,7 @@ export default function SearchScreen() {
                 <ThemedText
                   style={[styles.filterChipText, { color: tintColor }]}
                 >
-                  { filter.label }
+                  {filter.label}
                 </ThemedText>
               </Pressable>
             ))}
@@ -257,30 +191,13 @@ export default function SearchScreen() {
         </ThemedView>
         {hasSearched && (
           <>
-            <ThemedView style={[styles.segmentedControl, { borderColor }]}>
-              {segments.map((item) => {
-                const isActive = item.key === segment;
-                return (
-                  <Pressable
-                    key={item.key}
-                    onPress={() => setSegment(item.key)}
-                    style={[
-                      styles.segmentButton,
-                      isActive && { backgroundColor: tintColor },
-                    ]}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.segmentLabel,
-                        isActive ? styles.segmentLabelActive : undefined,
-                      ]}
-                    >
-                      {item.label}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </ThemedView>
+            <SegmentedControl
+              options={segments}
+              value={segment}
+              onChange={setSegment}
+              tintColor={tintColor}
+              borderColor={borderColor}
+            />
             <ThemedView style={styles.resultsMeta}>
               <ThemedText type="subtitle">
                 {`${results.length} ${
@@ -300,30 +217,6 @@ export default function SearchScreen() {
   );
 }
 
-function filterTravellers(list: ListingRow[], query: string) {
-  const trimmed = query.trim().toLowerCase();
-  if (!trimmed) {
-    return list;
-  }
-  return list.filter((traveller) => {
-    const haystack =
-      `${traveller.origin} ${traveller.destination} ${traveller.owner?.full_name} ${traveller.description}`.toLowerCase();
-    return haystack.includes(trimmed);
-  });
-}
-
-function filterShipments(list: ListingRow[], query: string) {
-  const trimmed = query.trim().toLowerCase();
-  if (!trimmed) {
-    return list;
-  }
-  return list.filter((shipment) => {
-    const haystack =
-      `${shipment.title} ${shipment.description} ${shipment.origin} ${shipment.destination}`.toLowerCase();
-    return haystack.includes(trimmed);
-  });
-}
-
 const styles = StyleSheet.create({
   container: { gap: 24, paddingBottom: 56 },
   headerIcon: { bottom: -50, left: -30, position: "absolute" },
@@ -333,35 +226,22 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 5,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  searchInput: { 
-    flex: 1, 
-    fontSize: 16 
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 14,
+    borderRadius: 18,
+    borderWidth: 0,
   },
   clearText: { fontWeight: "600" },
   quickFilters: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   filterChip: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
   filterChipText: { fontSize: 13, fontWeight: "600" },
-  segmentedControl: {
-    borderWidth: 1,
-    borderRadius: 999,
-    flexDirection: "row",
-    gap: 4,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentLabel: { fontWeight: "600", fontSize: 14 },
-  segmentLabelActive: { color: "#fff" },
   resultsMeta: { gap: 6 },
   resultsSubtitle: { fontSize: 14, lineHeight: 20 },
   resultsList: { gap: 16 },

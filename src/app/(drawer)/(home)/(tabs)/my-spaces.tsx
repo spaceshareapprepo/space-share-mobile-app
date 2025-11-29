@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { SegmentedControl } from "@/components/segmented-control";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { ListingRow } from "@/constants/types";
-import { useAuthContext } from "@/hooks/use-auth-context";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useMyListingsQuery } from "@/hooks/user-my-listings-query";
+import { useMyListings } from "@/hooks/user-my-listings-query";
 import * as fn from "@/lib/utils";
-import { router } from 'expo-router';
+import { router } from "expo-router";
 
 const segments = [
   { key: "shipped", label: "Shipped Items" },
@@ -25,44 +25,15 @@ export default function MyShipmentsScreen() {
     "background"
   );
 
-  const { session, isLoading, profile } = useAuthContext();
-  // const [user, setUser] = useState<string | null | undefined>(null);
-  const [segment, setSegment] = useState<SegmentKey>("shipped");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [listings, setListings] = useState<ListingRow[]>([]);
-
-  const ownerId = useMemo(
-    () => session?.user?.id ?? profile?.id ?? null,
-    [session?.user?.id, profile?.id]
+  const { userId, isLoading: authLoading } = useRequireAuth();
+  const { data: listings, isLoading: listingsLoading, error } = useMyListings(
+    userId
   );
-
-  useEffect(() => {
-    let isMounted = true;
-    if (!ownerId || isLoading) return; // wait for auth to hydrate
-
-    async function loadListings() {
-      setLoading(true);
-      setError(null);
-
-      
-      try {
-        const { data, error: dbError } = await useMyListingsQuery({ ownerId: ownerId });
-
-        if (dbError) throw dbError;
-        if (isMounted) setListings((data as unknown as ListingRow[]) ?? []);
-      } catch (err) {
-        if (isMounted) setError("Could not load your listings. Pull to refresh or try again.");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    void loadListings();
-    return () => {
-      isMounted = false;
-    };
-  }, [ownerId, isLoading]);
+  const [segment, setSegment] = useState<SegmentKey>("shipped");
+  const loading = authLoading || listingsLoading;
+  const errorMessage = error
+    ? "Could not load your listings. Pull to refresh or try again."
+    : null;
 
   const shippedItems = useMemo(
     () => listings.filter((item) => item.type_of_listing === "shipment"),
@@ -120,33 +91,22 @@ export default function MyShipmentsScreen() {
           </View>
         </ThemedView>
 
-        <View style={[styles.segmentedControl, { borderColor }]}>
-          {segments.map((option) => {
-            const isActive = option.key === segment;
-            return (
-              <Pressable
-                key={option.key}
-                onPress={() => setSegment(option.key)}
-                style={[styles.segmentButton, isActive && { backgroundColor: tintColor }]}
-              >
-                <ThemedText
-                  style={[styles.segmentLabel, isActive ? styles.segmentLabelActive : undefined]}
-                >
-                  {option.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SegmentedControl
+          options={segments}
+          value={segment}
+          onChange={setSegment}
+          tintColor={tintColor}
+          borderColor={borderColor}
+        />
 
         {loading ? (
           <ThemedView style={{ padding: 16, gap: 8, alignItems: "center" }}>
             <ActivityIndicator />
             <ThemedText>Loading your listings...</ThemedText>
           </ThemedView>
-        ) : error ? (
+        ) : errorMessage ? (
           <ThemedView style={{ padding: 16, gap: 8 }}>
-            <ThemedText>{error}</ThemedText>
+            <ThemedText>{errorMessage}</ThemedText>
           </ThemedView>
         ) : segment === "shipped" ? (
           <View style={styles.list}>
@@ -305,27 +265,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     flexWrap: "wrap",
-  },
-  segmentedControl: {
-    borderWidth: 1,
-    borderRadius: 999,
-    flexDirection: "row",
-    gap: 4,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentLabel: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  segmentLabelActive: {
-    color: "#fff",
   },
   list: {
     gap: 16,

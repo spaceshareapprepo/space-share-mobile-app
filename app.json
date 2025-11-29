@@ -39,9 +39,17 @@
     "plugins": [
       [
         "expo-router",
-      {
-        "origin":"https://space-share-mobile-app.expo.app"
-      }],
+        {
+          "origin": "https://space-share-mobile-app.expo.app"
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.spacesharemobileapp",
+          "publishableKey": "pk_test_51SYYXo3quEfU7iqNvbjhmh2X8gTH2tl0nVfC6dUfHg7J3k1Nu2W0JZh3JqbSS5D7fkNhiSoWqb8KqBLq4mSaUVts00zvKYwOck"
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -55,7 +63,7 @@
         }
       ],
       [
-       "expo-dev-client",
+        "expo-dev-client",
         {
           "launchMode": "most-recent"
         }

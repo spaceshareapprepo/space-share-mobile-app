@@ -41,6 +41,8 @@ export async function createRLSPolicies(db: ReturnType<typeof drizzle>) {
       DROP INDEX IF EXISTS idx_airports_label;
       DROP FUNCTION IF EXISTS public.handle_new_user;
       DROP FUNCTION IF EXISTS public.handle_updated_user;
+      DROP FUNCTION IF EXISTS public.listings_search_vector;
+      DROP FUNCTION IF EXISTS public.search_listings_websearch;
     `);
 
   await db.execute(sql`
@@ -174,6 +176,62 @@ export async function createFunctionsAndTriggers(
     WHEN (OLD.origin_id IS DISTINCT FROM NEW.origin_id OR OLD.destination_id IS DISTINCT FROM NEW.destination_id)
     EXECUTE FUNCTION copy_airport_names();
   `);
+
+  // Create the search function for listings
+  await db.execute(sql`
+    CREATE OR REPLACE FUNCTION listings_search_vector(listing_row jsonb)
+    RETURNS tsvector
+    LANGUAGE plpgsql
+    IMMUTABLE
+    AS $$
+    BEGIN
+      RETURN to_tsvector('english',
+        coalesce(listing_row->>'title','') || ' ' ||
+        coalesce(listing_row->>'description','') || ' ' ||
+        coalesce(listing_row->'origin'->>'city','') || ' ' ||
+        coalesce(listing_row->'origin'->>'name','') || ' ' ||
+        coalesce(listing_row->'origin'->>'iata_code','') || ' ' ||
+        coalesce(listing_row->'destination'->>'city','') || ' ' ||
+        coalesce(listing_row->'destination'->>'name','') || ' ' ||
+        coalesce(listing_row->'destination'->>'iata_code','')
+      );
+    END;
+    $$;
+  `);
+
+  // RPC function that uses websearch_to_tsquery (supports "JFK OR LAX", -"cancelled")
+  await db.execute(sql`
+    CREATE OR REPLACE FUNCTION search_listings_websearch(query text)
+    RETURNS SETOF listings
+    LANGUAGE sql
+    STABLE
+    AS $$
+      SELECT l.*
+      FROM listings l
+      LEFT JOIN airports o ON o.id = l.origin_id
+      LEFT JOIN airports d ON d.id = l.destination_id
+      CROSS JOIN LATERAL (
+        SELECT listings_search_vector(
+          jsonb_build_object(
+            'title', l.title,
+            'description', l.description,
+            'origin', jsonb_build_object(
+              'city', o.city,
+              'name', o.name,
+              'iata_code', o.iata_code
+            ),
+            'destination', jsonb_build_object(
+              'city', d.city,
+              'name', d.name,
+              'iata_code', d.iata_code
+            )
+          )
+        ) AS sv
+      ) s
+      WHERE s.sv @@ websearch_to_tsquery('english', query)
+      ORDER BY ts_rank(s.sv, websearch_to_tsquery('english', query)) DESC;
+    $$;
+    `);
 }
 
 export async function createPolicies(db: ReturnType<typeof drizzle>) {

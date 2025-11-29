@@ -1,20 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { SegmentedControl } from "@/components/segmented-control";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { useThreadsQuery } from "@/hooks/use-threads-query";
+import { useThreads } from "@/hooks/use-threads-query";
 import type { ThreadRow } from "@/constants/types";
-import { supabase } from "@/lib/supabase";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 import { useRouter } from "expo-router";
 import { Avatar, AvatarFallbackText, AvatarImage, AvatarBadge } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 
 type SegmentKey = "messages" | "notifications";
-type User = { id: string; name: string };
 
 type NotificationItem = {
   id: string;
@@ -37,10 +37,10 @@ export default function InboxScreen() {
   );
 
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [threads, setThreads] = useState<ThreadRow[]>([]);
   const [segment, setSegment] = useState<SegmentKey>("messages");
+  const { userId, isLoading: authLoading } = useRequireAuth();
+  const { threads, isLoading: threadsLoading } = useThreads(userId ?? undefined);
+  const isLoading = authLoading || threadsLoading;
 
   const notifications = useMemo<NotificationItem[]>(
     () => [
@@ -72,44 +72,7 @@ export default function InboxScreen() {
     []
   );
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function bootstrap() {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const supabaseUser = data?.user;
-        if (!supabaseUser) {
-          router.navigate("/");
-          return;
-        }
-
-        const currentUser: User = {
-          id: supabaseUser.id,
-          name: supabaseUser.user_metadata?.name ?? "Unknown user",
-        };
-
-        if (!isMounted) return;
-        setUser(currentUser);
-        if (!currentUser.id) return;
-
-        const rows = await useThreadsQuery({ userId: currentUser.id });
-        if (!isMounted) return;
-
-        setThreads(rows.data ?? []);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-
-    void bootstrap();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  if (isLoading || !user) {
+  if (isLoading) {
     return null;
   }
 
@@ -146,37 +109,20 @@ export default function InboxScreen() {
           </View>
         </ThemedView>
 
-        <View style={[styles.segmentedControl, { borderColor }]}>
-          {segments.map((item) => {
-            const isActive = item.key === segment;
-            return (
-              <Pressable
-                key={item.key}
-                style={[
-                  styles.segmentButton,
-                  isActive && { backgroundColor: tintColor },
-                ]}
-                onPress={() => setSegment(item.key)}
-              >
-                <ThemedText
-                  style={[
-                    styles.segmentLabel,
-                    isActive ? styles.segmentLabelActive : undefined,
-                  ]}
-                >
-                  {item.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SegmentedControl
+          options={segments}
+          value={segment}
+          onChange={setSegment}
+          tintColor={tintColor}
+          borderColor={borderColor}
+        />
 
         {segment === "messages" ? (
           <View style={styles.list}>
             {threads.map((thread) => {
               const counterpartName =
                 thread.buyer?.full_name ??
-                thread.buyer?.full_name ??
+                thread.seller?.full_name ??
                 "Unknown user";
               const listingTitle = thread.listing?.title ?? "Untitled listing";
               const updatedAt = formatDate(thread.updated_at);
@@ -304,27 +250,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 12,
-  },
-  segmentedControl: {
-    borderWidth: 1,
-    borderRadius: 999,
-    flexDirection: "row",
-    gap: 4,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  segmentLabel: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  segmentLabelActive: {
-    color: "#fff",
   },
   list: {
     gap: 16,
