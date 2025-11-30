@@ -9,9 +9,10 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+// import { BlurView } from 'expo-blur';
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import GoogleSignInButton from '@/components/social-auth-buttons/google/google-sign-in-button';
+import GithubSignInButton from '@/components/social-auth-buttons/github/github-sign-in-button';
 
 // For icons, you'll need: expo install react-native-vector-icons
 // or use expo-vector-icons (comes with Expo)
@@ -121,12 +122,8 @@ const LoginScreen = () => {
           
           {/* Social Login */}
           <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-              <Text style={styles.socialButtonText}>Apple</Text>
-            </TouchableOpacity>
+            <GoogleSignInButton label="Google" />
+            <GithubSignInButton label="Github" />
           </View>
         </View>
         

@@ -73,6 +73,12 @@
         {
           "experimentalLauncherActivity": false
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": "./assets/fonts/SpaceMono-Regular.ttf"
+        }
       ]
     ],
     "experiments": {

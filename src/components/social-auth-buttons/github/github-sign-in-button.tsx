@@ -27,24 +27,24 @@ function extractParamsFromUrl(url: string) {
 async function onSignInButtonPress() {
   console.debug("onSignInButtonPress - start");
   const res = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider: "github",
     options: {
-      redirectTo: `${expo.scheme}://google-auth`,
+      redirectTo: `${expo.scheme}://github-auth`,
       queryParams: { prompt: "consent" },
       skipBrowserRedirect: true,
     },
   });
 
-  const googleOAuthUrl = res.data.url;
+  const githubOAuthUrl = res.data.url;
 
-  if (!googleOAuthUrl) {
+  if (!githubOAuthUrl) {
     console.error("no oauth url found!");
     return;
   }
 
   const result = await WebBrowser.openAuthSessionAsync(
-    googleOAuthUrl,
-    `${expo.scheme}://google-auth`,
+    githubOAuthUrl,
+    `${expo.scheme}://github-auth`,
     { showInRecents: true }
   ).catch((err) => {
     console.error("onSignInButtonPress - openAuthSessionAsync - error", {
@@ -84,13 +84,13 @@ async function onSignInButtonPress() {
   }
 }
 
-type GoogleSignInButtonProps = Readonly<{
+type GithubSignInButtonProps = Readonly<{
   label?: string;
 }>;
 
-export default function GoogleSignInButton({
+export default function GithubSignInButton({
   label,
-}: GoogleSignInButtonProps) {
+}: GithubSignInButtonProps) {
   // to warm up the browser
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -125,7 +125,7 @@ export default function GoogleSignInButton({
     >
       <Image
         source={{
-          uri: "https://developers.google.com/identity/images/g-logo.png",
+          uri: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
         }}
         style={{ width: 24, height: 24, marginRight: 10 }}
       />
