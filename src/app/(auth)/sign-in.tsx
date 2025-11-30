@@ -5,7 +5,7 @@ import SignInForm from '@/components/auth/sign-in-form';
 
 export default function SignInScreen() {
   return (
-    <ThemedView safeArea style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 32 }}>
+    <ThemedView style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 32 }}>
       <Stack.Screen options={{ title: "Sign in" }} />
       <SignInForm />
     </ThemedView>
