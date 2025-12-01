@@ -65,7 +65,7 @@ export function useGoogleAuth() {
     onSuccess: void onGoogleButtonSuccess,
     onError: void onGoogleButtonFailure,
   });
-
+  setIsLoading(true)
   return { login, isLoading, sha256Nonce };
 }
 
