@@ -1,45 +1,55 @@
-import React, { useState } from "react";
-import { z } from "zod"
+import {
+  Toast,
+  ToastDescription,
+  ToastTitle,
+  useToast,
+} from '@/components/ui/toast';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import React, { useState } from "react";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
   Dimensions,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
-import {
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  useToast,
-} from '@/components/ui/toast';
+import { z } from "zod";
 // import { BlurView } from 'expo-blur';
 import GithubSignInButton from "@/components/social-auth-buttons/github/github-sign-in-button";
 import GoogleSignInButton from "@/components/social-auth-buttons/google/google-sign-in-button";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 // For icons, you'll need: expo install react-native-vector-icons
 // or use expo-vector-icons (comes with Expo)
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
+import { CloseIcon, HelpCircleIcon, Icon } from '@/components/ui/icon';
+import { VStack } from '@/components/ui/vstack';
 import { supabase } from "@/lib/supabase";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Icon, CloseIcon, HelpCircleIcon } from '@/components/ui/icon';
-import { HStack } from '@/components/ui/hstack';
-import { VStack } from '@/components/ui/vstack';
-import { Button, ButtonText } from '@/components/ui/button';
 import { router } from "expo-router";
+
+console.log('Toast:', Toast);
+console.log('Button:', Button);
+console.log('GoogleSignInButton:', GoogleSignInButton);
+console.log('GithubSignInButton:', GithubSignInButton);
+console.log('ThemedText:', ThemedText);
+console.log('ThemedView:', ThemedView);
+console.log('Icon:', Icon);
+console.log('HStack:', HStack);
+console.log('VStack:', VStack);
 
 const { width } = Dimensions.get("window");
 
-export default function LoginScreen() {
+export default function SignInScreen() {
   const userSchema = z.object({
     email: z.email({ message: "Please enter a valid email address."}),
-    password: z.string().min(5, { message: "Please enter at least 6 characters."})
+    password: z.string().min(6, { message: "Please enter at least 6 characters."})
   })
 
   const [showPassword, setShowPassword] = useState(false);
@@ -114,7 +124,7 @@ export default function LoginScreen() {
 
       if (error) {
         handleToast(error.message);
-         console.error("Error during sign-in:", error);
+        console.error("Error during sign-in:", error);
       }
      
     } catch (caughtError) {
@@ -125,7 +135,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Top decorative section */}
       <View style={styles.topSection}>
         <View style={[styles.decorativeCircle, styles.decorativeCircle1]} />
@@ -274,11 +284,13 @@ export default function LoginScreen() {
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>
             Don't have an account?{" "}
-            <ThemedText style={styles.signupLink} onPress={()=>router.navigate('/sign-up')}>Sign up</ThemedText>
+            <TouchableOpacity onPress={() => router.navigate('/sign-up')}>
+              <ThemedText style={styles.signupLink}>Sign up</ThemedText>
+            </TouchableOpacity>
           </Text>
         </View>
       </View>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
