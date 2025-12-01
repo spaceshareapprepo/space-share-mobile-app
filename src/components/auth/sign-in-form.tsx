@@ -94,7 +94,7 @@ export default function SignInForm() {
           </ThemedText>
           <ThemedText className="text-sm">
             {" "}
-            Don&apos;t have an account?{" "}
+            Do&napos;t have an account?{" "}
             <Link href="/sign-up" className="underline underline-offset-4">
               Sign up
             </Link>
@@ -212,7 +212,7 @@ export default function SignInForm() {
             <Divider className="w-[100px]" />
           </HStack>
         </ThemedView>
-        <GoogleSignInButton buttonText="Sign in with Google" />
+        <GoogleSignInButton label="Sign in with Google" />
       </VStack>
     </ThemedView>
   );
