@@ -468,7 +468,7 @@ export function ListingForm({
         if (data?.id) {
           router.replace(`/listings/${data.id}?segment=${typeOfListing}`);
         } else {
-          router.replace("/(drawer)/(home)/(tabs)");
+          router.replace("/");
         }
       } else {
         const payload: TablesUpdate<"listings"> = {

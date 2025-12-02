@@ -34,16 +34,6 @@ import { supabase } from "@/lib/supabase";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-console.log('Toast:', Toast);
-console.log('Button:', Button);
-console.log('GoogleSignInButton:', GoogleSignInButton);
-console.log('GithubSignInButton:', GithubSignInButton);
-console.log('ThemedText:', ThemedText);
-console.log('ThemedView:', ThemedView);
-console.log('Icon:', Icon);
-console.log('HStack:', HStack);
-console.log('VStack:', VStack);
-
 const { width } = Dimensions.get("window");
 
 export default function SignInScreen() {
@@ -173,7 +163,7 @@ export default function SignInScreen() {
               field: { onChange, onBlur, value },
               fieldState: { error },
             }) => (
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Email</Text>
                 <View
                   style={[
@@ -193,7 +183,7 @@ export default function SignInScreen() {
                     autoCapitalize="none"
                   />
                 </View>
-              </ThemedView>
+              </View>
             )}
             name="email"
           />
@@ -208,7 +198,7 @@ export default function SignInScreen() {
               field: { onChange, onBlur, value },
               fieldState: { error },
             }) => (
-              <ThemedView style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>Password</Text>
                 <View
                   style={[
@@ -240,7 +230,7 @@ export default function SignInScreen() {
                     />
                   </TouchableOpacity>
                 </View>
-              </ThemedView>
+              </View>
             )}
             name="password"
           />

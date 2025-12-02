@@ -40,7 +40,7 @@ export default function LandingScreen() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      router.replace("/(drawer)/(home)/(tabs)");
+      router.replace("/");
     }
   }, [isLoggedIn, router]);
 
