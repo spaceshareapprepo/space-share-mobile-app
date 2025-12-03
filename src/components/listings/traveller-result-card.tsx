@@ -17,7 +17,7 @@ export function RouteResultCard({
   borderColor: string;
 }>) {
   const handlePress = () =>
-    router.navigate({
+    router.push({
       pathname: "/listings/[id]",
       params: {
         id: listing.id,

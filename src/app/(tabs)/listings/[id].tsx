@@ -63,9 +63,9 @@ async function startConversation({
 }): Promise<void> {
   try {
     const { data, error } = await supabase.auth.getUser();
-    console.log(`User: ${JSON.stringify(data?.user?.id)}`)
+    
     if (error || !data?.user) {
-      router.navigate("/(auth)/sign-in");
+      router.push("/(auth)/sign-in");
       return;
     }
 
@@ -103,8 +103,8 @@ async function startConversation({
       throw new Error("Unable to create or fetch thread");
     }
 
-    router.navigate({
-      pathname: "/chat/[id]",
+    router.push({
+      pathname: "/inbox/[id]",
       params: { id: threadId },
     });
   } catch (err) {

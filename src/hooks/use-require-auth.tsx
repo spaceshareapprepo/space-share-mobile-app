@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from "react";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 
 import { useAuthContext } from "@/hooks/use-auth-context";
 
 type RequireAuthOptions = {
-  redirectTo?: string;
+  redirectTo?: RelativePathString;
 };
 
 export function useRequireAuth(options: RequireAuthOptions = {}) {

@@ -16,7 +16,7 @@ export function ShipmentResultCard({
   borderColor: string;
 }>) {
   const handlePress = () =>
-    router.navigate({
+    router.push({
       pathname: "/listings/[id]",
       params: {
         id: shipment.id,

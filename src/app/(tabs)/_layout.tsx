@@ -8,7 +8,10 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { DrawerButton } from "@/hooks/use-drawer";
 
-
+export const unstable_settings = {
+  anchor: "(tabs)",
+  initialRouteName: 'index',
+};
 
 export default function TabsLayout() {
   const colorScheme = useColorScheme();

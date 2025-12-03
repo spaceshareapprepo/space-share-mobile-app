@@ -1,4 +1,4 @@
-import type { ListingsResponse } from "@/constants/types";
+import type { ListingRow, ListingsResponse } from "@/constants/types";
 import { searchListings } from "@/lib/database/db";
 import {
   normaliseSearchTerm,
@@ -30,10 +30,10 @@ export async function GET(request: Request) {
     const rows = await searchListings({ query, typeFilter });
 
     const travellers = rows.data
-      .filter((row: any) => row.type_of_listing === "travel");
+      .filter((row: any) => row.type_of_listing === "travel") as ListingRow[];
 
     const shipments = rows.data
-      .filter((row: any) => row.type_of_listing === "shipment");
+      .filter((row: any) => row.type_of_listing === "shipment") as ListingRow[];
       
     const duration = Date.now() - start;
 

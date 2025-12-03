@@ -35,7 +35,7 @@ export default function AuthCallback() {
         .setSession({ access_token, refresh_token })
         .then(({ error }: { error: any }) => {
           if (error) console.error("setSession failed", error);
-          router.replace("/");
+          router.replace("/(tabs)");
         });
     } else {
       router.replace("/sign-in");

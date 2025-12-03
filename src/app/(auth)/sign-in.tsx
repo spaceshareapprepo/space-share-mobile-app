@@ -65,7 +65,7 @@ export default function SignInScreen() {
         showToast({ title: "Error!", description: `${error.message}`, action: "error" });
         console.error("Error during sign-in:", error);
       }
-     
+
     } catch (caughtError) {
       console.error("Error during sign-in:", caughtError);
     } finally {

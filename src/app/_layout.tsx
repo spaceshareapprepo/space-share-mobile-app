@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -16,59 +16,50 @@ import { SplashScreenController } from "@/components/splash-screen-controller";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import AuthProvider from "@/providers/auth-provider";
 import { DrawerProvider } from "@/providers/gluestack-drawer-provider";
+import SessionProvider from "@/providers/session-provider";
 import { useEffect } from "react";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
 
-// Separate RootNavigator so we can access the AuthContext
 function RootNavigator() {
   const { isLoggedIn, session } = useAuthContext();
-  const segments = useSegments();
-  const router = useRouter();
 
+  // FIX: This useEffect now just ensures the session hydrates. The <Stack> logic handles the routes.
   useEffect(() => {
-    if (session === undefined) return;
+    if (session === undefined) return; 
+    console.log('Auth state hydrated:', isLoggedIn ? 'Logged In' : 'Logged Out');
+  }, [isLoggedIn, session]);
 
-    const [first] = segments;
-    const inAuthGroup = first === "(auth)";
-    const isLanding = first === undefined;
-    const isOnTabs = first === "(tabs)";
-
-    if (!isLoggedIn && !inAuthGroup && !isLanding) {
-      router.replace("/(auth)/sign-in");
-      return;
-    }
-
-    if (isLoggedIn && !isOnTabs && (inAuthGroup || isLanding)) {
-      router.navigate("/(tabs)");
-    }
-  }, [isLoggedIn, session, segments, router]);
-
-  if (session === undefined) {
-    // Wait for the auth state to hydrate before deciding which stack to show.
+  if (session === undefined) 
+    {
+    // Show a loading screen while auth state is unknown
     return (
-      <ActivityIndicatorComponent />
+      <ActivityIndicatorComponent /> 
     );
-  }
-
+  } 
+  
+  // The Stack definition handles which routes are available based on authentication status.
   return (
     <Stack>
-      <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false}} />
-      </Stack.Protected>
-      <Stack.Protected guard={!isLoggedIn}>
-        <Stack.Screen name="(auth)/sign-in" options={{ headerShown: true, title: "Sign in" }} />
-        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "Sign up" }} />
-      </Stack.Protected>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Space Share Animated" }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
-        <Stack.Screen name="+not-found" />
+        {/* User is logged in: Show the main app tabs and other screens */}
+        <Stack.Protected guard={isLoggedIn}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          {/* other top-level screens that are only available when logged in */}
+          <Stack.Screen name="about" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="spaceshare-animated" />
+          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          <Stack.Screen name="+not-found" />
+        </Stack.Protected>
+        {/* User is not logged in: Only show authentication screens and an index (optional landing)*/}
+        <Stack.Protected guard={!isLoggedIn}>
+          <Stack.Screen name="index" options={{ headerShown: false }} /> {/* Public landing page */}
+          <Stack.Screen name="(auth)/sign-in" options={{ headerShown: true, title: "Sign in" }} />
+          <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "Sign up" }} />
+          <Stack.Screen name="(auth)/v1/callback" options={{ headerShown: false }} />
+        </Stack.Protected>
+      {/* If you have screens accessible to everyone (like a generic index/landing page that exists outside (auth) or (tabs)), they go here if needed. */}
     </Stack>
   );
 }
@@ -85,20 +76,20 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <GluestackUIProvider>
-          <AuthProvider>
+    <SessionProvider>
+      <SafeAreaProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <GluestackUIProvider>
             <SplashScreenController />
             <AutocompleteDropdownContextProvider>
               <DrawerProvider>
                 <RootNavigator />
               </DrawerProvider>
             </AutocompleteDropdownContextProvider>
-            <StatusBar style="auto" animated/>
-          </AuthProvider>
-        </GluestackUIProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+            <StatusBar style="auto" animated />
+          </GluestackUIProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </SessionProvider>
   );
 }

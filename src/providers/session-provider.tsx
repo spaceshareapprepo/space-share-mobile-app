@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 
-export default function AuthProvider({
+export default function SessionProvider({
   children,
 }: Readonly<PropsWithChildren>) {
   const [session, setSession] = useState<Session | undefined | null>();

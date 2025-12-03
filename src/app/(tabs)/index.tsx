@@ -18,6 +18,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 
 import type { QuickFilter, SearchSegment, SegmentKey } from "@/constants/types";
 import ActivityIndicatorComponent from "@/components/activity-indicator";
+import SearchComponent from "@/components/listings/search-hero";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -134,6 +135,7 @@ export default function SearchScreen() {
         />
       }
     >
+      <SearchComponent/>
       <ThemedView style={styles.container}>
         <ThemedView style={[styles.heroCard, { borderColor }]}>
           <ThemedText type="title">Find your perfect match</ThemedText>
