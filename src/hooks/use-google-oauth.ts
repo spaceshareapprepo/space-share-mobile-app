@@ -6,9 +6,9 @@ import { Platform } from "react-native";
 export async function useGoolgeOAuth() {
 
   const redirectTo =
-    Platform.OS !== "web"
-      ? `${expo.scheme}://v1/callback`
-      : `${window.location.origin}/v1/callback`;
+    Platform.OS === "web"
+      ? `${globalThis.location.origin}/v1/callback`
+      :  `${expo.scheme}://v1/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -26,7 +26,7 @@ export async function useGoolgeOAuth() {
 
   const url = data?.url;
   if (Platform.OS === "web" && url) {
-    window.location.assign(url);
+    globalThis.location.assign(url);
     return;
   }
 

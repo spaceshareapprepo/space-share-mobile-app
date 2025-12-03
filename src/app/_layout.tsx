@@ -11,6 +11,7 @@ import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-url-polyfill/auto";
 
+import ActivityIndicatorComponent from "@/components/activity-indicator";
 import { SplashScreenController } from "@/components/splash-screen-controller";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useAuthContext } from "@/hooks/use-auth-context";
@@ -18,7 +19,6 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import AuthProvider from "@/providers/auth-provider";
 import { DrawerProvider } from "@/providers/gluestack-drawer-provider";
 import { useEffect } from "react";
-import { ActivityIndicator } from "react-native";
 import { AutocompleteDropdownContextProvider } from "react-native-autocomplete-dropdown";
 
 export const unstable_settings = {
@@ -36,7 +36,6 @@ function RootNavigator() {
 
     const [first] = segments;
     const inAuthGroup = first === "(auth)";
-    const isOnGoogleAuth = first === "google-auth";
     const isLanding = first === undefined;
     const isOnTabs = first === "(tabs)";
 
@@ -45,14 +44,16 @@ function RootNavigator() {
       return;
     }
 
-    if (isLoggedIn && !isOnTabs && (inAuthGroup || isOnGoogleAuth || isLanding)) {
+    if (isLoggedIn && !isOnTabs && (inAuthGroup || isLanding)) {
       router.navigate("/(tabs)");
     }
   }, [isLoggedIn, session, segments, router]);
 
   if (session === undefined) {
     // Wait for the auth state to hydrate before deciding which stack to show.
-    return <ActivityIndicator />;
+    return (
+      <ActivityIndicatorComponent />
+    );
   }
 
   return (
@@ -63,9 +64,9 @@ function RootNavigator() {
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: true, title: "Sign in" }} />
         <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "" }} />
-        </Stack.Protected>
+      </Stack.Protected>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        {/* <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Demo" }} /> */}
+        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Mock" }} />
         <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
         <Stack.Screen name="+not-found" />
     </Stack>
@@ -85,19 +86,19 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <GluestackUIProvider>
-          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-            <AuthProvider>
-              <SplashScreenController />
-              <AutocompleteDropdownContextProvider>
-                <DrawerProvider>
-                  <RootNavigator />
-                </DrawerProvider>
-              </AutocompleteDropdownContextProvider>
-              <StatusBar style="auto" />
-            </AuthProvider>
-          </ThemeProvider>
+          <AuthProvider>
+            <SplashScreenController />
+            <AutocompleteDropdownContextProvider>
+              <DrawerProvider>
+                <RootNavigator />
+              </DrawerProvider>
+            </AutocompleteDropdownContextProvider>
+            <StatusBar style="auto" animated/>
+          </AuthProvider>
         </GluestackUIProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

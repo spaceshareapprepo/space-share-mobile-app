@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   View,
@@ -12,6 +11,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import ActivityIndicatorComponent from "@/components/activity-indicator";
 
 function withAlpha(hexColor: string, alpha: number) {
   const sanitized = hexColor.replace("#", "");
@@ -46,9 +46,7 @@ export default function LandingScreen() {
 
   if (isLoading) {
     return (
-      <ThemedView safeArea style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={tint} />
-      </ThemedView>
+      <ActivityIndicatorComponent />
     );
   }
 

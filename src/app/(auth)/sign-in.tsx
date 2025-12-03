@@ -22,7 +22,6 @@ import { z } from "zod";
 import GithubSignInButton from "@/components/social-auth-buttons/github/github-sign-in-button";
 import GoogleSignInButton from "@/components/social-auth-buttons/google/google-sign-in-button";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 
 // For icons, you'll need: expo install react-native-vector-icons
 // or use expo-vector-icons (comes with Expo)

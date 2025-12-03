@@ -365,7 +365,7 @@ export default function SignUpForm() {
             <Divider className="w-[100px]" />
           </HStack>
         </ThemedView>
-        <GoogleSignInButton buttonText="Sign up with Google" />
+        <GoogleSignInButton label="Sign up with Google" />
       </VStack>
     </ThemedView>
   );

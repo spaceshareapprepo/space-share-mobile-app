@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
+import ActivityIndicatorComponent from "@/components/activity-indicator";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { SegmentedControl } from "@/components/segmented-control";
 import { ThemedText } from "@/components/themed-text";
@@ -101,7 +102,7 @@ export default function MyShipmentsScreen() {
 
         {loading ? (
           <ThemedView style={{ padding: 16, gap: 8, alignItems: "center" }}>
-            <ActivityIndicator />
+            <ActivityIndicatorComponent />
             <ThemedText>Loading your listings...</ThemedText>
           </ThemedView>
         ) : errorMessage ? (

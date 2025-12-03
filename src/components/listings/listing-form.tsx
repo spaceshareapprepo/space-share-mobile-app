@@ -1,7 +1,6 @@
 // Shared listing form for create and edit flows.
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
 } from "react-native";
@@ -49,6 +48,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import type { Tables, TablesInsert, TablesUpdate } from "@/lib/database/supabase.types";
 import { supabase } from "@/lib/supabase";
 import { Switch } from "../ui/switch";
+import ActivityIndicatorComponent from "../activity-indicator";
 
 export type ListingFormValues = {
   title: string;
@@ -521,7 +521,7 @@ export function ListingForm({
         <Stack.Screen options={{ title: headerTitle }} />
         <ThemedView safeArea style={styles.safeArea}>
           <ThemedView style={styles.loadingState}>
-            <ActivityIndicator size="large" />
+            <ActivityIndicatorComponent />
             <ThemedText>Loading listing...</ThemedText>
           </ThemedView>
         </ThemedView>
@@ -1102,7 +1102,7 @@ export function ListingForm({
             />
             {isSubmitting && (
               <ThemedView style={styles.submittingRow}>
-                <ActivityIndicator size="small" />
+                <ActivityIndicatorComponent />
                 <ThemedText style={styles.submittingText}>
                   {mode === "edit" ? "Updating listing..." : "Saving listing..."}
                 </ThemedText>

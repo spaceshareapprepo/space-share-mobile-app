@@ -1,7 +1,7 @@
+import ActivityIndicatorComponent from '@/components/activity-indicator';
 import { ThemedText } from '@/components/themed-text';
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator } from "react-native";
 import { supabase } from "../../lib/supabase";
 
 export default function SignOutScreen() {
@@ -38,7 +38,7 @@ export default function SignOutScreen() {
 
   return (
     <>
-      <ActivityIndicator size="large" animating={loading} />
+      <ActivityIndicatorComponent />
       <ThemedText className="text-16">
         {errorMessage ? "We couldn't sign you out." : "Signing you out..."}
       </ThemedText>

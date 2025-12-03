@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   TextInput,
@@ -18,6 +17,7 @@ import { useListingsSearch } from "@/hooks/use-listings-search";
 import { useThemeColor } from "@/hooks/use-theme-color";
 
 import type { QuickFilter, SearchSegment, SegmentKey } from "@/constants/types";
+import ActivityIndicatorComponent from "@/components/activity-indicator";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -86,7 +86,7 @@ export default function SearchScreen() {
     if (isFetching) {
       return (
         <View style={styles.loadingState}>
-          <ActivityIndicator size="small" color={tintColor} />
+          <ActivityIndicatorComponent />
           <ThemedText style={styles.loadingText}>
             Loading listings...
           </ThemedText>
