@@ -19,6 +19,7 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import type { QuickFilter, SearchSegment, SegmentKey } from "@/constants/types";
 import ActivityIndicatorComponent from "@/components/activity-indicator";
 import SearchComponent from "@/components/listings/search-hero";
+import SearchFilterComponent from "@/components/listings/search-filter";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -135,7 +136,12 @@ export default function SearchScreen() {
         />
       }
     >
-      <SearchComponent/>
+      <SearchComponent />
+      <SearchFilterComponent
+        options={segments}
+        value={segment}
+        onChange={setSegment}
+      />
       <ThemedView style={styles.container}>
         <ThemedView style={[styles.heroCard, { borderColor }]}>
           <ThemedText type="title">Find your perfect match</ThemedText>
@@ -158,7 +164,10 @@ export default function SearchScreen() {
               returnKeyType="search"
               placeholder="Search ..."
               placeholderTextColor={tintColor}
-              style={[styles.searchInput, { color: tintColor, fontSize: 18, outline: "none" }]}
+              style={[
+                styles.searchInput,
+                { color: tintColor, fontSize: 18, outline: "none" },
+              ]}
               accessibilityLabel="Search routes and shipments"
               submitBehavior="blurAndSubmit"
             />
@@ -211,7 +220,9 @@ export default function SearchScreen() {
                 pricing terms.
               </ThemedText>
             </ThemedView>
-            <ThemedView style={styles.resultsList}>{renderResults()}</ThemedView>
+            <ThemedView style={styles.resultsList}>
+              {renderResults()}
+            </ThemedView>
           </>
         )}
       </ThemedView>
