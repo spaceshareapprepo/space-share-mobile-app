@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 
-export async function useGoolgeOAuth() {
+export async function useGithubOAuth() {
 
   const redirectTo =
     Platform.OS !== "web"
@@ -11,7 +11,7 @@ export async function useGoolgeOAuth() {
       : `${window.location.origin}/v1/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
+    provider: "github",
     options: {
       redirectTo,
       queryParams: { prompt: "consent" },
@@ -20,7 +20,7 @@ export async function useGoolgeOAuth() {
   });
 
   if (error) {
-    console.error("Google OAuth failed", error);
+    console.error("Github OAuth failed", error);
     return;
   }
 

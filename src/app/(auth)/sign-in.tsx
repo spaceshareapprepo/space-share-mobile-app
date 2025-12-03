@@ -53,6 +53,7 @@ export default function SignInScreen() {
     formState: { errors },
   } = useForm<UserFormType>({
     resolver: zodResolver(userSchema),
+    defaultValues: { email: "", password: "" },
   });
 
   const toast = useToast();
@@ -105,6 +106,7 @@ export default function SignInScreen() {
 
   const onSubmit: SubmitHandler<UserFormType> = async (data: UserFormType) => {
     console.log(data);
+    setIsLoading(true);
     try {
       const normalizedEmail = data.email.trim();
       const { error } = await supabase.auth.signInWithPassword({
