@@ -63,10 +63,10 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={!isLoggedIn}>
         <Stack.Screen name="(auth)/sign-in" options={{ headerShown: true, title: "Sign in" }} />
-        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "" }} />
+        <Stack.Screen name="(auth)/sign-up" options={{ headerShown: true, title: "Sign up" }} />
       </Stack.Protected>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Mock" }} />
+        <Stack.Screen name="spaceshare-animated" options={{ headerShown: true, title: "Space Share Animated" }} />
         <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
         <Stack.Screen name="+not-found" />
     </Stack>

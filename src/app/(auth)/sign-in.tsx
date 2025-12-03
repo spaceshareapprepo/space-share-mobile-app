@@ -1,15 +1,14 @@
-import {
-  Toast,
-  ToastDescription,
-  ToastTitle,
-  useToast,
-} from '@/components/ui/toast';
+import GithubSignInButton from "@/components/social-auth-buttons/github/github-sign-in-button";
+import GoogleSignInButton from "@/components/social-auth-buttons/google/google-sign-in-button";
+import { ThemedText } from "@/components/themed-text";
+import { useToastComponent } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
-  Dimensions,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,28 +17,24 @@ import {
   View
 } from "react-native";
 import { z } from "zod";
-// import { BlurView } from 'expo-blur';
-import GithubSignInButton from "@/components/social-auth-buttons/github/github-sign-in-button";
-import GoogleSignInButton from "@/components/social-auth-buttons/google/google-sign-in-button";
-import { ThemedText } from "@/components/themed-text";
-
-// For icons, you'll need: expo install react-native-vector-icons
-// or use expo-vector-icons (comes with Expo)
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { CloseIcon, HelpCircleIcon, Icon } from '@/components/ui/icon';
-import { VStack } from '@/components/ui/vstack';
-import { supabase } from "@/lib/supabase";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
-
-const { width } = Dimensions.get("window");
 
 export default function SignInScreen() {
-  const userSchema = z.object({
-    email: z.email({ message: "Please enter a valid email address."}),
-    password: z.string().min(6, { message: "Please enter at least 6 characters."})
-  })
+  const userSchema = z
+    .object({
+      email: z
+        .email({
+          message: "Please enter a valid email address",
+        })
+        .toLowerCase()
+        .trim(),
+      password: z
+        .string({ message: "Password is required" })
+        .min(8, "Password must be at least 8 characters")
+        .regex(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+          "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+        ),
+    });
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,56 +50,9 @@ export default function SignInScreen() {
     defaultValues: { email: "", password: "" },
   });
 
-  const toast = useToast();
-  const [toastId, setToastId] = useState(0);
-  const handleToast = (errorMessage: string) => {
-    if (!toast.isActive(toastId as any)) {
-      showNewToast(errorMessage);
-    }
-  };
-  const showNewToast = (errorMessage: string) => {
-    const newId = Math.random();
-    setToastId(newId);
-    toast.show({
-      id: newId as any,
-      placement: 'top',
-      duration: 3000,
-      render: ({ id }) => {
-        const uniqueToastId = 'toast-' + id;
-        return (
-          <Toast
-            action="error"
-            variant="outline"
-            nativeID={uniqueToastId}
-            className="p-4 gap-6 border-error-500 w-full shadow-hard-5 max-w-[443px] flex-row justify-between"
-          >
-            <HStack space="md">
-              <Icon as={HelpCircleIcon} className="stroke-error-500 mt-0.5" />
-              <VStack space="xs">
-                <ToastTitle className="font-semibold text-error-500">
-                  Error!
-                </ToastTitle>
-                <ToastDescription size="sm">
-                  {errorMessage}.
-                </ToastDescription>
-              </VStack>
-            </HStack>
-            <HStack className="min-[450px]:gap-3 gap-1">
-              <Button variant="link" size="sm" className="px-3.5 self-center">
-                <ButtonText>Retry</ButtonText>
-              </Button>
-              <Pressable onPress={() => toast.close(id)}>
-                <Icon as={CloseIcon} />
-              </Pressable>
-            </HStack>
-          </Toast>
-        );
-      },
-    });
-  };
+  const { showToast } = useToastComponent();
 
   const onSubmit: SubmitHandler<UserFormType> = async (data: UserFormType) => {
-    console.log(data);
     setIsLoading(true);
     try {
       const normalizedEmail = data.email.trim();
@@ -114,7 +62,7 @@ export default function SignInScreen() {
       });
 
       if (error) {
-        handleToast(error.message);
+        showToast({ title: "Error!", description: `${error.message}`, action: "error" });
         console.error("Error during sign-in:", error);
       }
      
