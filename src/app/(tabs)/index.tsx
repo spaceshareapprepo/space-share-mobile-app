@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -20,6 +21,9 @@ import type { QuickFilter, SearchSegment, SegmentKey } from "@/constants/types";
 import ActivityIndicatorComponent from "@/components/activity-indicator";
 import SearchComponent from "@/components/listings/search-hero";
 import SearchFilterComponent from "@/components/listings/search-filter";
+import ResultsHeader from "@/components/listings/results-count";
+import SearchResultCard from "@/components/listings/search-result-card";
+import { travellers } from "@/constants/mock-data";
 
 const segments: { key: SegmentKey; label: string }[] = [
   { key: "routes", label: "Travellers" },
@@ -125,113 +129,124 @@ export default function SearchScreen() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#041834", dark: "#050E1E" }}
-      headerImage={
-        <IconSymbol
-          name="magnifyingglass"
-          size={260}
-          color="rgba(255,255,255,0.25)"
-          style={styles.headerIcon}
-        />
-      }
-    >
+    <ScrollView style={styles.container}>
+      {/* New Components - START */}
       <SearchComponent />
       <SearchFilterComponent
         options={segments}
         value={segment}
         onChange={setSegment}
       />
-      <ThemedView style={styles.container}>
-        <ThemedView style={[styles.heroCard, { borderColor }]}>
-          <ThemedText type="title">Find your perfect match</ThemedText>
-          <ThemedText style={styles.heroSubtitle}>
-            Search real travellers and shipment requests across the USA to Ghana
-            corridor. Filter by route, item type, or urgency to start a trusted
-            conversation.
-          </ThemedText>
-          <ThemedView
-            style={[
-              styles.searchField,
-              { backgroundColor: inputBackground, borderColor },
-            ]}
-          >
-            <IconSymbol name="magnifyingglass" size={18} color={tintColor} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={() => triggerSearch()}
-              returnKeyType="search"
-              placeholder="Search ..."
-              placeholderTextColor={tintColor}
-              style={[
-                styles.searchInput,
-                { color: tintColor, fontSize: 18, outline: "none" },
-              ]}
-              accessibilityLabel="Search routes and shipments"
-              submitBehavior="blurAndSubmit"
-            />
-            <Pressable onPress={() => triggerSearch()}>
-              <ThemedText style={[styles.clearText, { color: tintColor }]}>
-                Search
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
-          <ThemedView style={[styles.quickFilters]}>
-            {quickFilters.map((filter) => (
-              <Pressable
-                key={filter.label}
-                onPress={() => {
-                  setSegment(filter.segment);
-                  setQuery(filter.value);
-                  triggerSearch(filter.value, filter.segment);
-                }}
-                style={[
-                  styles.filterChip,
-                  { backgroundColor: `${tintColor}15` },
-                ]}
-              >
-                <ThemedText
-                  style={[styles.filterChipText, { color: tintColor }]}
-                >
-                  {filter.label}
-                </ThemedText>
-              </Pressable>
-            ))}
-          </ThemedView>
-        </ThemedView>
-        {hasSearched && (
-          <>
-            <SegmentedControl
-              options={segments}
-              value={segment}
-              onChange={setSegment}
-              tintColor={tintColor}
-              borderColor={borderColor}
-            />
-            <ThemedView style={styles.resultsMeta}>
-              <ThemedText type="subtitle">
-                {`${results.length} ${
-                  segment === "routes" ? "traveller" : "shipment"
-                } ${results.length === 1 ? "match" : "matches"}`}
-              </ThemedText>
-              <ThemedText style={styles.resultsSubtitle}>
-                Tap a card to review verification badges, connect, and agree on
-                pricing terms.
-              </ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.resultsList}>
-              {renderResults()}
-            </ThemedView>
-          </>
-        )}
-      </ThemedView>
-    </ParallaxScrollView>
+      <ResultsHeader resultCount={3} onSortPress={() => setQuery} />
+      {travellers.map((traveller) => (
+        <SearchResultCard key={traveller.id} traveller={traveller as any} />
+      ))}
+      {/* New Components - END */}
+    </ScrollView>
+    // <ParallaxScrollView
+    //   headerBackgroundColor={{ light: "#041834", dark: "#050E1E" }}
+    //   headerImage={
+    //     <IconSymbol
+    //       name="magnifyingglass"
+    //       size={260}
+    //       color="rgba(255,255,255,0.25)"
+    //       style={styles.headerIcon}
+    //     />
+    //   }
+    // >
+    //   <ThemedView style={styles.container}>
+    //     <ThemedView style={[styles.heroCard, { borderColor }]}>
+    //       <ThemedText type="title">Find your perfect match</ThemedText>
+    //       <ThemedText style={styles.heroSubtitle}>
+    //         Search real travellers and shipment requests across the USA to Ghana
+    //         corridor. Filter by route, item type, or urgency to start a trusted
+    //         conversation.
+    //       </ThemedText>
+    //       <ThemedView
+    //         style={[
+    //           styles.searchField,
+    //           { backgroundColor: inputBackground, borderColor },
+    //         ]}
+    //       >
+    //         <IconSymbol name="magnifyingglass" size={18} color={tintColor} />
+    //         <TextInput
+    //           value={query}
+    //           onChangeText={setQuery}
+    //           onSubmitEditing={() => triggerSearch()}
+    //           returnKeyType="search"
+    //           placeholder="Search ..."
+    //           placeholderTextColor={tintColor}
+    //           style={[
+    //             styles.searchInput,
+    //             { color: tintColor, fontSize: 18, outline: "none" },
+    //           ]}
+    //           accessibilityLabel="Search routes and shipments"
+    //           submitBehavior="blurAndSubmit"
+    //         />
+    //         <Pressable onPress={() => triggerSearch()}>
+    //           <ThemedText style={[styles.clearText, { color: tintColor }]}>
+    //             Search
+    //           </ThemedText>
+    //         </Pressable>
+    //       </ThemedView>
+    //       <ThemedView style={[styles.quickFilters]}>
+    //         {quickFilters.map((filter) => (
+    //           <Pressable
+    //             key={filter.label}
+    //             onPress={() => {
+    //               setSegment(filter.segment);
+    //               setQuery(filter.value);
+    //               triggerSearch(filter.value, filter.segment);
+    //             }}
+    //             style={[
+    //               styles.filterChip,
+    //               { backgroundColor: `${tintColor}15` },
+    //             ]}
+    //           >
+    //             <ThemedText
+    //               style={[styles.filterChipText, { color: tintColor }]}
+    //             >
+    //               {filter.label}
+    //             </ThemedText>
+    //           </Pressable>
+    //         ))}
+    //       </ThemedView>
+    //     </ThemedView>
+    //     {hasSearched && (
+    //       <>
+    //         <SegmentedControl
+    //           options={segments}
+    //           value={segment}
+    //           onChange={setSegment}
+    //           tintColor={tintColor}
+    //           borderColor={borderColor}
+    //         />
+    //         <ThemedView style={styles.resultsMeta}>
+    //           <ThemedText type="subtitle">
+    //             {`${results.length} ${
+    //               segment === "routes" ? "traveller" : "shipment"
+    //             } ${results.length === 1 ? "match" : "matches"}`}
+    //           </ThemedText>
+    //           <ThemedText style={styles.resultsSubtitle}>
+    //             Tap a card to review verification badges, connect, and agree on
+    //             pricing terms.
+    //           </ThemedText>
+    //         </ThemedView>
+    //         <ThemedView style={styles.resultsList}>
+    //           {renderResults()}
+    //         </ThemedView>
+    //       </>
+    //     )}
+    //   </ThemedView>
+    // </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 24, paddingBottom: 56 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB" 
+  },
   headerIcon: { bottom: -50, left: -30, position: "absolute" },
   heroCard: { borderRadius: 24, borderWidth: 1, padding: 22, gap: 16 },
   heroSubtitle: { fontSize: 15, lineHeight: 22 },
