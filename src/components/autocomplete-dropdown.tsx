@@ -1,4 +1,5 @@
 import { LocationsResponse } from '@/constants/types'
+import { useThemeColor } from '@/hooks/use-theme-color'
 import React, { memo, useCallback, useRef, useState } from 'react'
 import { Dimensions, Platform } from 'react-native'
 import {
@@ -8,9 +9,7 @@ import {
 } from 'react-native-autocomplete-dropdown'
 import { ThemedText } from './themed-text'
 import { ThemedView } from './themed-view'
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from './ui/icon-symbol'
-import { Button, ButtonText } from './ui/button'
 
 type AutocompleteDropdownControlProps = {
   value?: string;

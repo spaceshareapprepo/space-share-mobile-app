@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Animated,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+  Modal,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useDatePicker } from "@/hooks/use-date-picker";
+import { format } from "date-fns";
+import { SearchDropdown } from "./search-dropdown";
 
 interface SearchParams {
   origin: string;
@@ -16,26 +20,41 @@ interface SearchParams {
   departureDate: string;
   arrivalDate: string;
   weight: string;
-  weightUnit: 'kg' | 'lb';
+  weightUnit: "kg" | "lb";
 }
 
-interface HeroSectionProps {
+type HeroSectionProps = {
   onSearch?: (params: SearchParams) => void;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
-  const [origin, setOrigin] = React.useState('');
-  const [destination, setDestination] = React.useState('');
-  const [departureDate, setDepartureDate] = React.useState('');
-  const [arrivalDate, setArrivalDate] = React.useState('');
-  const [weight, setWeight] = React.useState('');
-  const [weightUnit, setWeightUnit] = React.useState<'kg' | 'lb'>('kg');
-  
+export default function HeroSection({ onSearch }: HeroSectionProps){
+  const [showDeparturePicker, setShowDeparturePicker] = useState(false);
+  const [showArrivalPicker, setShowArrivalPicker] = useState(false);
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [weight, setWeight] = useState("");
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lb">("kg");
+
   // Animation values
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const fadeAnim1 = useRef(new Animated.Value(0)).current;
   const fadeAnim2 = useRef(new Animated.Value(0)).current;
   const fadeAnim3 = useRef(new Animated.Value(0)).current;
+
+  const departurePicker = useDatePicker({
+    onSelect: (date) => {
+      setDepartureDate(date ? format(new Date(date as any), "yyyy-MM-dd") : "");
+      setShowDeparturePicker(false);
+    },
+  });
+  const arrivalPicker = useDatePicker({
+    onSelect: (date) =>{
+      setArrivalDate(date ? format(new Date(date as any), "yyyy-MM-dd") : "");
+      setShowArrivalPicker(false);
+    }
+  });
 
   useEffect(() => {
     // Scale in animation
@@ -95,14 +114,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
   };
 
   return (
-    <Animated.View 
-      style={[
-        styles.container,
-        { transform: [{ scale: scaleAnim }] }
-      ]}
+    <Animated.View
+      style={[styles.container, { transform: [{ scale: scaleAnim }] }]}
     >
       <LinearGradient
-        colors={['#FBBf24', '#FBBF24', '#FB923C']} // amber-400, yellow-400, orange-400
+        colors={["#FBBf24", "#FBBF24", "#FB923C"]} // amber-400, yellow-400, orange-400
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -110,29 +126,23 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
         {/* Background decorative elements */}
         <View style={[styles.decorativeCircle, styles.decorativeCircle1]} />
         <View style={[styles.decorativeCircle, styles.decorativeCircle2]} />
-        
+
         {/* Title */}
         <Animated.View style={{ opacity: fadeAnim1 }}>
           <Text style={styles.title}>
-            Find your{'\n'}
+            Find your{"\n"}
             <Text style={styles.titleItalic}>perfect</Text> match
           </Text>
         </Animated.View>
-        
+
         {/* Subtitle */}
         <Animated.View style={{ opacity: fadeAnim2 }}>
-          <Text style={styles.subtitle}>
-            USA ↔ Ghana corridor
-          </Text>
+          <Text style={styles.subtitle}>USA ↔ Ghana corridor</Text>
         </Animated.View>
-        
+
         {/* Search Inputs */}
-        <Animated.View 
-          style={[
-            styles.searchContainer,
-            { opacity: fadeAnim3 }
-          ]}
-        >
+        <Animated.View style={[styles.searchContainer, { opacity: fadeAnim3 }]}>
+           <SearchDropdown placeholder="Origin" iconName="location-outline"/>
           {/* Origin and Destination with Swap Button */}
           <View style={styles.locationContainer}>
             {/* Origin Input */}
@@ -148,7 +158,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
             </View>
 
             {/* Swap Button */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.swapButton}
               onPress={handleSwapLocations}
               activeOpacity={0.7}
@@ -172,28 +182,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
           {/* Date Inputs Row */}
           <View style={styles.dateRow}>
             {/* Departure Date */}
-            <View style={[styles.inputWrapper, styles.dateInput]}>
+            <TouchableOpacity
+              style={[styles.inputWrapper, styles.dateInput]}
+              onPress={() => setShowDeparturePicker(true)}
+            >
               <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <TextInput
-                style={styles.input}
-                placeholder="Departure"
-                placeholderTextColor="#9CA3AF"
-                value={departureDate}
-                onChangeText={setDepartureDate}
-              />
-            </View>
-
+              <Text style={styles.input}>{departureDate || "Departure Date"}</Text>
+            </TouchableOpacity>
             {/* Arrival Date */}
-            <View style={[styles.inputWrapper, styles.dateInput]}>
+            <TouchableOpacity
+              style={[styles.inputWrapper, styles.dateInput]}
+              onPress={() => setShowArrivalPicker(true)}
+            >
               <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <TextInput
-                style={styles.input}
-                placeholder="Arrival"
-                placeholderTextColor="#9CA3AF"
-                value={arrivalDate}
-                onChangeText={setArrivalDate}
-              />
-            </View>
+              <Text style={styles.input}>{arrivalDate || "Arrival Date"}</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Weight Input with Unit Toggle */}
@@ -212,33 +215,37 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
 
             {/* Unit Toggle */}
             <View style={styles.unitToggle}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.unitButton,
-                  weightUnit === 'kg' && styles.unitButtonActive
+                  weightUnit === "kg" && styles.unitButtonActive,
                 ]}
-                onPress={() => setWeightUnit('kg')}
+                onPress={() => setWeightUnit("kg")}
                 activeOpacity={0.7}
               >
-                <Text style={[
-                  styles.unitText,
-                  weightUnit === 'kg' && styles.unitTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.unitText,
+                    weightUnit === "kg" && styles.unitTextActive,
+                  ]}
+                >
                   kg
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.unitButton,
-                  weightUnit === 'lb' && styles.unitButtonActive
+                  weightUnit === "lb" && styles.unitButtonActive,
                 ]}
-                onPress={() => setWeightUnit('lb')}
+                onPress={() => setWeightUnit("lb")}
                 activeOpacity={0.7}
               >
-                <Text style={[
-                  styles.unitText,
-                  weightUnit === 'lb' && styles.unitTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.unitText,
+                    weightUnit === "lb" && styles.unitTextActive,
+                  ]}
+                >
                   lb
                 </Text>
               </TouchableOpacity>
@@ -246,7 +253,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
           </View>
 
           {/* Search Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.searchButton}
             onPress={handleSearch}
             activeOpacity={0.8}
@@ -255,6 +262,63 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
             <Text style={styles.searchButtonText}>Find Spaces</Text>
           </TouchableOpacity>
         </Animated.View>
+        { showDeparturePicker && (
+          <view
+            style={{
+              backgroundColor: "#0005",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+            >
+              <Modal
+                visible={showDeparturePicker}
+                animationType="slide"
+                transparent
+              >
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "#0005" }}
+                  onPress={() => setShowDeparturePicker(false)}
+                />
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: 16,
+                    borderRadius: 16,
+                  }}
+                >
+                  {departurePicker.Picker}
+                </View>
+              </Modal>
+            </view>
+        )}
+        { showArrivalPicker  && (
+          <view
+              style={{
+                backgroundColor: "#0005",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Modal
+                visible={showArrivalPicker}
+                animationType="slide"
+                transparent
+              >
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "#0005" }}
+                  onPress={() => setShowArrivalPicker(false)}
+                />
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    padding: 16,
+                    borderRadius: 16,
+                  }}
+                >
+                  {arrivalPicker.Picker}
+                </View>
+              </Modal>
+            </view>)}
       </LinearGradient>
     </Animated.View>
   );
@@ -265,9 +329,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     // Shadow for iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -279,11 +343,11 @@ const styles = StyleSheet.create({
   },
   gradient: {
     padding: 24,
-    position: 'relative',
-    overflow: 'hidden',
+    position: "relative",
+    overflow: "hidden",
   },
   decorativeCircle: {
-    position: 'absolute',
+    position: "absolute",
     borderRadius: 9999,
   },
   decorativeCircle1: {
@@ -291,7 +355,7 @@ const styles = StyleSheet.create({
     right: 0,
     width: 128,
     height: 128,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     transform: [{ translateY: -64 }, { translateX: 64 }],
   },
   decorativeCircle2: {
@@ -299,21 +363,21 @@ const styles = StyleSheet.create({
     left: 0,
     width: 96,
     height: 96,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     transform: [{ translateY: 48 }, { translateX: -48 }],
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     lineHeight: 36,
   },
   titleItalic: {
-    fontStyle: 'italic',
-    fontWeight: '300',
+    fontStyle: "italic",
+    fontWeight: "300",
   },
   subtitle: {
-    color: 'rgba(0, 0, 0, 0.7)',
+    color: "rgba(0, 0, 0, 0.7)",
     marginTop: 8,
     fontSize: 14,
     maxWidth: 200,
@@ -323,23 +387,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   locationContainer: {
-    position: 'relative',
-    gap: 12
+    position: "relative",
+    gap: 12,
   },
   swapButton: {
-    position: 'absolute',
+    position: "absolute",
     right: -12,
-    top: '50%',
-    transform: [{  translateY: -20 }, {  translateX: -40 }],
-    backgroundColor: '#FFF',
+    top: "50%",
+    transform: [{ translateY: -20 }, { translateX: -40 }],
+    backgroundColor: "#FFF",
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 10,
     // Shadow for iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -349,18 +413,18 @@ const styles = StyleSheet.create({
     // Shadow for Android
     elevation: 4,
     borderWidth: 2,
-    borderColor: '#FBBf24',
+    borderColor: "#FBBf24",
   },
   inputWrapper: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 10,
     // Shadow for iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -373,31 +437,38 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
+    color: "#1F2937",
+  },
+  pickerContainer: {
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    marginTop: 8,
+    padding: 8,
   },
   dateRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
+    justifyContent: "space-evenly"
   },
   dateInput: {
     flex: 1,
   },
   weightContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   weightInput: {
     flex: 1,
   },
   unitToggle: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    backgroundColor: "#FFF",
     borderRadius: 12,
     padding: 4,
     gap: 4,
     // Shadow for iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -413,27 +484,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   unitButtonActive: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
   },
   unitText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
+    fontWeight: "600",
+    color: "#6B7280",
   },
   unitTextActive: {
-    color: '#FFF',
+    color: "#FFF",
   },
   searchButton: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     paddingVertical: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     marginTop: 4,
     // Shadow for iOS
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -444,10 +515,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   searchButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
-
-export default HeroSection;
