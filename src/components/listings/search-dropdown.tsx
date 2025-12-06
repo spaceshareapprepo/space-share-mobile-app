@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   TextInput,
@@ -18,9 +18,11 @@ import {
   PopoverFooter,
 } from "@/components/ui/popover";
 import { LocationsResponse } from "@/constants/types";
+import { useOptionalSearchDropdownContext } from "@/providers/search-dropdown-provider";
 import { Ionicons } from "@expo/vector-icons";
 
 type SearchDropdownProps = {
+  value?: string;
   onSelectId?: (id: string | null, label?: string) => void;
   placeholder?: string;
   iconName: string;
@@ -33,14 +35,18 @@ type SearchDropdownItem = {
 
 export const SearchDropdown = memo (
   ({
+    value,
     onSelectId, 
     placeholder = 'Airport, City, Item ..',
     iconName }: SearchDropdownProps ) => {
+  const dropdownContext = useOptionalSearchDropdownContext();
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState<SearchDropdownItem[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showPopover, setShowPopover] = useState(false);
   const [loading, setLoading] = useState(false)
+  const selectedLabelFromContext = dropdownContext?.selectedLabel;
+  const skipNextSearchRef = useRef(false);
 
   const handleSearch = useCallback(async (q: string) => {
     const filterToken = q.trim().toLowerCase();
@@ -83,16 +89,33 @@ export const SearchDropdown = memo (
   },[]);
 
   useEffect(() => {
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
     const timeoutId = setTimeout(() => {
       void handleSearch(searchText);
     }, 600);
     return () => clearTimeout(timeoutId);
   }, [searchText, handleSearch]);
 
+  useEffect(() => {
+    if (value !== undefined) {
+      skipNextSearchRef.current = true;
+      setSearchText(value);
+      return;
+    }
+    if (selectedLabelFromContext !== undefined) {
+      skipNextSearchRef.current = true;
+      setSearchText(selectedLabelFromContext ?? "");
+    }
+  }, [value, selectedLabelFromContext]);
+
   const handleSelectItem = (item: SearchDropdownItem) => {
     setSearchText(item.title ?? "");
     setIsDropdownOpen(false);
     setShowPopover(false);
+    dropdownContext?.setSelectedValue(item.id, item.title ?? null);
     onSelectId?.(item.id, item.title ?? undefined);
 
     console.log(`id: ${ item.id }, title: ${ item.title }`)

@@ -30,8 +30,12 @@ type HeroSectionProps = {
 export default function HeroSection({ onSearch }: HeroSectionProps){
   const [showDeparturePicker, setShowDeparturePicker] = useState(false);
   const [showArrivalPicker, setShowArrivalPicker] = useState(false);
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+
+  const [originId, setOriginId] = useState<string | null>(null);
+  const [originLabel, setOriginLabel] = useState("");
+  const [destinationId, setDestinationId] = useState<string | null>(null);
+  const [destinationLabel, setDestinationLabel] = useState("");
+
   const [departureDate, setDepartureDate] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [weight, setWeight] = useState("");
@@ -97,8 +101,8 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
   const handleSearch = () => {
     if (onSearch) {
       onSearch({
-        origin,
-        destination,
+        origin: originId ?? originLabel,
+        destination: destinationId ?? destinationLabel,
         departureDate,
         arrivalDate,
         weight,
@@ -108,10 +112,11 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
   };
 
   const handleSwapLocations = () => {
-    const temp = origin;
-    setOrigin(destination);
-    setDestination(temp);
-  };
+    setOriginId(destinationId);
+    setOriginLabel(destinationLabel);
+    setDestinationId(originId);
+    setDestinationLabel(originLabel);
+    };
 
   return (
     <Animated.View
@@ -145,7 +150,16 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
           {/* Origin and Destination with Swap Button */}
           <View style={styles.locationContainer}>
             {/* Origin Input */}
-            <SearchDropdown key={"origin-input"} placeholder="Origin (e.g., New York)" iconName="location-outline"/>
+            <SearchDropdown
+              key={"origin-input"}
+              placeholder="Origin (e.g., New York)"
+              iconName="location-outline"
+              value={originLabel}
+              onSelectId={(id, label) => {
+                setOriginId(id);
+                setOriginLabel(label ?? "");
+              }}
+            />
             {/* Swap Button */}
             <TouchableOpacity
               style={styles.swapButton}
@@ -155,7 +169,16 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
               <Ionicons name="swap-vertical" size={24} color="#000" />
             </TouchableOpacity>
             {/* Destination Input */}
-            <SearchDropdown key={"destination-input"} placeholder="Destination (e.g., Accra)" iconName="navigate-outline"/>
+            <SearchDropdown
+              key={"destination-input"}
+              placeholder="Destination (e.g., Accra)"
+              iconName="navigate-outline"
+              value={destinationLabel}
+              onSelectId={(id, label) => {
+                setDestinationId(id);
+                setDestinationLabel(label ?? "");
+              }}
+            />
           </View>
 
           {/* Date Inputs Row */}
@@ -166,7 +189,9 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
               onPress={() => setShowDeparturePicker(true)}
             >
               <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.input}>{departureDate || "Departure Date"}</Text>
+              <Text style={styles.input}>
+                {departureDate || "Departure Date"}
+              </Text>
             </TouchableOpacity>
             {/* Arrival Date */}
             <TouchableOpacity
@@ -241,63 +266,64 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
             <Text style={styles.searchButtonText}>Find Spaces</Text>
           </TouchableOpacity>
         </Animated.View>
-        { showDeparturePicker && (
+        {showDeparturePicker && (
           <view
             style={{
               backgroundColor: "#0005",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
             }}
+          >
+            <Modal
+              visible={showDeparturePicker}
+              animationType="slide"
+              transparent
             >
-              <Modal
-                visible={showDeparturePicker}
-                animationType="slide"
-                transparent
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#0005" }}
+                onPress={() => setShowDeparturePicker(false)}
+              />
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 16,
+                  borderRadius: 16,
+                }}
               >
-                <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: "#0005" }}
-                  onPress={() => setShowDeparturePicker(false)}
-                />
-                <View
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: 16,
-                    borderRadius: 16,
-                  }}
-                >
-                  {departurePicker.Picker}
-                </View>
-              </Modal>
-            </view>
+                {departurePicker.Picker}
+              </View>
+            </Modal>
+          </view>
         )}
-        { showArrivalPicker  && (
+        {showArrivalPicker && (
           <view
-              style={{
-                backgroundColor: "#0005",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+            style={{
+              backgroundColor: "#0005",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Modal
+              visible={showArrivalPicker}
+              animationType="slide"
+              transparent
             >
-              <Modal
-                visible={showArrivalPicker}
-                animationType="slide"
-                transparent
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#0005" }}
+                onPress={() => setShowArrivalPicker(false)}
+              />
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 16,
+                  borderRadius: 16,
+                }}
               >
-                <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: "#0005" }}
-                  onPress={() => setShowArrivalPicker(false)}
-                />
-                <View
-                  style={{
-                    backgroundColor: "#fff",
-                    padding: 16,
-                    borderRadius: 16,
-                  }}
-                >
-                  {arrivalPicker.Picker}
-                </View>
-              </Modal>
-            </view>)}
+                {arrivalPicker.Picker}
+              </View>
+            </Modal>
+          </view>
+        )}
       </LinearGradient>
     </Animated.View>
   );
