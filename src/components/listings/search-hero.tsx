@@ -142,21 +142,10 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
 
         {/* Search Inputs */}
         <Animated.View style={[styles.searchContainer, { opacity: fadeAnim3 }]}>
-           <SearchDropdown placeholder="Origin" iconName="location-outline"/>
           {/* Origin and Destination with Swap Button */}
           <View style={styles.locationContainer}>
             {/* Origin Input */}
-            <View style={styles.inputWrapper}>
-              <Ionicons name="location-outline" size={18} color="#9CA3AF" />
-              <TextInput
-                style={styles.input}
-                placeholder="Origin (e.g., Accra)"
-                placeholderTextColor="#9CA3AF"
-                value={origin}
-                onChangeText={setOrigin}
-              />
-            </View>
-
+            <SearchDropdown key={"origin-input"} placeholder="Origin (e.g., New York)" iconName="location-outline"/>
             {/* Swap Button */}
             <TouchableOpacity
               style={styles.swapButton}
@@ -165,18 +154,8 @@ export default function HeroSection({ onSearch }: HeroSectionProps){
             >
               <Ionicons name="swap-vertical" size={24} color="#000" />
             </TouchableOpacity>
-
             {/* Destination Input */}
-            <View style={styles.inputWrapper}>
-              <Ionicons name="navigate-outline" size={18} color="#9CA3AF" />
-              <TextInput
-                style={styles.input}
-                placeholder="Destination (e.g., New York)"
-                placeholderTextColor="#9CA3AF"
-                value={destination}
-                onChangeText={setDestination}
-              />
-            </View>
+            <SearchDropdown key={"destination-input"} placeholder="Destination (e.g., Accra)" iconName="navigate-outline"/>
           </View>
 
           {/* Date Inputs Row */}

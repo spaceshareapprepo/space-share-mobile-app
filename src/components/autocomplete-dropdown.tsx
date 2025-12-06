@@ -19,7 +19,7 @@ type AutocompleteDropdownControlProps = {
 };
 
 export const AutocompleteDropdownControl = memo(
-  ({ value, label, onSelectId, placeholder = 'Search for a location' }: AutocompleteDropdownControlProps) => {
+  ({ value, label, onSelectId, placeholder = 'Default placeholder text' }: AutocompleteDropdownControlProps) => {
   const tintColor = useThemeColor(
     {}, 
     'tint'

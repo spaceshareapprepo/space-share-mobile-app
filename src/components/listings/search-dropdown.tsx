@@ -21,10 +21,8 @@ import { LocationsResponse } from "@/constants/types";
 import { Ionicons } from "@expo/vector-icons";
 
 type SearchDropdownProps = {
-  value?: string;
   onSelectId?: (id: string | null, label?: string) => void;
   placeholder?: string;
-  label?: string;
   iconName: string;
 };
 
@@ -34,9 +32,7 @@ type SearchDropdownItem = {
 }
 
 export const SearchDropdown = memo (
-  ({ 
-    value, 
-    label, 
+  ({
     onSelectId, 
     placeholder = 'Airport, City, Item ..',
     iconName }: SearchDropdownProps ) => {
@@ -98,8 +94,10 @@ export const SearchDropdown = memo (
     setIsDropdownOpen(false);
     setShowPopover(false);
     onSelectId?.(item.id, item.title ?? undefined);
+
+    console.log(`id: ${ item.id }, title: ${ item.title }`)
   };
-  console.log(`searchText: ${searchText}`)
+  
 
   return (
     <View style={styles.container}>
@@ -110,7 +108,8 @@ export const SearchDropdown = memo (
           setIsDropdownOpen(false);
         }}
         onOpen={() => setShowPopover(true)}
-        placement="bottom left"
+        placement="bottom"
+        size="full"
         offset={5}
         trigger={(triggerProps) => (
           <View style={styles.inputWrapper} {...triggerProps}>
@@ -126,9 +125,9 @@ export const SearchDropdown = memo (
       >
         <PopoverBackdrop />
         <PopoverContent className="max-w-[473px] w-full native:max-w-[300px]">
-          {/* <PopoverArrow /> */}
+          <PopoverArrow />
           <PopoverHeader className="w-full gap-3">
-            {/* <PopoverCloseButton /> */}
+            <PopoverCloseButton />
           </PopoverHeader>
           <PopoverBody className="gap-6">
             <View style={styles.dropdownContainer}>
@@ -140,7 +139,7 @@ export const SearchDropdown = memo (
                     style={styles.dropdownItem}
                     onPress={() => handleSelectItem(item)}
                   >
-                    <Text>{item.title}</Text>
+                    <Text data-id={item.id}>{item.title}</Text>
                   </TouchableOpacity>
                 )}
                 extraData={onSelectId}
